@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="eOcOaW" name="Kronos" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="0" jucerFormatVersion="1"
+              companyName="Jack.Lion" companyWebsite="https://jacklion.com"
+              companyEmail="jack.lion710@gmail.com" pluginFormats="buildAU,buildStandalone,buildVST,buildVST3"
+              pluginCode="KRNS" cppLanguageStandard="20" pluginVST3Category="Tools">
+  <MAINGROUP id="BaOmXI" name="Kronos">
+    <GROUP id="{3F17D307-FD11-C3B5-9773-A8098DD394F4}" name="Source">
+      <FILE id="MJF2rv" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="JquvCS" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="o1q1GO" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="orVD9k" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <VS2022 targetFolder="Builds/VisualStudio2022">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Kronos" enablePluginBinaryCopyStep="1"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Kronos"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../Documents/Applications/Programming/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../Documents/Applications/Programming/JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2022>
+  </EXPORTFORMATS>
+</JUCERPROJECT>
