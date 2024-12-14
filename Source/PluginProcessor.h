@@ -53,7 +53,22 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    //==============================================================================
+    void startTracking();
+    void stopTracking();
+    juce::int64 getTotalTimeInSeconds() const;
+    bool isTracking = false;
+
+    void saveToJson(const juce::File& file);
+    juce::File getDefaultSaveDirectory();
+
+    void autoSaveState();
+    juce::File getPluginStateDirectory();
+    juce::String getHostProjectName();
+
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KronosAudioProcessor)
+    juce::Time startTime;
+    juce::int64 totalTimeInSeconds;
 };

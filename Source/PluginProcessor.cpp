@@ -8,6 +8,8 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include <JuceHeader.h>
+#include "JucePluginDefines.h"
 
 //==============================================================================
 KronosAudioProcessor::KronosAudioProcessor()
@@ -22,10 +24,65 @@ KronosAudioProcessor::KronosAudioProcessor()
                        )
 #endif
 {
+    isTracking = false;
+    totalTimeInSeconds = 0;
 }
 
 KronosAudioProcessor::~KronosAudioProcessor()
 {
+    isTracking = false;
+    totalTimeInSeconds = 0;
+}
+
+void KronosAudioProcessor::startTracking()
+{
+    if (!isTracking)
+    {
+        startTime = juce::Time::getCurrentTime();
+        isTracking = true;
+    }
+}
+
+void KronosAudioProcessor::stopTracking()
+{
+    if (isTracking)
+    {
+        auto currentTime = juce::Time::getCurrentTime();
+        totalTimeInSeconds += (currentTime - startTime).inSeconds();
+        isTracking = false;
+    }
+}
+
+juce::int64 KronosAudioProcessor::getTotalTimeInSeconds() const
+{
+    if (isTracking)
+    {
+        auto currentTime = juce::Time::getCurrentTime();
+        return totalTimeInSeconds + (currentTime - startTime).inSeconds();
+    }
+    return totalTimeInSeconds;
+}
+
+void KronosAudioProcessor::saveToJson(const juce::File& file)
+{
+    juce::DynamicObject* dataObject = new juce::DynamicObject();
+    
+    // Data to save
+    dataObject->setProperty("totalTimeInSeconds", getTotalTimeInSeconds());
+    dataObject->setProperty("isTracking", isTracking);
+    dataObject->setProperty("startTime", startTime.toISO8601(true));
+
+    // Convert to JSON string
+    juce::var jsonVar = juce::JSON::toString(dataObject);
+    juce::String jsonString = juce::JSON::toString(jsonVar);
+
+    // Write to file
+    file.replaceWithText(jsonString);
+}
+
+juce::File KronosAudioProcessor::getDefaultSaveDirectory()
+{
+    return juce::File::getSpecialLocation(juce::File::userHomeDirectory).getChildFile("KronosPlugin");
 }
 
 //==============================================================================
@@ -156,6 +213,40 @@ void KronosAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
         // ..do something to the data...
     }
+
+    static juce::String lastProjectName;
+    juce::String currentProjectName = getHostProjectName();
+    
+    // Check if project was just saved (name changed from *_Unsaved to something else)
+    if (lastProjectName.endsWith("_Unsaved") && !currentProjectName.endsWith("_Unsaved"))
+    {
+        // Load data from unsaved file
+        juce::File unsavedFile = getPluginStateDirectory()
+            .getChildFile("KronosProjectsTimeData")
+            .getChildFile(lastProjectName + ".json");
+            
+        if (unsavedFile.exists())
+        {
+            // Save to new location first
+            autoSaveState();
+            
+            // Then delete the unsaved file
+            unsavedFile.deleteFile();
+        }
+    }
+    
+    lastProjectName = currentProjectName;
+
+    // Regular autosave check
+    static juce::int64 lastSaveTime = 0;
+    juce::int64 currentTime = juce::Time::currentTimeMillis();
+    
+    // Auto-save every minute
+    if (currentTime - lastSaveTime > 60000) // 60000ms = 1 minute
+    {
+        autoSaveState();
+        lastSaveTime = currentTime;
+    }
 }
 
 //==============================================================================
@@ -188,4 +279,108 @@ void KronosAudioProcessor::setStateInformation (const void* data, int sizeInByte
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new KronosAudioProcessor();
+}
+
+juce::File KronosAudioProcessor::getPluginStateDirectory()
+{
+    // Get the user's application data directory
+    #if JUCE_MAC
+        // On macOS: ~/Library/Application Support/Kronos
+        juce::File dataDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                                .getChildFile("Application Support")
+                                .getChildFile("Kronos");
+    #else
+        // On Windows: %APPDATA%\Kronos
+        // On Linux: ~/.config/Kronos
+        juce::File dataDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                                .getChildFile("Kronos");
+    #endif
+    
+    // Ensure the directory exists
+    if (!dataDir.exists())
+        dataDir.createDirectory();
+        
+    return dataDir;
+}
+
+void KronosAudioProcessor::autoSaveState()
+{
+    juce::File dataDir = getPluginStateDirectory();
+    juce::File projectsDir = dataDir.getChildFile("KronosProjectsTimeData");
+    
+    if (!projectsDir.exists())
+        projectsDir.createDirectory();
+    
+    juce::String filename = getHostProjectName() + ".json";
+    juce::File stateFile = projectsDir.getChildFile(filename);
+    
+    DBG("Saving state to: " + stateFile.getFullPathName());
+    
+    juce::DynamicObject* dataObject = new juce::DynamicObject();
+    
+    // Add your data to save
+    dataObject->setProperty("totalTimeInSeconds", getTotalTimeInSeconds());
+    dataObject->setProperty("isTracking", isTracking);
+    dataObject->setProperty("lastSaveTime", juce::Time::getCurrentTime().toISO8601(true));
+    
+    // Add host information
+    juce::PluginHostType hostType;
+    dataObject->setProperty("hostName", hostType.getHostDescription());
+    dataObject->setProperty("hostPath", juce::PluginHostType::getHostPath());
+    
+    juce::var jsonVar(dataObject);
+    juce::String jsonString = juce::JSON::toString(jsonVar);
+    
+    stateFile.replaceWithText(jsonString);
+}
+
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
+#include <JuceHeader.h>
+#include "JucePluginDefines.h"
+
+// [...previous code remains unchanged until getHostProjectName()]
+
+juce::String KronosAudioProcessor::getHostProjectName()
+{
+    juce::PluginHostType hostType;
+    juce::String projectName;
+    
+    // Try to get the actual project name from the host
+    auto* wrapper = getActiveEditor();
+    if (wrapper != nullptr)
+    {
+        projectName = wrapper->getName();
+        
+        // If we got a meaningful project name, use it
+        if (!projectName.isEmpty() && projectName != "Unknown" && 
+            projectName != hostType.getHostDescription())
+        {
+            projectName = juce::File::createLegalFileName(projectName);
+            return projectName;
+        }
+    }
+    
+    // Fallback to host name if no project name available
+    if (hostType.isAbletonLive())
+        projectName = "Ableton_Unsaved";
+    else if (hostType.isLogic())
+        projectName = "Logic_Unsaved";
+    else if (hostType.isCubase())
+        projectName = "Cubase_Unsaved";
+    else if (hostType.isReaper())
+        projectName = "Reaper_Unsaved";
+    else if (hostType.isStudioOne())
+        projectName = "StudioOne_Unsaved";
+    else if (hostType.isProTools())
+        projectName = "ProTools_Unsaved";
+    else if (hostType.isFruityLoops())
+        projectName = "FL_Studio_Unsaved";
+    else
+        projectName = juce::String(hostType.getHostDescription()) + juce::String("_Unsaved");    
+    
+    // Remove any illegal characters
+    projectName = juce::File::createLegalFileName(projectName);
+    
+    return projectName;
 }

@@ -14,7 +14,7 @@
 //==============================================================================
 /**
 */
-class KronosAudioProcessorEditor  : public juce::AudioProcessorEditor
+class KronosAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Timer
 {
 public:
     KronosAudioProcessorEditor (KronosAudioProcessor&);
@@ -23,11 +23,15 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+    void timerCallback() override;
 
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     KronosAudioProcessor& audioProcessor;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KronosAudioProcessorEditor)
+    juce::TextButton startStopButton {"Start Tracking"};
+    juce::Label timeLabel;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
