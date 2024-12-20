@@ -14,20 +14,13 @@
 KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    addAndMakeVisible(&startStopButton);
+    addAndMakeVisible(&clearButton);
     addAndMakeVisible(&timeLabel);
     
-    startStopButton.onClick = [this]() {
-        if (!audioProcessor.isTracking)
-        {
-            audioProcessor.startTracking();
-            startStopButton.setButtonText("Stop Tracking");
-        }
-        else
-        {
-            audioProcessor.stopTracking();
-            startStopButton.setButtonText("Start Tracking");
-        }
+    timeLabel.setJustificationType(juce::Justification::centred);
+
+    clearButton.onClick = [this]() {
+        audioProcessor.clearTracking();
     };
 
     startTimer(1000); // Update every second
@@ -50,8 +43,21 @@ void KronosAudioProcessorEditor::timerCallback()
 void KronosAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
-    startStopButton.setBounds(bounds.removeFromTop(50));
-    timeLabel.setBounds(bounds.removeFromTop(50));
+    auto buttonHeight = 40;
+    auto margin = 10;
+
+    // Title area
+    bounds.removeFromTop(margin);
+
+    // Buttons area
+    auto buttonArea = bounds.removeFromTop(buttonHeight);
+    auto halfWidth = buttonArea.getWidth() / 2;
+    
+    clearButton.setBounds(buttonArea.reduced(margin));
+
+    // Time display
+    bounds.removeFromTop(margin);
+    timeLabel.setBounds(bounds.removeFromTop(buttonHeight));
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()

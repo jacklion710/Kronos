@@ -13,7 +13,7 @@
 //==============================================================================
 /**
 */
-class KronosAudioProcessor  : public juce::AudioProcessor
+class KronosAudioProcessor  : public juce::AudioProcessor, public juce::Timer
 {
 public:
     //==============================================================================
@@ -56,19 +56,18 @@ public:
     //==============================================================================
     void startTracking();
     void stopTracking();
+    void clearTracking();
+
     juce::int64 getTotalTimeInSeconds() const;
     bool isTracking = false;
 
-    void saveToJson(const juce::File& file);
-    juce::File getDefaultSaveDirectory();
-
-    void autoSaveState();
-    juce::File getPluginStateDirectory();
-    juce::String getHostProjectName();
+    void suspendProcessing(bool shouldSuspend);
+    void timerCallback();
 
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KronosAudioProcessor)
     juce::Time startTime;
     juce::int64 totalTimeInSeconds;
+    juce::AudioProcessorValueTreeState parameters;
 };
