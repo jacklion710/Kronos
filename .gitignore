@@ -31,3 +31,6 @@ Thumbs.db
 *.lastbuildstate
 *.recipe
 *.tlog
+
+# Live Projects
+test project/
