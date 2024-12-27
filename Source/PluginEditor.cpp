@@ -17,14 +17,24 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     // Apply the custom look and feel
     setLookAndFeel(&customLookAndFeel);
     
-    // Create a font object using ASTERA
-    auto asteraFont = juce::Font(36.0f);
-    asteraFont.setTypefaceName("ASTERA"); // Set the typeface name explicitly
+    // Create fonts
+    auto asteraFontLarge = juce::Font(36.0f);
+    auto asteraFontSmall = juce::Font(16.0f);
+    asteraFontLarge.setTypefaceName("ASTERA");
+    asteraFontSmall.setTypefaceName("ASTERA");
     
     // Add the time label
     addAndMakeVisible(timeLabel);
-    timeLabel.setFont(asteraFont);
+    timeLabel.setFont(asteraFontLarge);
     timeLabel.setJustificationType(juce::Justification::centred);
+    
+    // Setup date labels
+    for (int i = 0; i < 3; ++i)
+    {
+        addAndMakeVisible(dateLabels[i]);
+        dateLabels[i].setFont(asteraFontSmall);
+        dateLabels[i].setJustificationType(juce::Justification::centred);
+    }
     
     // Set a fixed size for our editor
     setSize(400, 300);
@@ -43,6 +53,21 @@ void KronosAudioProcessorEditor::timerCallback()
     timeLabel.setText(juce::String::formatted("%02d:%02d:%02d", 
                      (int)hours, (int)minutes, (int)seconds), 
                      juce::dontSendNotification);
+    
+    // Update date labels with MM-DD-YYYY format
+    auto& dates = audioProcessor.getSessionDates();
+    for (int i = 0; i < 3; ++i)
+    {
+        if (i < dates.size())
+        {
+            dateLabels[i].setText(dates[i].formatted("%m-%d-%Y"), 
+                                juce::dontSendNotification);
+        }
+        else
+        {
+            dateLabels[i].setText("", juce::dontSendNotification);
+        }
+    }
 }
 
 void KronosAudioProcessorEditor::resized()
@@ -50,17 +75,21 @@ void KronosAudioProcessorEditor::resized()
     auto bounds = getLocalBounds();
     auto buttonHeight = 40;
     auto margin = 10;
+    auto dateHeight = 20;
+    auto titleHeight = 50;  // Space for title
 
     // Title area
-    bounds.removeFromTop(margin);
+    bounds.removeFromTop(titleHeight);  // Reserve space for title
+    bounds.removeFromTop(margin * 2);   // Extra space after title
 
-    // Buttons area
-    auto buttonArea = bounds.removeFromTop(buttonHeight);
-    auto halfWidth = buttonArea.getWidth() / 2;
-    
     // Time display
-    bounds.removeFromTop(margin);
     timeLabel.setBounds(bounds.removeFromTop(buttonHeight));
+    
+    bounds.removeFromTop(margin);
+    for (int i = 0; i < 3; ++i)
+    {
+        dateLabels[i].setBounds(bounds.removeFromTop(dateHeight));
+    }
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
@@ -82,6 +111,6 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     auto asteraFont = juce::Font(20.0f);
     asteraFont.setTypefaceName("ASTERA");
     g.setFont(asteraFont);
-    g.drawText("KRONOS", getLocalBounds().removeFromTop(30),
+    g.drawText("KRONOS", getLocalBounds().removeFromTop(50),
                juce::Justification::centred, true);
 }

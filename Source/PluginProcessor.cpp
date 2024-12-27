@@ -28,6 +28,7 @@ KronosAudioProcessor::KronosAudioProcessor()
     isTracking = false;
     totalTimeInSeconds = 0;
     startTimer(1000);
+    addSessionDate();
 }
 
 KronosAudioProcessor::~KronosAudioProcessor()
@@ -214,7 +215,14 @@ void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
     // Store the total time
     state.setProperty("totalTimeInSeconds", totalTimeInSeconds, nullptr);
     
-    // Convert to XML and save
+    // Save session dates as ISO8601 strings
+    juce::StringArray dateStrings;
+    for (auto& date : sessionDates)
+    {
+        dateStrings.add(date.toISO8601(true));
+    }
+    state.setProperty("sessionDates", dateStrings.joinIntoString(";"), nullptr);
+    
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
@@ -231,6 +239,27 @@ void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes
         
         // Restore the total time
         totalTimeInSeconds = state.getProperty("totalTimeInSeconds", (juce::int64)0);
+        
+        // Load session dates
+        sessionDates.clear();
+        if (state.hasProperty("sessionDates"))
+        {
+            juce::String datesString = state.getProperty("sessionDates");
+            juce::StringArray dateStrings;
+            dateStrings.addTokens(datesString, ";", "");
+            
+            for (const auto& dateStr : dateStrings)
+            {
+                juce::Time date = juce::Time::fromISO8601(dateStr);
+                if (date != juce::Time())  // Valid date
+                {
+                    sessionDates.add(date);
+                }
+            }
+        }
+        
+        // Always add today's date when loading
+        addSessionDate();
     }
 }
 
@@ -254,5 +283,30 @@ void KronosAudioProcessor::suspendProcessing(bool shouldSuspend)
 void KronosAudioProcessor::timerCallback()
 {
     totalTimeInSeconds++;
+}
+
+void KronosAudioProcessor::addSessionDate()
+{
+    auto today = juce::Time::getCurrentTime();
+    
+    // Check if we already have today's date
+    bool dateExists = false;
+    for (auto& date : sessionDates)
+    {
+        if (date.getDayOfMonth() == today.getDayOfMonth() &&
+            date.getMonth() == today.getMonth() &&
+            date.getYear() == today.getYear())
+        {
+            dateExists = true;
+            break;
+        }
+    }
+    
+    if (!dateExists)
+    {
+        sessionDates.insert(0, today);  // Add to front of array
+        if (sessionDates.size() > 10)   // Keep only last 10 sessions
+            sessionDates.removeLast();
+    }
 }
 
