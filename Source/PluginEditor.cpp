@@ -36,6 +36,19 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         dateLabels[i].setJustificationType(juce::Justification::centred);
     }
     
+    // Initialize play/pause button
+    addAndMakeVisible(playPauseButton);
+    playPauseButton.setButtonText(audioProcessor.isTracking ? "||" : ">");
+    playPauseButton.onClick = [this]() {
+        if (audioProcessor.isTracking) {
+            audioProcessor.stopTracking();
+            playPauseButton.setButtonText(">");
+        } else {
+            audioProcessor.startTracking();
+            playPauseButton.setButtonText("||");
+        }
+    };
+    
     // Set a fixed size for our editor
     setSize(400, 300);
     
@@ -77,13 +90,19 @@ void KronosAudioProcessorEditor::resized()
     auto margin = 10;
     auto dateHeight = 20;
     auto titleHeight = 50;  // Space for title
+    auto playPauseWidth = 40;  // Width for the play/pause button
 
     // Title area
     bounds.removeFromTop(titleHeight);  // Reserve space for title
     bounds.removeFromTop(margin * 2);   // Extra space after title
 
-    // Time display
-    timeLabel.setBounds(bounds.removeFromTop(buttonHeight));
+    // Time display area
+    auto timeDisplayBounds = bounds.removeFromTop(buttonHeight);
+    
+    // Position play/pause button to the left of the time display
+    playPauseButton.setBounds(timeDisplayBounds.removeFromLeft(playPauseWidth));
+    timeDisplayBounds.removeFromLeft(margin); // Add some space between button and time
+    timeLabel.setBounds(timeDisplayBounds);
     
     bounds.removeFromTop(margin);
     for (int i = 0; i < 3; ++i)
@@ -96,6 +115,7 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
 {
     setLookAndFeel(nullptr);
     stopTimer();
+    playPauseButton.onClick = nullptr;
 }
 
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)

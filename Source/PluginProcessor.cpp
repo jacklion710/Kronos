@@ -25,7 +25,8 @@ KronosAudioProcessor::KronosAudioProcessor()
        parameters(*this, nullptr, "Parameters", {})
 #endif
 {
-    isTracking = false;
+    startTime = juce::Time::getCurrentTime();
+    isTracking = true;
     totalTimeInSeconds = 0;
     startTimer(1000);
     addSessionDate();
@@ -282,7 +283,10 @@ void KronosAudioProcessor::suspendProcessing(bool shouldSuspend)
 
 void KronosAudioProcessor::timerCallback()
 {
-    totalTimeInSeconds++;
+    if (isTracking)
+    {
+        totalTimeInSeconds++;
+    }
 }
 
 void KronosAudioProcessor::addSessionDate()

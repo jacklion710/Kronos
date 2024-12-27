@@ -36,5 +36,7 @@ private:
     juce::Label timeLabel;
     juce::Label dateLabels[3];  // Labels for recent dates
 
+    juce::TextButton playPauseButton;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };

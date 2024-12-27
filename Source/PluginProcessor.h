@@ -58,7 +58,7 @@ public:
     void stopTracking();
 
     juce::int64 getTotalTimeInSeconds() const;
-    bool isTracking = false;
+    bool isTracking = true;  // Start tracking by default
 
     void suspendProcessing(bool shouldSuspend);
     void timerCallback();
@@ -69,7 +69,7 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KronosAudioProcessor)
     juce::Time startTime;
-    juce::int64 totalTimeInSeconds;
+    juce::int64 totalTimeInSeconds = 0;
     juce::AudioProcessorValueTreeState parameters;
     
     // Array to store session dates
