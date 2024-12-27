@@ -6,7 +6,12 @@
               companyEmail="jack.lion710@gmail.com" pluginFormats="buildAU,buildStandalone,buildVST,buildVST3"
               pluginCode="KRNS" cppLanguageStandard="20" pluginVST3Category="Tools">
   <MAINGROUP id="BaOmXI" name="Kronos">
+    <GROUP id="{95DFCBFD-71F4-784F-99EE-B168B870A2CB}" name="Assets">
+      <FILE id="IJDnaT" name="ASTERA.ttf" compile="0" resource="1" file="../../Desktop/ASTERA.ttf"/>
+    </GROUP>
     <GROUP id="{3F17D307-FD11-C3B5-9773-A8098DD394F4}" name="Source">
+      <FILE id="D7CUVz" name="LookAndFeel.h" compile="0" resource="0" file="Source/LookAndFeel.h"/>
+      <FILE id="rckogh" name="LookAndFeel.cpp" compile="1" resource="0" file="Source/LookAndFeel.cpp"/>
       <FILE id="MJF2rv" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="JquvCS" name="PluginProcessor.h" compile="0" resource="0"
@@ -53,5 +58,25 @@
         <MODULEPATH id="juce_gui_extra" path="../../Documents/Applications/Programming/JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../juce"/>
+        <MODULEPATH id="juce_audio_devices" path="../../juce"/>
+        <MODULEPATH id="juce_audio_formats" path="../../juce"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../juce"/>
+        <MODULEPATH id="juce_audio_processors" path="../../juce"/>
+        <MODULEPATH id="juce_audio_utils" path="../../juce"/>
+        <MODULEPATH id="juce_core" path="../../juce"/>
+        <MODULEPATH id="juce_data_structures" path="../../juce"/>
+        <MODULEPATH id="juce_events" path="../../juce"/>
+        <MODULEPATH id="juce_graphics" path="../../juce"/>
+        <MODULEPATH id="juce_gui_basics" path="../../juce"/>
+        <MODULEPATH id="juce_gui_extra" path="../../juce"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
   </EXPORTFORMATS>
 </JUCERPROJECT>

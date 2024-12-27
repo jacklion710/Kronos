@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "LookAndFeel.h"
 
 //==============================================================================
 /**
@@ -30,7 +31,8 @@ private:
     // access the processor object that created it.
     KronosAudioProcessor& audioProcessor;
 
-    juce::TextButton clearButton {"Clear"};
+    KronosLookAndFeel customLookAndFeel;
+
     juce::Label timeLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)

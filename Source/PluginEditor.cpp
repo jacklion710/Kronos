@@ -14,18 +14,23 @@
 KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    addAndMakeVisible(&clearButton);
-    addAndMakeVisible(&timeLabel);
+    // Apply the custom look and feel
+    setLookAndFeel(&customLookAndFeel);
     
+    // Create a font object using ASTERA
+    auto asteraFont = juce::Font(36.0f);
+    asteraFont.setTypefaceName("ASTERA"); // Set the typeface name explicitly
+    
+    // Add the time label
+    addAndMakeVisible(timeLabel);
+    timeLabel.setFont(asteraFont);
     timeLabel.setJustificationType(juce::Justification::centred);
-
-    clearButton.onClick = [this]() {
-        audioProcessor.clearTracking();
-    };
-
-    startTimer(1000); // Update every second
     
+    // Set a fixed size for our editor
     setSize(400, 300);
+    
+    // Start the timer for updates
+    startTimerHz(1);
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -53,8 +58,6 @@ void KronosAudioProcessorEditor::resized()
     auto buttonArea = bounds.removeFromTop(buttonHeight);
     auto halfWidth = buttonArea.getWidth() / 2;
     
-    clearButton.setBounds(buttonArea.reduced(margin));
-
     // Time display
     bounds.removeFromTop(margin);
     timeLabel.setBounds(bounds.removeFromTop(buttonHeight));
@@ -62,7 +65,8 @@ void KronosAudioProcessorEditor::resized()
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
 {
-    stopTimer(); // Make sure to stop the timer when the editor is destroyed
+    setLookAndFeel(nullptr);
+    stopTimer();
 }
 
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)
@@ -74,8 +78,10 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(juce::Colours::white);
     g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(5.0f), 10.0f, 2.0f);
 
-    // Add a title
-    g.setFont(20.0f);
-    g.drawText("Kronos Time Tracker", getLocalBounds().removeFromTop(30),
+    // Add a title with ASTERA font
+    auto asteraFont = juce::Font(20.0f);
+    asteraFont.setTypefaceName("ASTERA");
+    g.setFont(asteraFont);
+    g.drawText("KRONOS", getLocalBounds().removeFromTop(30),
                juce::Justification::centred, true);
 }

@@ -54,12 +54,6 @@ void KronosAudioProcessor::stopTracking()
     }
 }
 
-void KronosAudioProcessor::clearTracking()
-{
-    isTracking = false;
-    totalTimeInSeconds = 0;
-}
-
 juce::int64 KronosAudioProcessor::getTotalTimeInSeconds() const
 {
     if (isTracking)

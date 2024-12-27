@@ -56,7 +56,6 @@ public:
     //==============================================================================
     void startTracking();
     void stopTracking();
-    void clearTracking();
 
     juce::int64 getTotalTimeInSeconds() const;
     bool isTracking = false;
