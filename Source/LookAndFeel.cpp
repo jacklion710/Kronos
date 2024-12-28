@@ -6,15 +6,10 @@ KronosLookAndFeel::KronosLookAndFeel()
     // Load the ASTERA font from binary data
     auto typeface = juce::Typeface::createSystemTypefaceFor(BinaryData::ASTERA_ttf, BinaryData::ASTERA_ttfSize);
     
-    // Debug check to ensure font loaded
+    // Check to ensure font loaded
     if (typeface != nullptr)
     {
         asteraTypeface = typeface;
-        DBG("Successfully loaded ASTERA font!");
-    }
-    else
-    {
-        DBG("Failed to load ASTERA font!");
     }
 
     // Set initial color scheme (dark mode by default)

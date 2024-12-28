@@ -40,10 +40,15 @@ KronosAudioProcessor::~KronosAudioProcessor()
 
 void KronosAudioProcessor::startTracking()
 {
-    if (!isTracking)
+    if (!isTracking && !isSuspended())
     {
-        startTime = juce::Time::getCurrentTime();
         isTracking = true;
+        startTime = juce::Time::getCurrentTime();
+        startTimer(1000);
+        
+        // Save state immediately after changing it
+        juce::MemoryBlock state;
+        getStateInformation(state);
     }
 }
 
@@ -51,9 +56,14 @@ void KronosAudioProcessor::stopTracking()
 {
     if (isTracking)
     {
+        isTracking = false;
         auto currentTime = juce::Time::getCurrentTime();
         totalTimeInSeconds += (currentTime - startTime).inSeconds();
-        isTracking = false;
+        stopTimer();
+        
+        // Save state immediately after changing it
+        juce::MemoryBlock state;
+        getStateInformation(state);
     }
 }
 
@@ -139,7 +149,11 @@ void KronosAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 void KronosAudioProcessor::releaseResources()
 {
     // When the plugin is released (project closed/plugin removed)
-    stopTracking();
+    if (isTracking)
+    {
+        juce::MemoryBlock state;
+        getStateInformation(state);
+    }
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -211,13 +225,21 @@ juce::AudioProcessorEditor* KronosAudioProcessor::createEditor()
 //==============================================================================
 void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    // Create a ValueTree to store our state
+    // Add debouncing
+    auto now = juce::Time::getCurrentTime();
+    if ((now - lastSaveTime).inMilliseconds() < minimumSaveIntervalMs)
+    {
+        return;
+    }
+    lastSaveTime = now;
+
     juce::ValueTree state("KronosState");
     
-    // Store the total time
+    state.setProperty("isTracking", isTracking, nullptr);
     state.setProperty("totalTimeInSeconds", totalTimeInSeconds, nullptr);
+    state.setProperty("darkMode", darkModeEnabled, nullptr);
     
-    // Save session dates as ISO8601 strings
+    // Save session dates
     juce::StringArray dateStrings;
     for (auto& date : sessionDates)
     {
@@ -225,25 +247,34 @@ void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
     }
     state.setProperty("sessionDates", dateStrings.joinIntoString(";"), nullptr);
     
-    // Save dark mode state
-    state.setProperty("darkMode", darkModeEnabled, nullptr);
-    
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
 
 void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
-    // Get XML from binary data
     std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
     
     if (xml.get() != nullptr)
     {
-        // Convert XML back to ValueTree
         juce::ValueTree state = juce::ValueTree::fromXml(*xml);
         
-        // Restore the total time
+        // Stop any current timing operations
+        stopTimer();
+        
+        // Load total time first
         totalTimeInSeconds = state.getProperty("totalTimeInSeconds", (juce::int64)0);
+        
+        // Load play/pause state
+        bool newTrackingState = state.getProperty("isTracking", false);
+        
+        isTracking = newTrackingState;
+        
+        if (isTracking && !isSuspended())
+        {
+            startTime = juce::Time::getCurrentTime();
+            startTimer(1000);
+        }
         
         // Load session dates
         sessionDates.clear();
@@ -268,6 +299,11 @@ void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes
         
         // Always add today's date when loading
         addSessionDate();
+        
+        if (onStateLoaded)
+        {
+            onStateLoaded();
+        }
     }
 }
 
@@ -280,11 +316,10 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 void KronosAudioProcessor::suspendProcessing(bool shouldSuspend)
 {
-    // When the plugin is suspended (project closed/plugin disabled)
     if (shouldSuspend)
     {
-        // Save the current time and stop tracking
-        stopTracking();
+        juce::MemoryBlock state;
+        getStateInformation(state);
     }
 }
 
@@ -326,3 +361,7 @@ void KronosAudioProcessor::setDarkMode(bool isDark)
     darkModeEnabled = isDark;
 }
 
+bool KronosAudioProcessor::isSuspended() const
+{
+    return AudioProcessor::isSuspended();
+}

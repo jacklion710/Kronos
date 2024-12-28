@@ -61,12 +61,18 @@ public:
     bool isTracking = true;  // Start tracking by default
 
     void suspendProcessing(bool shouldSuspend);
-    void timerCallback();
+    void timerCallback() override;
 
     const juce::Array<juce::Time>& getSessionDates() const { return sessionDates; }
 
     void setDarkMode(bool isDark);
     bool isDarkMode() const { return darkModeEnabled; }
+
+    // Add the callback
+    std::function<void()> onStateLoaded;
+
+    // Fix isSuspended by removing the implementation from header
+    bool isSuspended() const;
 
 private:
     //==============================================================================
@@ -80,4 +86,7 @@ private:
     void addSessionDate();  // Helper function to add today's date
 
     bool darkModeEnabled = true;  // Default to dark mode
+
+    juce::Time lastSaveTime;
+    const int minimumSaveIntervalMs = 100; // Minimum time between saves
 };
