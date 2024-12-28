@@ -14,8 +14,9 @@
 KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    // Apply the custom look and feel
+    // Apply the custom look and feel and set initial theme
     setLookAndFeel(&customLookAndFeel);
+    customLookAndFeel.setDarkMode(audioProcessor.isDarkMode());
     
     // Create fonts
     auto asteraFontLarge = juce::Font(36.0f);
@@ -47,6 +48,17 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
             audioProcessor.startTracking();
             playPauseButton.setButtonText("||");
         }
+    };
+    
+    // Initialize theme toggle button
+    addAndMakeVisible(themeToggleButton);
+    themeToggleButton.setButtonText(audioProcessor.isDarkMode() ? "L" : "D");
+    themeToggleButton.onClick = [this]() {
+        bool isDark = customLookAndFeel.isDarkMode();
+        customLookAndFeel.setDarkMode(!isDark);
+        audioProcessor.setDarkMode(!isDark);  // Save the state
+        themeToggleButton.setButtonText(!isDark ? "L" : "D");
+        repaint();
     };
     
     // Set a fixed size for our editor
@@ -109,6 +121,12 @@ void KronosAudioProcessorEditor::resized()
     {
         dateLabels[i].setBounds(bounds.removeFromTop(dateHeight));
     }
+
+    // Position theme toggle button in bottom right
+    auto buttonSize = 30;
+    themeToggleButton.setBounds(getWidth() - buttonSize - margin,
+                               getHeight() - buttonSize - margin,
+                               buttonSize, buttonSize);
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
@@ -124,13 +142,14 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
     // Add a border
-    g.setColour(juce::Colours::white);
+    g.setColour(getLookAndFeel().findColour(KronosLookAndFeel::outlineColourId));
     g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(5.0f), 10.0f, 2.0f);
 
     // Add a title with ASTERA font
     auto asteraFont = juce::Font(20.0f);
     asteraFont.setTypefaceName("ASTERA");
     g.setFont(asteraFont);
+    g.setColour(getLookAndFeel().findColour(juce::Label::textColourId));
     g.drawText("KRONOS", getLocalBounds().removeFromTop(50),
                juce::Justification::centred, true);
 }

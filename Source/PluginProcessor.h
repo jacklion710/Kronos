@@ -65,6 +65,9 @@ public:
 
     const juce::Array<juce::Time>& getSessionDates() const { return sessionDates; }
 
+    void setDarkMode(bool isDark);
+    bool isDarkMode() const { return darkModeEnabled; }
+
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KronosAudioProcessor)
@@ -75,4 +78,6 @@ private:
     // Array to store session dates
     juce::Array<juce::Time> sessionDates;
     void addSessionDate();  // Helper function to add today's date
+
+    bool darkModeEnabled = true;  // Default to dark mode
 };

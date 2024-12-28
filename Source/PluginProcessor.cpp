@@ -28,6 +28,7 @@ KronosAudioProcessor::KronosAudioProcessor()
     startTime = juce::Time::getCurrentTime();
     isTracking = true;
     totalTimeInSeconds = 0;
+    darkModeEnabled = true;  // Set default dark mode
     startTimer(1000);
     addSessionDate();
 }
@@ -224,6 +225,9 @@ void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
     }
     state.setProperty("sessionDates", dateStrings.joinIntoString(";"), nullptr);
     
+    // Save dark mode state
+    state.setProperty("darkMode", darkModeEnabled, nullptr);
+    
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
@@ -258,6 +262,9 @@ void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes
                 }
             }
         }
+        
+        // Load dark mode state
+        darkModeEnabled = state.getProperty("darkMode", true);
         
         // Always add today's date when loading
         addSessionDate();
@@ -312,5 +319,10 @@ void KronosAudioProcessor::addSessionDate()
         if (sessionDates.size() > 10)   // Keep only last 10 sessions
             sessionDates.removeLast();
     }
+}
+
+void KronosAudioProcessor::setDarkMode(bool isDark)
+{
+    darkModeEnabled = isDark;
 }
 
