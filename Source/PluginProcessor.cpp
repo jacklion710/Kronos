@@ -247,6 +247,14 @@ void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
     }
     state.setProperty("sessionDates", dateStrings.joinIntoString(";"), nullptr);
     
+    // Save time per date
+    juce::String timePerDateString;
+    for (juce::HashMap<juce::String, juce::int64>::Iterator i(timePerDate); i.next();)
+    {
+        timePerDateString += i.getKey() + "=" + juce::String(i.getValue()) + ";";
+    }
+    state.setProperty("timePerDate", timePerDateString, nullptr);
+    
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
@@ -328,12 +336,18 @@ void KronosAudioProcessor::timerCallback()
     if (isTracking)
     {
         totalTimeInSeconds++;
+        
+        // Update today's time
+        auto today = juce::Time::getCurrentTime();
+        juce::String dateKey = today.formatted("%Y-%m-%d");
+        timePerDate.set(dateKey, timePerDate[dateKey] + 1);
     }
 }
 
 void KronosAudioProcessor::addSessionDate()
 {
     auto today = juce::Time::getCurrentTime();
+    juce::String dateKey = today.formatted("%Y-%m-%d");
     
     // Check if we already have today's date
     bool dateExists = false;
@@ -364,4 +378,10 @@ void KronosAudioProcessor::setDarkMode(bool isDark)
 bool KronosAudioProcessor::isSuspended() const
 {
     return AudioProcessor::isSuspended();
+}
+
+juce::int64 KronosAudioProcessor::getTimeForDate(const juce::Time& date) const
+{
+    juce::String dateKey = date.formatted("%Y-%m-%d");
+    return timePerDate[dateKey];
 }

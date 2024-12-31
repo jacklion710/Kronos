@@ -74,6 +74,11 @@ public:
     // Fix isSuspended by removing the implementation from header
     bool isSuspended() const;
 
+    // Map to store time spent per date
+    juce::HashMap<juce::String, juce::int64> timePerDate;
+
+    juce::int64 getTimeForDate(const juce::Time& date) const;
+
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KronosAudioProcessor)

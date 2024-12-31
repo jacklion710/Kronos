@@ -79,13 +79,21 @@ void KronosAudioProcessorEditor::timerCallback()
                      (int)hours, (int)minutes, (int)seconds), 
                      juce::dontSendNotification);
     
-    // Update date labels with MM-DD-YYYY format
+    // Update date labels with MM-DD-YYYY and time
     auto& dates = audioProcessor.getSessionDates();
     for (int i = 0; i < 3; ++i)
     {
         if (i < dates.size())
         {
-            dateLabels[i].setText(dates[i].formatted("%m-%d-%Y"), 
+            auto dateSeconds = audioProcessor.getTimeForDate(dates[i]);
+            auto dateHours = dateSeconds / 3600;
+            auto dateMinutes = (dateSeconds % 3600) / 60;
+            dateSeconds = dateSeconds % 60;
+            
+            juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
+                                 (int)dateHours, (int)dateMinutes, (int)dateSeconds);
+            
+            dateLabels[i].setText(dates[i].formatted("%m-%d-%Y") + " - " + timeStr,
                                 juce::dontSendNotification);
         }
         else
