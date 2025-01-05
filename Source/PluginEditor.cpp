@@ -146,12 +146,41 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
 
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    // Fill background
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    // Draw custom metallic border
+    auto bounds = getLocalBounds().toFloat();
+    float borderThickness = 4.0f;
+    
+    // Create gradient for border with multiple points for sine-wave like effect
+    juce::ColourGradient borderGradient(
+        juce::Colour(130, 130, 130),  // Light grey (bottom left)
+        bounds.getBottomLeft(),
+        juce::Colour(130, 130, 130),  // Light grey (top right)
+        bounds.getTopRight(),
+        false
+    );
+    
+    // Add intermediate points for the sine-wave like effect
+    borderGradient.addColour(0.25, juce::Colour(40, 40, 40));    // Dark (first quarter)
+    borderGradient.addColour(0.5, juce::Colour(40, 40, 40));     // Dark (middle)
+    borderGradient.addColour(0.75, juce::Colour(130, 130, 130)); // Light (third quarter)
+    
+    // Draw border with gradient
+    g.setGradientFill(borderGradient);
+    g.drawRect(bounds, borderThickness);
 
-    // Add a border
-    g.setColour(getLookAndFeel().findColour(KronosLookAndFeel::outlineColourId));
-    g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(5.0f), 10.0f, 2.0f);
+    // Load and draw background SVG slightly inset
+    auto backgroundSvg = juce::Drawable::createFromImageData(BinaryData::Background_svg, 
+                                                           BinaryData::Background_svgSize);
+    if (backgroundSvg != nullptr)
+    {
+        float padding = borderThickness + 1.0f;
+        auto paddedBounds = bounds.reduced(padding);
+        
+        backgroundSvg->drawWithin(g, paddedBounds, 
+                                juce::RectanglePlacement::centred | 
+                                juce::RectanglePlacement::stretchToFit, 
+                                1.0f);
+    }
 
     // Add a title with ASTERA font
     auto asteraFont = juce::Font(20.0f);
