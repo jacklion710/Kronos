@@ -39,14 +39,32 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     
     // Initialize play/pause button
     addAndMakeVisible(playPauseButton);
-    playPauseButton.setButtonText(audioProcessor.isTracking ? "||" : ">");
+    playPauseButton.setButtonText(""); // Clear text as we'll use images
+
+    // Load SVG assets
+    std::unique_ptr<juce::Drawable> playSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_svg, 
+                                                                                 BinaryData::Play_Button_svgSize);
+    std::unique_ptr<juce::Drawable> pauseSvg = juce::Drawable::createFromImageData(BinaryData::Pause_Button_svg, 
+                                                                                  BinaryData::Pause_Button_svgSize);
+
+    // Make button background transparent
+    playPauseButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    playPauseButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+
+    // Store the drawables in the button
+    playPauseButton.setImages(playSvg.get(), nullptr, nullptr, nullptr, 
+                             pauseSvg.get());
+
+    // Set initial state
+    playPauseButton.setToggleState(audioProcessor.isTracking, juce::dontSendNotification);
+
     playPauseButton.onClick = [this]() {
         if (audioProcessor.isTracking) {
             audioProcessor.stopTracking();
-            playPauseButton.setButtonText(">");
+            playPauseButton.setToggleState(false, juce::dontSendNotification);
         } else {
             audioProcessor.startTracking();
-            playPauseButton.setButtonText("||");
+            playPauseButton.setToggleState(true, juce::dontSendNotification);
         }
     };
     
@@ -120,6 +138,7 @@ void KronosAudioProcessorEditor::resized()
     auto timeDisplayBounds = bounds.removeFromTop(buttonHeight);
     
     // Position play/pause button to the left of the time display
+    auto buttonSize = 70;
     playPauseButton.setBounds(timeDisplayBounds.removeFromLeft(playPauseWidth));
     timeDisplayBounds.removeFromLeft(margin); // Add some space between button and time
     timeLabel.setBounds(timeDisplayBounds);
@@ -131,10 +150,13 @@ void KronosAudioProcessorEditor::resized()
     }
 
     // Position theme toggle button in bottom right
-    auto buttonSize = 30;
     themeToggleButton.setBounds(getWidth() - buttonSize - margin,
                                getHeight() - buttonSize - margin,
                                buttonSize, buttonSize);
+
+    // Position the play/pause button
+    // int buttonSize = 40;
+    playPauseButton.setBounds(20, getHeight() / 2 - buttonSize / 2, buttonSize, buttonSize);
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
