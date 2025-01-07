@@ -204,7 +204,20 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                                 1.0f);
     }
 
-    // Add a title with ASTERA font
+    // Load and draw header SVG
+    auto headerSvg = juce::Drawable::createFromImageData(BinaryData::header_svg, 
+                                                        BinaryData::header_svgSize);
+    if (headerSvg != nullptr)
+    {
+        // Calculate header area (adjust these values as needed)
+        auto headerArea = bounds.removeFromTop(50);
+        headerSvg->drawWithin(g, headerArea, 
+                            juce::RectanglePlacement::centred | 
+                            juce::RectanglePlacement::stretchToFit, 
+                            1.0f);
+    }
+
+    // Draw title text on top of header SVG
     auto asteraFont = juce::Font(20.0f);
     asteraFont.setTypefaceName("ASTERA");
     g.setFont(asteraFont);
