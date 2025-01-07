@@ -124,39 +124,39 @@ void KronosAudioProcessorEditor::timerCallback()
 void KronosAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
-    auto buttonHeight = 40;
+    auto buttonHeight = 30;
     auto margin = 10;
     auto dateHeight = 20;
-    auto titleHeight = 50;  // Space for title
-    auto playPauseWidth = 40;  // Width for the play/pause button
+    auto titleHeight = 50;
+    auto playPauseWidth = 40;
 
     // Title area
-    bounds.removeFromTop(titleHeight);  // Reserve space for title
-    bounds.removeFromTop(margin * 2);   // Extra space after title
+    bounds.removeFromTop(titleHeight);
+    bounds.removeFromTop(margin * 2);
 
     // Time display area
     auto timeDisplayBounds = bounds.removeFromTop(buttonHeight);
+    timeDisplayBounds = timeDisplayBounds.withSizeKeepingCentre(timeDisplayBounds.getWidth(), buttonHeight);
     
-    // Position play/pause button to the left of the time display
-    auto buttonSize = 70;
     playPauseButton.setBounds(timeDisplayBounds.removeFromLeft(playPauseWidth));
-    timeDisplayBounds.removeFromLeft(margin); // Add some space between button and time
+    timeDisplayBounds.removeFromLeft(margin);
     timeLabel.setBounds(timeDisplayBounds);
+
+    // Move dates to bottom section
+    auto bottomSection = bounds.removeFromBottom(100);  // Reserve space for previous sessions
+    bottomSection.removeFromBottom(margin);  // Add some padding at the bottom
     
-    bounds.removeFromTop(margin);
+    // Position date labels in the bottom section
     for (int i = 0; i < 3; ++i)
     {
-        dateLabels[i].setBounds(bounds.removeFromTop(dateHeight));
+        dateLabels[i].setBounds(bottomSection.removeFromTop(dateHeight));
     }
 
-    // Position theme toggle button in bottom right
+    // Position theme toggle button
+    auto buttonSize = 50;
     themeToggleButton.setBounds(getWidth() - buttonSize - margin,
                                getHeight() - buttonSize - margin,
                                buttonSize, buttonSize);
-
-    // Position the play/pause button
-    // int buttonSize = 40;
-    playPauseButton.setBounds(20, getHeight() / 2 - buttonSize / 2, buttonSize, buttonSize);
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
@@ -204,12 +204,52 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                                 1.0f);
     }
 
+    // Load and draw Time Display SVG
+    auto timeDisplaySvg = juce::Drawable::createFromImageData(BinaryData::Time_Display_svg, 
+                                                            BinaryData::Time_Display_svgSize);
+    if (timeDisplaySvg != nullptr)
+    {
+        auto timeDisplayArea = timeLabel.getBounds().toFloat();
+        
+        float desiredWidth = 150.0f;
+        float desiredHeight = 50.0f;
+        
+        float x = timeDisplayArea.getCentreX() - (desiredWidth / 2.0f);
+        float y = timeDisplayArea.getCentreY() - (desiredHeight / 2.0f);
+        
+        juce::Rectangle<float> scaledArea(x, y, desiredWidth, desiredHeight);
+        
+        timeDisplaySvg->drawWithin(g, scaledArea,
+                                 juce::RectanglePlacement::centred | 
+                                 juce::RectanglePlacement::stretchToFit,
+                                 1.0f);
+    }
+
+    // Load and draw Previous Sessions SVG
+    auto previousSessionsSvg = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_svg, 
+                                                                 BinaryData::Previous_Sessions_svgSize);
+    if (previousSessionsSvg != nullptr)
+    {
+        // Create area for previous sessions at bottom
+        float desiredWidth = 300.0f;  // Adjust as needed
+        float desiredHeight = 100.0f;  // Adjust as needed
+        
+        float x = getWidth() / 2.0f - (desiredWidth / 2.0f);
+        float y = getHeight() - desiredHeight - 10.0f;  // 10px from bottom
+        
+        juce::Rectangle<float> sessionsArea(x, y, desiredWidth, desiredHeight);
+        
+        previousSessionsSvg->drawWithin(g, sessionsArea,
+                                      juce::RectanglePlacement::centred | 
+                                      juce::RectanglePlacement::stretchToFit,
+                                      1.0f);
+    }
+
     // Load and draw header SVG
     auto headerSvg = juce::Drawable::createFromImageData(BinaryData::header_svg, 
-                                                        BinaryData::header_svgSize);
+                                                       BinaryData::header_svgSize);
     if (headerSvg != nullptr)
     {
-        // Calculate header area (adjust these values as needed)
         auto headerArea = bounds.removeFromTop(50);
         headerSvg->drawWithin(g, headerArea, 
                             juce::RectanglePlacement::centred | 
