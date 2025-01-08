@@ -1,0 +1,2 @@
+Resources/*.svg filter=lfs diff=lfs merge=lfs -text
+Resources/*.ttf filter=lfs diff=lfs merge=lfs -text
