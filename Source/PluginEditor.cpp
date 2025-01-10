@@ -80,7 +80,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     };
     
     // Set a fixed size for our editor
-    setSize(400, 300);
+    setSize(600, 450);
     
     // Start the timer for updates
     startTimerHz(1);
@@ -124,27 +124,41 @@ void KronosAudioProcessorEditor::timerCallback()
 void KronosAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
-    auto buttonHeight = 30;
+    auto buttonHeight = 60;
     auto margin = 10;
     auto dateHeight = 20;
-    auto titleHeight = 50;
-    auto playPauseWidth = 40;
+    auto titleHeight = 80;
+    auto playPauseWidth = 60;
 
     // Title area
     bounds.removeFromTop(titleHeight);
-    bounds.removeFromTop(margin * 2);
+    bounds.removeFromTop(margin * 6);  // Space before time display
 
     // Time display area
-    auto timeDisplayBounds = bounds.removeFromTop(buttonHeight);
-    timeDisplayBounds = timeDisplayBounds.withSizeKeepingCentre(timeDisplayBounds.getWidth(), buttonHeight);
+    auto timeDisplayBounds = bounds.removeFromTop(buttonHeight * 2.5);  // Even taller area
     
-    playPauseButton.setBounds(timeDisplayBounds.removeFromLeft(playPauseWidth));
-    timeDisplayBounds.removeFromLeft(margin);
-    timeLabel.setBounds(timeDisplayBounds);
+    // Calculate center positions
+    auto centerX = getWidth() / 2;
+    auto timeWidth = 400.0f;  // Increased time display width
+    
+    // Position play button halfway between window edge and time display
+    auto timeDisplayLeft = centerX - (timeWidth / 2);
+    auto playButtonX = timeDisplayLeft / 2 - (playPauseWidth / 2);  // Center in left space
+    auto playButtonY = timeDisplayBounds.getCentreY() - (buttonHeight / 2);
+    playPauseButton.setBounds(playButtonX, playButtonY, playPauseWidth, buttonHeight);
 
-    // Move dates to bottom section
-    auto bottomSection = bounds.removeFromBottom(100);  // Reserve space for previous sessions
-    bottomSection.removeFromBottom(margin);  // Add some padding at the bottom
+    // Center time label
+    auto timeLabelWidth = timeWidth - margin * 2;
+    auto timeLabelHeight = buttonHeight * 2;     // Taller for bigger display
+    timeLabel.setBounds(centerX - (timeLabelWidth / 2),
+                       timeDisplayBounds.getCentreY() - (timeLabelHeight / 2),
+                       timeLabelWidth,
+                       timeLabelHeight);
+
+    // Move dates even further down
+    auto bottomSection = bounds.removeFromBottom(140);  // Keep this the same
+    bottomSection.removeFromTop(margin * 6);  // Increased from 4 to 6 margins for more space
+    bottomSection.removeFromBottom(margin);
     
     // Position date labels in the bottom section
     for (int i = 0; i < 3; ++i)
@@ -204,15 +218,15 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                                 1.0f);
     }
 
-    // Load and draw Time Display SVG
+    // Time Display SVG - stretched vertically
     auto timeDisplaySvg = juce::Drawable::createFromImageData(BinaryData::Time_Display_svg, 
                                                             BinaryData::Time_Display_svgSize);
     if (timeDisplaySvg != nullptr)
     {
         auto timeDisplayArea = timeLabel.getBounds().toFloat();
         
-        float desiredWidth = 150.0f;
-        float desiredHeight = 50.0f;
+        float desiredWidth = 400.0f;
+        float desiredHeight = 170.0f;  // Increased from 150 to stretch vertically
         
         float x = timeDisplayArea.getCentreX() - (desiredWidth / 2.0f);
         float y = timeDisplayArea.getCentreY() - (desiredHeight / 2.0f);
@@ -246,22 +260,28 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     }
 
     // Load and draw header SVG
-    auto headerSvg = juce::Drawable::createFromImageData(BinaryData::header_svg, 
-                                                       BinaryData::header_svgSize);
+    auto headerSvg = juce::Drawable::createFromImageData(BinaryData::Header_svg,
+                                                       BinaryData::Header_svgSize);
     if (headerSvg != nullptr)
     {
-        auto headerArea = bounds.removeFromTop(50);
-        headerSvg->drawWithin(g, headerArea, 
-                            juce::RectanglePlacement::centred | 
-                            juce::RectanglePlacement::stretchToFit, 
+        auto headerArea = bounds.removeFromTop(80);
+        float originalWidth = 400.0f;
+        float originalHeight = 60.0f;
+        
+        float x = (getWidth() - originalWidth) / 2.0f;
+        float y = 10.0f;
+        
+        juce::Rectangle<float> headerBounds(x, y, originalWidth, originalHeight);
+        headerSvg->drawWithin(g, headerBounds, 
+                            juce::RectanglePlacement::centred, 
                             1.0f);
     }
 
-    // Draw title text on top of header SVG
-    auto asteraFont = juce::Font(20.0f);
+    // Draw title text - adjusted position and size
+    auto asteraFont = juce::Font(24.0f);  // Increased from 20.0f
     asteraFont.setTypefaceName("ASTERA");
     g.setFont(asteraFont);
     g.setColour(getLookAndFeel().findColour(juce::Label::textColourId));
-    g.drawText("KRONOS", getLocalBounds().removeFromTop(50),
+    g.drawText("KRONOS", juce::Rectangle<int>(0, 17, getWidth(), 50),  // Moved from 15 to 17
                juce::Justification::centred, true);
 }

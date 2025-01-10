@@ -8,16 +8,14 @@
   <MAINGROUP id="BaOmXI" name="Kronos">
     <GROUP id="{95DFCBFD-71F4-784F-99EE-B168B870A2CB}" name="Assets">
       <FILE id="ZBCR1v" name="ASTERA.ttf" compile="0" resource="1" file="Resources/ASTERA.ttf"/>
-      <FILE id="DXeYLm" name="Background.svg" compile="0" resource="1" file="Resources/Background.svg"/>
-      <FILE id="tSxa99" name="header.svg" compile="0" resource="1" file="Resources/header.svg"/>
-      <FILE id="RmcYPs" name="Kronos geometry 2-01.svg" compile="0" resource="1"
-            file="Resources/Kronos geometry 2-01.svg"/>
-      <FILE id="MUE6mQ" name="Pause Button.svg" compile="0" resource="1"
+      <FILE id="CCtCk6" name="Background.svg" compile="0" resource="1" file="Resources/Background.svg"/>
+      <FILE id="Kpr26r" name="Header.svg" compile="0" resource="1" file="Resources/Header.svg"/>
+      <FILE id="EC0pwJ" name="Pause Button.svg" compile="0" resource="1"
             file="Resources/Pause Button.svg"/>
-      <FILE id="krugDS" name="Play Button.svg" compile="0" resource="1" file="Resources/Play Button.svg"/>
-      <FILE id="md7lX4" name="Previous Sessions.svg" compile="0" resource="1"
+      <FILE id="aYCBui" name="Play Button.svg" compile="0" resource="1" file="Resources/Play Button.svg"/>
+      <FILE id="lzIC29" name="Previous Sessions.svg" compile="0" resource="1"
             file="Resources/Previous Sessions.svg"/>
-      <FILE id="OdbLBE" name="Time Display.svg" compile="0" resource="1"
+      <FILE id="I6UjBk" name="Time Display.svg" compile="0" resource="1"
             file="Resources/Time Display.svg"/>
     </GROUP>
     <GROUP id="{3F17D307-FD11-C3B5-9773-A8098DD394F4}" name="Source">
