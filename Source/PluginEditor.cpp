@@ -25,9 +25,17 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     asteraFontSmall.setTypefaceName("ASTERA");
     
     // Add the time label
-    addAndMakeVisible(timeLabel);
-    timeLabel.setFont(asteraFontLarge);
-    timeLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(hoursLabel);
+    addAndMakeVisible(minutesLabel);
+    addAndMakeVisible(secondsLabel);
+
+    hoursLabel.setFont(asteraFontLarge);
+    minutesLabel.setFont(asteraFontLarge);
+    secondsLabel.setFont(asteraFontLarge);
+
+    hoursLabel.setJustificationType(juce::Justification::centred);
+    minutesLabel.setJustificationType(juce::Justification::centred);
+    secondsLabel.setJustificationType(juce::Justification::centred);
     
     // Setup date labels
     for (int i = 0; i < 3; ++i)
@@ -93,9 +101,12 @@ void KronosAudioProcessorEditor::timerCallback()
     auto minutes = (seconds % 3600) / 60;
     seconds = seconds % 60;
     
-    timeLabel.setText(juce::String::formatted("%02d:%02d:%02d", 
-                     (int)hours, (int)minutes, (int)seconds), 
-                     juce::dontSendNotification);
+    hoursLabel.setText(juce::String::formatted("%02d", (int)hours), 
+                      juce::dontSendNotification);
+    minutesLabel.setText(juce::String::formatted("%02d", (int)minutes), 
+                        juce::dontSendNotification);
+    secondsLabel.setText(juce::String::formatted("%02d", (int)seconds), 
+                        juce::dontSendNotification);
     
     // Update date labels with MM-DD-YYYY and time
     auto& dates = audioProcessor.getSessionDates();
@@ -132,11 +143,11 @@ void KronosAudioProcessorEditor::resized()
 
     // Title area
     bounds.removeFromTop(titleHeight);
-    bounds.removeFromTop(margin * 6);  // Space before time display
+    bounds.removeFromTop(margin * 3);
 
-    // Time display area
-    auto timeDisplayBounds = bounds.removeFromTop(buttonHeight * 2.5);  // Even taller area
-    
+    // Time display area - store the bounds
+    timeDisplayBounds = bounds.removeFromTop(buttonHeight * 2.5);  // Store in member variable
+
     // Calculate center positions
     auto centerX = getWidth() / 2;
     auto timeWidth = 400.0f;  // Increased time display width
@@ -144,16 +155,31 @@ void KronosAudioProcessorEditor::resized()
     // Position play button halfway between window edge and time display
     auto timeDisplayLeft = centerX - (timeWidth / 2);
     auto playButtonX = timeDisplayLeft / 2 - (playPauseWidth / 2);  // Center in left space
-    auto playButtonY = timeDisplayBounds.getCentreY() - (buttonHeight / 2);
+    auto playButtonY = timeDisplayBounds.getCentreY() - (buttonHeight / 3.3);
     playPauseButton.setBounds(playButtonX, playButtonY, playPauseWidth, buttonHeight);
 
     // Center time label
     auto timeLabelWidth = timeWidth - margin * 2;
     auto timeLabelHeight = buttonHeight * 2;     // Taller for bigger display
-    timeLabel.setBounds(centerX - (timeLabelWidth / 2),
-                       timeDisplayBounds.getCentreY() - (timeLabelHeight / 2),
-                       timeLabelWidth,
-                       timeLabelHeight);
+    auto timeDisplayArea = timeDisplayBounds.toFloat();
+    auto labelWidth = timeLabelWidth / 3;  // Split into thirds
+    auto labelHeight = timeLabelHeight;
+
+    // Position the labels within the time display
+    hoursLabel.setBounds(centerX - timeLabelWidth/2,
+                        timeDisplayBounds.getCentreY() - (labelHeight / 2),
+                        labelWidth,
+                        labelHeight);
+
+    minutesLabel.setBounds(centerX - labelWidth/2,
+                          timeDisplayBounds.getCentreY() - (labelHeight / 2),
+                          labelWidth,
+                          labelHeight);
+
+    secondsLabel.setBounds(centerX + timeLabelWidth/2 - labelWidth,
+                          timeDisplayBounds.getCentreY() - (labelHeight / 2),
+                          labelWidth,
+                          labelHeight);
 
     // Move dates even further down
     auto bottomSection = bounds.removeFromBottom(140);  // Keep this the same
@@ -218,18 +244,17 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                                 1.0f);
     }
 
-    // Time Display SVG - stretched vertically
+    // Time Display SVG - position independently from labels
     auto timeDisplaySvg = juce::Drawable::createFromImageData(BinaryData::Time_Display_svg, 
                                                             BinaryData::Time_Display_svgSize);
     if (timeDisplaySvg != nullptr)
     {
-        auto timeDisplayArea = timeLabel.getBounds().toFloat();
-        
         float desiredWidth = 400.0f;
-        float desiredHeight = 170.0f;  // Increased from 150 to stretch vertically
+        float desiredHeight = 170.0f;
         
-        float x = timeDisplayArea.getCentreX() - (desiredWidth / 2.0f);
-        float y = timeDisplayArea.getCentreY() - (desiredHeight / 2.0f);
+        // Position SVG relative to window rather than labels
+        float x = getWidth()/2 - desiredWidth/2;
+        float y = timeDisplayBounds.getCentreY() - desiredHeight/2;  // You can adjust this Y value
         
         juce::Rectangle<float> scaledArea(x, y, desiredWidth, desiredHeight);
         

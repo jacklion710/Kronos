@@ -33,11 +33,16 @@ private:
 
     KronosLookAndFeel customLookAndFeel;
 
-    juce::Label timeLabel;
+    juce::Label hoursLabel;
+    juce::Label minutesLabel;
+    juce::Label secondsLabel;
+
     juce::Label dateLabels[3];  // Labels for recent dates
 
     juce::DrawableButton playPauseButton {"PlayPauseButton", juce::DrawableButton::ButtonStyle::ImageFitted};
     juce::TextButton themeToggleButton;
+
+    juce::Rectangle<int> timeDisplayBounds;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
