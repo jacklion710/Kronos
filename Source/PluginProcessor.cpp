@@ -30,8 +30,12 @@ KronosAudioProcessor::KronosAudioProcessor()
     totalTimeInSeconds = 0;
     darkModeEnabled = true;  // Set default dark mode
     startTimer(1000);
-    addSessionDate();
+
+#if USE_DUMMY_DATES
     addDummyDates();
+#else
+    addSessionDate();
+#endif
 }
 
 KronosAudioProcessor::~KronosAudioProcessor()
