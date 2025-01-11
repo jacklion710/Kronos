@@ -172,6 +172,12 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     hoursLabel.setName("TimeLabel");
     minutesLabel.setName("TimeLabel");
     secondsLabel.setName("TimeLabel");
+
+    // Set names for date labels
+    for (auto& label : dateLabels)
+    {
+        label.setName("DateLabel");
+    }
 }
 
 void KronosAudioProcessorEditor::timerCallback()

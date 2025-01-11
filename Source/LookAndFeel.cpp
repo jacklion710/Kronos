@@ -117,8 +117,8 @@ void KronosLookAndFeel::GlowingLabelLookAndFeel::drawLabel(juce::Graphics& g, ju
 
 void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
 {
-    // Check if this is a time label (hours, minutes, seconds)
-    if (label.getName().contains("TimeLabel"))
+    // Check if this is a time label or date label
+    if (label.getName().contains("TimeLabel") || label.getName().contains("DateLabel"))
     {
         auto bounds = label.getLocalBounds().toFloat();
         auto text = label.getText();
@@ -132,7 +132,7 @@ void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
         g.setFont(font);
         
         // Multiple offset positions for stroke effect
-        float strokeSize = 1.25f;
+        float strokeSize = label.getName().contains("TimeLabel") ? 1.25f : 0.75f; // Smaller stroke for date labels
         float positions[][2] = {
             {-strokeSize, -strokeSize},
             {-strokeSize, strokeSize},
