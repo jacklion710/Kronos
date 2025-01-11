@@ -102,6 +102,14 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     
     // Start the timer for updates
     startTimerHz(1);
+
+    addAndMakeVisible(sortModeButton);
+    sortModeButton.setButtonText("Sort by Time");
+    sortModeButton.onClick = [this]() {
+        audioProcessor.toggleDateSortMode();
+        updateSortButtonText();
+        updateDateLabels();
+    };
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -207,6 +215,14 @@ void KronosAudioProcessorEditor::resized()
     themeToggleButton.setBounds(getWidth() - buttonSize - margin,
                                getHeight() - buttonSize - margin,
                                buttonSize, buttonSize);
+
+    // Position sort mode button (adjust these values as needed)
+    auto sortButtonWidth = 100;
+    auto sortButtonHeight = 30;  // Changed from buttonHeight to sortButtonHeight
+    sortModeButton.setBounds(margin, 
+                            getHeight() - sortButtonHeight - margin,
+                            sortButtonWidth, 
+                            sortButtonHeight);
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
@@ -337,4 +353,34 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(getLookAndFeel().findColour(juce::Label::textColourId));
     g.drawText("KRONOS", juce::Rectangle<int>(0, 17, getWidth(), 50),  // Moved from 15 to 17
                juce::Justification::centred, true);
+}
+
+void KronosAudioProcessorEditor::updateSortButtonText()
+{
+    if (audioProcessor.getDateSortMode() == KronosAudioProcessor::DateSortMode::MostRecent)
+        sortModeButton.setButtonText("Sort by Time");
+    else
+        sortModeButton.setButtonText("Sort by Date");
+}
+
+void KronosAudioProcessorEditor::updateDateLabels()
+{
+    auto dates = audioProcessor.getSortedDates();
+    
+    for (int i = 0; i < 3 && i < dates.size(); ++i)
+    {
+        auto date = dates[i];
+        auto timeSpent = audioProcessor.getTimeForDate(date);
+        auto hours = timeSpent / 3600;
+        auto minutes = (timeSpent % 3600) / 60;
+        auto seconds = timeSpent % 60;
+        
+        juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
+                                                      (int)hours, 
+                                                      (int)minutes, 
+                                                      (int)seconds);
+        
+        dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr, 
+                             juce::dontSendNotification);
+    }
 }

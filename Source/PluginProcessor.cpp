@@ -385,3 +385,32 @@ juce::int64 KronosAudioProcessor::getTimeForDate(const juce::Time& date) const
     juce::String dateKey = date.formatted("%Y-%m-%d");
     return timePerDate[dateKey];
 }
+
+void KronosAudioProcessor::toggleDateSortMode()
+{
+    currentSortMode = (currentSortMode == DateSortMode::MostRecent) ? 
+                      DateSortMode::MostTime : DateSortMode::MostRecent;
+}
+
+juce::Array<juce::Time> KronosAudioProcessor::getSortedDates() const
+{
+    juce::Array<juce::Time> sortedDates = sessionDates;
+    
+    if (currentSortMode == DateSortMode::MostTime)
+    {
+        auto* rawData = sortedDates.getRawDataPointer();
+        std::sort(rawData, rawData + sortedDates.size(), 
+            [this](const juce::Time& first, const juce::Time& second)
+            {
+                juce::String dateKeyA = first.formatted("%Y-%m-%d");
+                juce::String dateKeyB = second.formatted("%Y-%m-%d");
+                
+                juce::int64 timeA = timePerDate[dateKeyA];
+                juce::int64 timeB = timePerDate[dateKeyB];
+                
+                return timeA > timeB;
+            });
+    }
+    
+    return sortedDates;
+}

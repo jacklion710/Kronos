@@ -44,5 +44,10 @@ private:
 
     juce::Rectangle<int> timeDisplayBounds;
 
+    juce::TextButton sortModeButton;
+
+    void updateSortButtonText();
+    void updateDateLabels();
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
