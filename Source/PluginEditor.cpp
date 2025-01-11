@@ -543,40 +543,64 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
         maxTime = juce::jmax(maxTime, timeSpent);
     }
 
-    // Calculate total width for centering
-    float dateWidth = 120.0f;  // Width for date text
-    float dashWidth = 20.0f;   // Width for " - "
-    float maxBarWidth = 70.0f;
-    float totalWidth = dateWidth + dashWidth + maxBarWidth;
-    float startX = (getWidth() - totalWidth) / 2.0f;
+    // Get the bounds of the Previous Sessions panel
+    auto bounds = getLocalBounds();
+    auto bottomSection = bounds.removeFromBottom(140);
+    bottomSection.removeFromTop(margin * 6);
+    bottomSection.removeFromBottom(margin);
 
-    // Draw bars for up to 3 dates
-    for (int i = 0; i < juce::jmin(3, dates.size()); ++i)
+    // Draw bars for visible dates
+    for (int i = 0; i < 3; ++i)
     {
-        auto labelBounds = dateLabels[i].getBounds();
-        auto date = dates[i];
-        auto timeSpent = audioProcessor.getTimeForDate(date);
-        float ratio = getTimeRatio(timeSpent, maxTime);
+        int dateIndex = i + (int)(scrollOffset / dateHeight);
         
-        // Position date label
-        dateLabels[i].setBounds(startX, labelBounds.getY(), 
-                               dateWidth + dashWidth, labelBounds.getHeight());
-        dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
-                            juce::dontSendNotification);
-        
-        // Calculate bar position
-        float barHeight = 16.0f;
-        float x = startX + dateWidth + dashWidth;
-        float y = labelBounds.getCentreY() - (barHeight / 2);
-        float barWidth = juce::jmax(2.0f, ratio * maxBarWidth);
-        
-        // Draw bar background (darker charcoal)
-        g.setColour(juce::Colour(40, 40, 40));
-        g.fillRoundedRectangle(x, y, maxBarWidth, barHeight, 3.0f);
-        
-        // Draw actual bar (matching UI blue)
-        g.setColour(juce::Colour(64, 64, 255));  // Bright blue matching the UI accents
-        g.fillRoundedRectangle(x, y, barWidth, barHeight, 3.0f);
+        if (dateIndex < dates.size())
+        {
+            auto date = dates[dateIndex];
+            auto timeSpent = audioProcessor.getTimeForDate(date);
+            float ratio = getTimeRatio(timeSpent, maxTime);
+            
+            // Calculate bar position
+            float barHeight = 16.0f;
+            float maxBarWidth = 70.0f;
+            float dateWidth = 120.0f;
+            float dashWidth = 20.0f;
+            float totalWidth = dateWidth + dashWidth + maxBarWidth;
+            float startX = (getWidth() - totalWidth) / 2.0f;
+            
+            // Calculate Y position with scroll offset
+            float y = bottomSection.getY() + (i * dateHeight);
+            
+            // Only draw if within bounds
+            if (y >= bottomSection.getY() && y + barHeight <= bottomSection.getBottom())
+            {
+                // Position date label
+                dateLabels[i].setBounds(startX, y, dateWidth + dashWidth, dateHeight);
+                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
+                                    juce::dontSendNotification);
+                dateLabels[i].setVisible(true);
+                
+                // Draw bar background (darker charcoal)
+                float barX = startX + dateWidth + dashWidth;
+                g.setColour(juce::Colour(40, 40, 40));
+                g.fillRoundedRectangle(barX, y + (dateHeight - barHeight) / 2, 
+                                     maxBarWidth, barHeight, 3.0f);
+                
+                // Draw actual bar (matching UI blue)
+                float barWidth = juce::jmax(2.0f, ratio * maxBarWidth);
+                g.setColour(juce::Colour(64, 64, 255));
+                g.fillRoundedRectangle(barX, y + (dateHeight - barHeight) / 2, 
+                                     barWidth, barHeight, 3.0f);
+            }
+            else
+            {
+                dateLabels[i].setVisible(false);
+            }
+        }
+        else
+        {
+            dateLabels[i].setVisible(false);
+        }
     }
 }
 
