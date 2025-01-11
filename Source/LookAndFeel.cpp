@@ -78,3 +78,40 @@ void KronosLookAndFeel::setDarkMode(bool isDark)
     sendChangeMessage();
 }
 
+void KronosLookAndFeel::GlowingLabelLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
+{
+    auto bounds = label.getLocalBounds().toFloat();
+    auto text = label.getText();
+    auto font = label.getFont();
+
+    // Draw glow (multiple passes with decreasing alpha)
+    auto glowColor = juce::Colour(64, 64, 255).withAlpha(0.2f);
+    for (float i = 6; i > 0; --i)
+    {
+        g.setColour(glowColor.withAlpha(glowColor.getFloatAlpha() / i));
+        g.setFont(font);
+        auto glowBounds = bounds.expanded(i * 0.3f);
+        g.drawText(text, glowBounds, label.getJustificationType(), true);
+    }
+
+    // Draw multiple colored strokes for a neon effect
+    float strokeWidth = 0.8f;
+    
+    // Inner blue stroke with reduced alpha
+    g.setColour(juce::Colour(64, 64, 255).withAlpha(0.6f));
+    g.setFont(font);
+    for (float x = -strokeWidth; x <= strokeWidth; x += strokeWidth)
+        for (float y = -strokeWidth; y <= strokeWidth; y += strokeWidth)
+            if (x != 0 || y != 0)
+                g.drawText(text, bounds.translated(x, y), label.getJustificationType(), true);
+
+    // Outer white stroke with reduced alpha
+    g.setColour(juce::Colours::white.withAlpha(0.7f));
+    g.setFont(font);
+    g.drawText(text, bounds, label.getJustificationType(), true);
+
+    // Draw main text
+    g.setColour(label.findColour(juce::Label::textColourId));
+    g.drawText(text, bounds, label.getJustificationType(), true);
+}
+

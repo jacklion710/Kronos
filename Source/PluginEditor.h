@@ -68,5 +68,9 @@ private:
     juce::TextButton scrollUpButton;
     juce::TextButton scrollDownButton;
 
+    juce::Label hourUnitLabel;
+    juce::Label minuteUnitLabel;
+    juce::Label secondUnitLabel;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };

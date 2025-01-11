@@ -135,6 +135,39 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     visualModeButton.setButtonText(showBars ? "Show Times" : "Show Bars");
     
     updateSortButtonText(); // This will reflect the loaded sort mode
+
+    // Add the unit labels
+    addAndMakeVisible(hourUnitLabel);
+    addAndMakeVisible(minuteUnitLabel);
+    addAndMakeVisible(secondUnitLabel);
+
+    hourUnitLabel.setFont(asteraFontSmall.withHeight(18.0f));
+    minuteUnitLabel.setFont(asteraFontSmall.withHeight(18.0f));
+    secondUnitLabel.setFont(asteraFontSmall.withHeight(18.0f));
+
+    juce::Colour labelColor(0xE6, 0xE6, 0xFF);  // #E6E6FF
+    hourUnitLabel.setColour(juce::Label::textColourId, labelColor);
+    minuteUnitLabel.setColour(juce::Label::textColourId, labelColor);
+    secondUnitLabel.setColour(juce::Label::textColourId, labelColor);
+
+    hourUnitLabel.setJustificationType(juce::Justification::centred);
+    minuteUnitLabel.setJustificationType(juce::Justification::centred);
+    secondUnitLabel.setJustificationType(juce::Justification::centred);
+
+    hourUnitLabel.setText("HOURS", juce::dontSendNotification);
+    minuteUnitLabel.setText("MINUTES", juce::dontSendNotification);
+    secondUnitLabel.setText("SECONDS", juce::dontSendNotification);
+
+    juce::Colour textColor(0xE6, 0xE6, 0xFF);  // Slightly blue-tinted white (#E6E6FF)
+    
+    hoursLabel.setColour(juce::Label::textColourId, textColor);
+    minutesLabel.setColour(juce::Label::textColourId, textColor);
+    secondsLabel.setColour(juce::Label::textColourId, textColor);
+
+    // Apply glowing effect to unit labels
+    hourUnitLabel.setLookAndFeel(&customLookAndFeel.glowingLabelLookAndFeel);
+    minuteUnitLabel.setLookAndFeel(&customLookAndFeel.glowingLabelLookAndFeel);
+    secondUnitLabel.setLookAndFeel(&customLookAndFeel.glowingLabelLookAndFeel);
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -260,6 +293,25 @@ void KronosAudioProcessorEditor::resized()
                           labelWidth,
                           labelHeight);
 
+    // Position the unit labels above the time labels
+    float unitLabelHeight = 20;
+    float unitLabelOffset = 0; // Reduced from 35 to move labels down
+
+    hourUnitLabel.setBounds(hoursLabel.getX(),
+                           hoursLabel.getY() - unitLabelHeight - unitLabelOffset,
+                           hoursLabel.getWidth(),
+                           unitLabelHeight);
+
+    minuteUnitLabel.setBounds(minutesLabel.getX(),
+                             minutesLabel.getY() - unitLabelHeight - unitLabelOffset,
+                             minutesLabel.getWidth(),
+                             unitLabelHeight);
+
+    secondUnitLabel.setBounds(secondsLabel.getX(),
+                             secondsLabel.getY() - unitLabelHeight - unitLabelOffset,
+                             secondsLabel.getWidth(),
+                             unitLabelHeight);
+
     // Move dates section
     auto bottomSection = bounds.removeFromBottom(previousSessionsHeight);
     bottomSection.removeFromTop(margin * 5);  // Increased from 4 to move labels down
@@ -309,6 +361,12 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
     setLookAndFeel(nullptr);
     stopTimer();
     playPauseButton.onClick = nullptr;
+    hoursLabel.setLookAndFeel(nullptr);
+    minutesLabel.setLookAndFeel(nullptr);
+    secondsLabel.setLookAndFeel(nullptr);
+    hourUnitLabel.setLookAndFeel(nullptr);
+    minuteUnitLabel.setLookAndFeel(nullptr);
+    secondUnitLabel.setLookAndFeel(nullptr);
 }
 
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)
@@ -373,7 +431,7 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     if (timeDisplaySvg != nullptr)
     {
         float desiredWidth = 400.0f;
-        float desiredHeight = 170.0f;
+        float desiredHeight = 200.0f;  // Increased from 170.0f to make it taller
         
         float x = getWidth()/2 - desiredWidth/2;
         float y = timeDisplayBounds.getCentreY() - desiredHeight/2;

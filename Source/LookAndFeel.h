@@ -4,6 +4,12 @@
 class KronosLookAndFeel : public juce::LookAndFeel_V4, public juce::ChangeBroadcaster
 {
 public:
+    class GlowingLabelLookAndFeel : public juce::LookAndFeel_V4
+    {
+    public:
+        void drawLabel(juce::Graphics& g, juce::Label& label) override;
+    };
+
     enum ColourIds
     {
         outlineColourId = 0x2000000,  // Custom color ID starting at a safe value
@@ -17,6 +23,8 @@ public:
     // Add color scheme methods
     void setDarkMode(bool isDark);
     bool isDarkMode() const { return darkModeEnabled; }
+
+    GlowingLabelLookAndFeel glowingLabelLookAndFeel;
 
 private:
     void setupDarkColorScheme();
