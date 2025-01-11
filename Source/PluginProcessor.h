@@ -88,6 +88,9 @@ public:
     DateSortMode getDateSortMode() const { return currentSortMode; }
     juce::Array<juce::Time> getSortedDates() const;
 
+    bool isShowBarsEnabled() const { return showBarsEnabled; }
+    void setShowBarsEnabled(bool enabled) { showBarsEnabled = enabled; }
+
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KronosAudioProcessor)
@@ -105,4 +108,8 @@ private:
     const int minimumSaveIntervalMs = 100; // Minimum time between saves
 
     DateSortMode currentSortMode = DateSortMode::MostRecent;
+
+    void addDummyDates();
+
+    bool showBarsEnabled = false;
 };

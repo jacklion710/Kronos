@@ -117,6 +117,24 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     visualModeButton.onClick = [this]() {
         toggleVisualMode();
     };
+
+    // Add mouse listener
+    addMouseListener(this, true);
+
+    // Initialize scroll buttons with the smallest triangles
+    addAndMakeVisible(scrollUpButton);
+    addAndMakeVisible(scrollDownButton);
+    scrollUpButton.setButtonText(juce::CharPointer_UTF8("\xe2\x80\xb4"));    // SINGLE UP POINTING ANGLE QUOTATION MARK
+    scrollDownButton.setButtonText(juce::CharPointer_UTF8("\xe2\x80\xb7")); // SINGLE DOWN POINTING ANGLE QUOTATION MARK
+    
+    scrollUpButton.addListener(this);
+    scrollDownButton.addListener(this);
+
+    // Initialize visual states from processor
+    showBars = audioProcessor.isShowBarsEnabled();
+    visualModeButton.setButtonText(showBars ? "Show Times" : "Show Bars");
+    
+    updateSortButtonText(); // This will reflect the loaded sort mode
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -133,42 +151,63 @@ void KronosAudioProcessorEditor::timerCallback()
     secondsLabel.setText(juce::String::formatted("%02d", (int)seconds), 
                         juce::dontSendNotification);
     
-    // Update date labels with MM-DD-YYYY and time
+    // Get the bounds of the Previous Sessions panel
+    auto bounds = getLocalBounds();
+    auto bottomSection = bounds.removeFromBottom(140);
+    bottomSection.removeFromTop(margin * 6);
+    bottomSection.removeFromBottom(margin);
+    
+    // Update date labels with scrolling
     auto dates = audioProcessor.getSortedDates();
     for (int i = 0; i < 3; ++i)
     {
-        if (i < dates.size())
+        int dateIndex = i + (int)(scrollOffset / dateHeight);
+        
+        if (dateIndex < dates.size())
         {
-            auto date = dates[i];
+            auto date = dates[dateIndex];
             auto timeSpent = audioProcessor.getTimeForDate(date);
-            auto hours = timeSpent / 3600;
-            auto minutes = (timeSpent % 3600) / 60;
-            auto seconds = timeSpent % 60;
             
-            dateLabels[i].setVisible(true);
+            // Calculate position within the Previous Sessions panel
+            float y = bottomSection.getY() + (i * dateHeight);
             
             if (showBars)
             {
-                // Only show date and dash when in bar mode
+                float barWidth = 70.0f;
+                float startX = (getWidth() - barWidth) / 2.0f;
+                dateLabels[i].setBounds(startX - 100, y, 100, dateHeight);
                 dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
                                     juce::dontSendNotification);
             }
             else
             {
-                // Show full date and time when in time mode
+                auto hours = timeSpent / 3600;
+                auto minutes = (timeSpent % 3600) / 60;
+                auto seconds = timeSpent % 60;
                 juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
                                      (int)hours, (int)minutes, (int)seconds);
-                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr,
+                
+                float totalWidth = 250;
+                float startX = (getWidth() - totalWidth) / 2.0f;
+                dateLabels[i].setBounds(startX, y, totalWidth, dateHeight);
+                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr, 
                                     juce::dontSendNotification);
             }
+            
+            // Only show label if it's within the Previous Sessions panel
+            dateLabels[i].setVisible(y >= bottomSection.getY() && 
+                                   y + dateHeight <= bottomSection.getBottom());
         }
         else
         {
             dateLabels[i].setVisible(false);
         }
     }
-    
-    repaint();  // Always repaint to ensure proper update
+
+    if (showBars)
+    {
+        repaint();
+    }
 }
 
 void KronosAudioProcessorEditor::resized()
@@ -253,10 +292,19 @@ void KronosAudioProcessorEditor::resized()
                              getHeight() - stackedButtonHeight - stackedMargin,
                              stackedButtonWidth, 
                              stackedButtonHeight);
+
+    // Position scroll buttons closer to the Previous Sessions panel
+    int scrollButtonSize = 25;
+    int buttonX = getWidth() - scrollButtonSize - (margin * 11);  // Reduced margin further
+    int buttonsY = getHeight() - 140 + (margin * 6);  // Align with Previous Sessions panel
+    
+    scrollUpButton.setBounds(buttonX, buttonsY, scrollButtonSize, scrollButtonSize);
+    scrollDownButton.setBounds(buttonX, buttonsY + scrollButtonSize + 5, scrollButtonSize, scrollButtonSize);
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
 {
+    removeMouseListener(this);
     setLookAndFeel(nullptr);
     stopTimer();
     playPauseButton.onClick = nullptr;
@@ -326,13 +374,11 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
         float desiredWidth = 400.0f;
         float desiredHeight = 170.0f;
         
-        // Position SVG relative to window rather than labels
         float x = getWidth()/2 - desiredWidth/2;
-        float y = timeDisplayBounds.getCentreY() - desiredHeight/2;  // You can adjust this Y value
+        float y = timeDisplayBounds.getCentreY() - desiredHeight/2;
         
-        juce::Rectangle<float> scaledArea(x, y, desiredWidth, desiredHeight);
-        
-        timeDisplaySvg->drawWithin(g, scaledArea,
+        timeDisplaySvg->drawWithin(g, 
+                                 juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
                                  juce::RectanglePlacement::centred | 
                                  juce::RectanglePlacement::stretchToFit,
                                  1.0f);
@@ -363,15 +409,14 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                                                        BinaryData::Header_svgSize);
     if (headerSvg != nullptr)
     {
-        auto headerArea = bounds.removeFromTop(80);
         float originalWidth = 400.0f;
         float originalHeight = 60.0f;
         
         float x = (getWidth() - originalWidth) / 2.0f;
         float y = 10.0f;
         
-        juce::Rectangle<float> headerBounds(x, y, originalWidth, originalHeight);
-        headerSvg->drawWithin(g, headerBounds, 
+        headerSvg->drawWithin(g, 
+                            juce::Rectangle<float>(x, y, originalWidth, originalHeight),
                             juce::RectanglePlacement::centred, 
                             1.0f);
     }
@@ -440,6 +485,7 @@ void KronosAudioProcessorEditor::updateDateLabels()
 void KronosAudioProcessorEditor::toggleVisualMode()
 {
     showBars = !showBars;
+    audioProcessor.setShowBarsEnabled(showBars);  // Save state to processor
     visualModeButton.setButtonText(showBars ? "Show Times" : "Show Bars");
     
     // Calculate total width for centering
@@ -531,5 +577,49 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
         // Draw actual bar (matching UI blue)
         g.setColour(juce::Colour(64, 64, 255));  // Bright blue matching the UI accents
         g.fillRoundedRectangle(x, y, barWidth, barHeight, 3.0f);
+    }
+}
+
+void KronosAudioProcessorEditor::mouseWheelMove(const juce::MouseEvent& event, 
+                                               const juce::MouseWheelDetails& wheel)
+{
+    DBG("Mouse wheel moved: deltaY = " << wheel.deltaY);  // Debug output
+    
+    // Get the bounds of the Previous Sessions panel
+    auto bounds = getLocalBounds();
+    auto bottomSection = bounds.removeFromBottom(140);
+    bottomSection.removeFromTop(margin * 6);
+    bottomSection.removeFromBottom(margin);
+    
+    // Only handle scrolling if mouse is over the Previous Sessions area
+    if (bottomSection.contains(event.position.toInt()))
+    {
+        DBG("Mouse is in Previous Sessions area");  // Debug output
+        scrollOffset += wheel.deltaY * 20.0f;
+        constrainScrollOffset();
+        timerCallback();
+    }
+}
+
+void KronosAudioProcessorEditor::constrainScrollOffset()
+{
+    auto dates = audioProcessor.getSortedDates();
+    float maxScroll = juce::jmax(0.0f, (dates.size() - visibleDates) * dateHeight);
+    scrollOffset = juce::jlimit(0.0f, maxScroll, scrollOffset);
+}
+
+void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
+{
+    if (button == &scrollUpButton)
+    {
+        scrollOffset -= dateHeight;
+        constrainScrollOffset();
+        timerCallback();
+    }
+    else if (button == &scrollDownButton)
+    {
+        scrollOffset += dateHeight;
+        constrainScrollOffset();
+        timerCallback();
     }
 }

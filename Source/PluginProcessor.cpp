@@ -31,6 +31,7 @@ KronosAudioProcessor::KronosAudioProcessor()
     darkModeEnabled = true;  // Set default dark mode
     startTimer(1000);
     addSessionDate();
+    addDummyDates();
 }
 
 KronosAudioProcessor::~KronosAudioProcessor()
@@ -185,30 +186,14 @@ bool KronosAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 void KronosAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
+    // Clear any output channels that don't contain input data
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear(i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
+    // Process the audio...
 }
 
 //==============================================================================
@@ -238,6 +223,10 @@ void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
     state.setProperty("isTracking", isTracking, nullptr);
     state.setProperty("totalTimeInSeconds", totalTimeInSeconds, nullptr);
     state.setProperty("darkMode", darkModeEnabled, nullptr);
+    
+    // Add new state properties
+    state.setProperty("sortMode", (int)currentSortMode, nullptr);
+    state.setProperty("showBars", showBarsEnabled, nullptr);
     
     // Save session dates
     juce::StringArray dateStrings;
@@ -307,6 +296,13 @@ void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes
         
         // Always add today's date when loading
         addSessionDate();
+        
+        // Load sort mode and bars mode
+        if (state.hasProperty("sortMode"))
+            currentSortMode = (DateSortMode)(int)state.getProperty("sortMode");
+        
+        if (state.hasProperty("showBars"))
+            showBarsEnabled = state.getProperty("showBars");
         
         if (onStateLoaded)
         {
@@ -413,4 +409,25 @@ juce::Array<juce::Time> KronosAudioProcessor::getSortedDates() const
     }
     
     return sortedDates;
+}
+
+void KronosAudioProcessor::addDummyDates()
+{
+    // Clear existing dates for testing
+    sessionDates.clear();
+    timePerDate.clear();
+
+    // Add 10 dummy dates with different times
+    juce::Time baseDate = juce::Time::getCurrentTime();
+    
+    for (int i = 0; i < 10; ++i)
+    {
+        // Create dates going backwards from today
+        juce::Time date = baseDate - juce::RelativeTime::days(i);
+        sessionDates.add(date);
+        
+        // Add varying times (increasing pattern for testing)
+        juce::String dateKey = date.formatted("%Y-%m-%d");
+        timePerDate.set(dateKey, (i + 1) * 300);  // Varying seconds (5 min increments)
+    }
 }

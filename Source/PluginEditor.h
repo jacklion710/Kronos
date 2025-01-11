@@ -15,7 +15,7 @@
 //==============================================================================
 /**
 */
-class KronosAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Timer
+class KronosAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Timer, public juce::Button::Listener
 {
 public:
     KronosAudioProcessorEditor (KronosAudioProcessor&);
@@ -25,6 +25,9 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     void timerCallback() override;
+    void mouseWheelMove(const juce::MouseEvent& event, 
+                       const juce::MouseWheelDetails& wheel) override;
+    void buttonClicked(juce::Button* button) override;
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -54,6 +57,16 @@ private:
 
     void updateSortButtonText();
     void updateDateLabels();
+
+    float scrollOffset = 0.0f;
+    const float dateHeight = 30.0f;  // Height of each date entry
+    const int visibleDates = 3;      // Number of dates visible at once
+    const float margin = 10.0f;        // Standard margin size
+    
+    void constrainScrollOffset();     // Helper to keep scrolling in bounds
+
+    juce::TextButton scrollUpButton;
+    juce::TextButton scrollDownButton;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
