@@ -110,6 +110,13 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         updateSortButtonText();
         updateDateLabels();
     };
+
+    // Initialize visual mode toggle button
+    addAndMakeVisible(visualModeButton);
+    visualModeButton.setButtonText("Show Bars");
+    visualModeButton.onClick = [this]() {
+        toggleVisualMode();
+    };
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -127,27 +134,41 @@ void KronosAudioProcessorEditor::timerCallback()
                         juce::dontSendNotification);
     
     // Update date labels with MM-DD-YYYY and time
-    auto& dates = audioProcessor.getSessionDates();
+    auto dates = audioProcessor.getSortedDates();
     for (int i = 0; i < 3; ++i)
     {
         if (i < dates.size())
         {
-            auto dateSeconds = audioProcessor.getTimeForDate(dates[i]);
-            auto dateHours = dateSeconds / 3600;
-            auto dateMinutes = (dateSeconds % 3600) / 60;
-            dateSeconds = dateSeconds % 60;
+            auto date = dates[i];
+            auto timeSpent = audioProcessor.getTimeForDate(date);
+            auto hours = timeSpent / 3600;
+            auto minutes = (timeSpent % 3600) / 60;
+            auto seconds = timeSpent % 60;
             
-            juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
-                                 (int)dateHours, (int)dateMinutes, (int)dateSeconds);
+            dateLabels[i].setVisible(true);
             
-            dateLabels[i].setText(dates[i].formatted("%m-%d-%Y") + " - " + timeStr,
-                                juce::dontSendNotification);
+            if (showBars)
+            {
+                // Only show date and dash when in bar mode
+                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
+                                    juce::dontSendNotification);
+            }
+            else
+            {
+                // Show full date and time when in time mode
+                juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
+                                     (int)hours, (int)minutes, (int)seconds);
+                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr,
+                                    juce::dontSendNotification);
+            }
         }
         else
         {
-            dateLabels[i].setText("", juce::dontSendNotification);
+            dateLabels[i].setVisible(false);
         }
     }
+    
+    repaint();  // Always repaint to ensure proper update
 }
 
 void KronosAudioProcessorEditor::resized()
@@ -216,13 +237,22 @@ void KronosAudioProcessorEditor::resized()
                                getHeight() - buttonSize - margin,
                                buttonSize, buttonSize);
 
-    // Position sort mode button (adjust these values as needed)
-    auto sortButtonWidth = 100;
-    auto sortButtonHeight = 30;  // Changed from buttonHeight to sortButtonHeight
-    sortModeButton.setBounds(margin, 
-                            getHeight() - sortButtonHeight - margin,
-                            sortButtonWidth, 
-                            sortButtonHeight);
+    // Stack the buttons in the bottom left
+    auto stackedButtonWidth = 100;
+    auto stackedButtonHeight = 30;
+    auto stackedMargin = 10;
+    
+    // Sort button on top
+    sortModeButton.setBounds(stackedMargin, 
+                           getHeight() - (stackedButtonHeight * 2) - (stackedMargin * 2),
+                           stackedButtonWidth, 
+                           stackedButtonHeight);
+
+    // Visual mode button below
+    visualModeButton.setBounds(stackedMargin, 
+                             getHeight() - stackedButtonHeight - stackedMargin,
+                             stackedButtonWidth, 
+                             stackedButtonHeight);
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
@@ -353,6 +383,11 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(getLookAndFeel().findColour(juce::Label::textColourId));
     g.drawText("KRONOS", juce::Rectangle<int>(0, 17, getWidth(), 50),  // Moved from 15 to 17
                juce::Justification::centred, true);
+
+    if (showBars)
+    {
+        drawTimeBars(g);
+    }
 }
 
 void KronosAudioProcessorEditor::updateSortButtonText()
@@ -367,20 +402,134 @@ void KronosAudioProcessorEditor::updateDateLabels()
 {
     auto dates = audioProcessor.getSortedDates();
     
-    for (int i = 0; i < 3 && i < dates.size(); ++i)
+    for (int i = 0; i < 3; ++i)
     {
+        if (i < dates.size())
+        {
+            auto date = dates[i];
+            auto timeSpent = audioProcessor.getTimeForDate(date);
+            
+            if (showBars)
+            {
+                dateLabels[i].setVisible(false);
+            }
+            else
+            {
+                dateLabels[i].setVisible(true);
+                auto hours = timeSpent / 3600;
+                auto minutes = (timeSpent % 3600) / 60;
+                auto seconds = timeSpent % 60;
+                
+                juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
+                                                              (int)hours, 
+                                                              (int)minutes, 
+                                                              (int)seconds);
+                
+                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr, 
+                                     juce::dontSendNotification);
+            }
+        }
+        else
+        {
+            dateLabels[i].setVisible(false);
+        }
+    }
+    repaint();
+}
+
+void KronosAudioProcessorEditor::toggleVisualMode()
+{
+    showBars = !showBars;
+    visualModeButton.setButtonText(showBars ? "Show Times" : "Show Bars");
+    
+    // Calculate total width for centering
+    float dateWidth = 120.0f;  // Width for date text
+    float dashWidth = 20.0f;   // Width for " - "
+    float timeWidth = 110.0f;  // Width for time text (or bar)
+    float totalWidth = dateWidth + dashWidth + timeWidth;
+    float startX = (getWidth() - totalWidth) / 2.0f;
+
+    // Recalculate label bounds based on mode
+    auto dates = audioProcessor.getSortedDates();
+    for (int i = 0; i < 3; ++i)
+    {
+        if (i < dates.size())
+        {
+            auto labelY = dateLabels[i].getBounds().getY();
+            auto labelHeight = dateLabels[i].getBounds().getHeight();
+            
+            if (showBars)
+            {
+                // Shorter width for date + dash only
+                dateLabels[i].setBounds(startX, labelY, 
+                                      dateWidth + dashWidth, labelHeight);
+            }
+            else
+            {
+                // Full width for date + dash + time, centered
+                dateLabels[i].setBounds(startX, labelY, 
+                                      totalWidth, labelHeight);
+            }
+        }
+    }
+    
+    timerCallback();
+}
+
+float KronosAudioProcessorEditor::getTimeRatio(juce::int64 time, juce::int64 maxTime) const
+{
+    if (maxTime == 0) return 0.0f;
+    return static_cast<float>(time) / static_cast<float>(maxTime);
+}
+
+void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
+{
+    if (!showBars) return;  // Don't draw bars if we're showing times
+    
+    auto dates = audioProcessor.getSortedDates();
+    if (dates.isEmpty()) return;
+
+    // Find maximum time
+    juce::int64 maxTime = 0;
+    for (const auto& date : dates)
+    {
+        auto timeSpent = audioProcessor.getTimeForDate(date);
+        maxTime = juce::jmax(maxTime, timeSpent);
+    }
+
+    // Calculate total width for centering
+    float dateWidth = 120.0f;  // Width for date text
+    float dashWidth = 20.0f;   // Width for " - "
+    float maxBarWidth = 70.0f;
+    float totalWidth = dateWidth + dashWidth + maxBarWidth;
+    float startX = (getWidth() - totalWidth) / 2.0f;
+
+    // Draw bars for up to 3 dates
+    for (int i = 0; i < juce::jmin(3, dates.size()); ++i)
+    {
+        auto labelBounds = dateLabels[i].getBounds();
         auto date = dates[i];
         auto timeSpent = audioProcessor.getTimeForDate(date);
-        auto hours = timeSpent / 3600;
-        auto minutes = (timeSpent % 3600) / 60;
-        auto seconds = timeSpent % 60;
+        float ratio = getTimeRatio(timeSpent, maxTime);
         
-        juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
-                                                      (int)hours, 
-                                                      (int)minutes, 
-                                                      (int)seconds);
+        // Position date label
+        dateLabels[i].setBounds(startX, labelBounds.getY(), 
+                               dateWidth + dashWidth, labelBounds.getHeight());
+        dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
+                            juce::dontSendNotification);
         
-        dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr, 
-                             juce::dontSendNotification);
+        // Calculate bar position
+        float barHeight = 16.0f;
+        float x = startX + dateWidth + dashWidth;
+        float y = labelBounds.getCentreY() - (barHeight / 2);
+        float barWidth = juce::jmax(2.0f, ratio * maxBarWidth);
+        
+        // Draw bar background (darker charcoal)
+        g.setColour(juce::Colour(40, 40, 40));
+        g.fillRoundedRectangle(x, y, maxBarWidth, barHeight, 3.0f);
+        
+        // Draw actual bar (matching UI blue)
+        g.setColour(juce::Colour(64, 64, 255));  // Bright blue matching the UI accents
+        g.fillRoundedRectangle(x, y, barWidth, barHeight, 3.0f);
     }
 }

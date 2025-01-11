@@ -46,6 +46,12 @@ private:
 
     juce::TextButton sortModeButton;
 
+    bool showBars = false;
+    juce::TextButton visualModeButton;
+    void drawTimeBars(juce::Graphics& g);
+    void toggleVisualMode();
+    float getTimeRatio(juce::int64 time, juce::int64 maxTime) const;
+
     void updateSortButtonText();
     void updateDateLabels();
 
