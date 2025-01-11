@@ -115,3 +115,52 @@ void KronosLookAndFeel::GlowingLabelLookAndFeel::drawLabel(juce::Graphics& g, ju
     g.drawText(text, bounds, label.getJustificationType(), true);
 }
 
+void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
+{
+    // Check if this is a time label (hours, minutes, seconds)
+    if (label.getName().contains("TimeLabel"))
+    {
+        auto bounds = label.getLocalBounds().toFloat();
+        auto text = label.getText();
+        auto font = label.getFont();
+        
+        // Draw multiple layers for stroke effect
+        auto textArea = bounds.withSizeKeepingCentre(bounds.getWidth(), bounds.getHeight());
+        
+        // Draw stroke layers with a dark blue-grey color
+        g.setColour(juce::Colour(30, 50, 150));  // Dark blue-grey
+        g.setFont(font);
+        
+        // Multiple offset positions for stroke effect
+        float strokeSize = 1.25f;
+        float positions[][2] = {
+            {-strokeSize, -strokeSize},
+            {-strokeSize, strokeSize},
+            {strokeSize, -strokeSize},
+            {strokeSize, strokeSize},
+            {0, strokeSize},
+            {0, -strokeSize},
+            {strokeSize, 0},
+            {-strokeSize, 0}
+        };
+        
+        // Draw stroke positions
+        for (auto& pos : positions)
+        {
+            g.drawText(text, 
+                      textArea.translated(pos[0], pos[1]).toNearestInt(), 
+                      label.getJustificationType(), 
+                      true);
+        }
+        
+        // Draw main text
+        g.setColour(label.findColour(juce::Label::textColourId));
+        g.drawText(text, textArea.toNearestInt(), label.getJustificationType(), true);
+    }
+    else
+    {
+        // Default label drawing for other labels
+        LookAndFeel_V4::drawLabel(g, label);
+    }
+}
+

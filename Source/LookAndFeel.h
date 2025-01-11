@@ -26,6 +26,8 @@ public:
 
     GlowingLabelLookAndFeel glowingLabelLookAndFeel;
 
+    void drawLabel(juce::Graphics& g, juce::Label& label) override;
+
 private:
     void setupDarkColorScheme();
     void setupLightColorScheme();

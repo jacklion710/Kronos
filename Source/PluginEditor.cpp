@@ -168,6 +168,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     hourUnitLabel.setLookAndFeel(&customLookAndFeel.glowingLabelLookAndFeel);
     minuteUnitLabel.setLookAndFeel(&customLookAndFeel.glowingLabelLookAndFeel);
     secondUnitLabel.setLookAndFeel(&customLookAndFeel.glowingLabelLookAndFeel);
+
+    hoursLabel.setName("TimeLabel");
+    minutesLabel.setName("TimeLabel");
+    secondsLabel.setName("TimeLabel");
 }
 
 void KronosAudioProcessorEditor::timerCallback()
