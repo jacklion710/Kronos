@@ -9,6 +9,7 @@
     <GROUP id="{95DFCBFD-71F4-784F-99EE-B168B870A2CB}" name="Assets">
       <FILE id="ZBCR1v" name="ASTERA.ttf" compile="0" resource="1" file="Resources/ASTERA.ttf"/>
       <FILE id="CCtCk6" name="Background.svg" compile="0" resource="1" file="Resources/Background.svg"/>
+      <FILE id="RptXpV" name="Grit.jpg" compile="0" resource="1" file="Resources/Grit.jpg"/>
       <FILE id="Kpr26r" name="Header.svg" compile="0" resource="1" file="Resources/Header.svg"/>
       <FILE id="WTs6xv" name="Pause Button Pressed.svg" compile="0" resource="1"
             file="Resources/Pause Button Pressed.svg"/>

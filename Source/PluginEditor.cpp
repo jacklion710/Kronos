@@ -254,6 +254,24 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                                 1.0f);
     }
 
+    // Draw grit texture overlay
+    auto gritImage = juce::ImageCache::getFromMemory(BinaryData::Grit_jpg, 
+                                                    BinaryData::Grit_jpgSize);
+    if (gritImage.isValid())
+    {
+        // Create a copy of the image that we can modify
+        juce::Image gritCopy = gritImage.createCopy();
+        
+        // Adjust the alpha of the entire image
+        gritCopy.multiplyAllAlphas(0.035f);
+        
+        // Create a slightly reduced bounds to fit inside border
+        auto gritBounds = bounds.reduced(borderThickness + 1.0f);
+        
+        g.drawImage(gritCopy, gritBounds,
+                   juce::RectanglePlacement::stretchToFit);
+    }
+
     // Time Display SVG - position independently from labels
     auto timeDisplaySvg = juce::Drawable::createFromImageData(BinaryData::Time_Display_svg, 
                                                             BinaryData::Time_Display_svgSize);
