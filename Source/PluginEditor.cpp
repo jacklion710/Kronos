@@ -52,16 +52,26 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     // Load SVG assets
     std::unique_ptr<juce::Drawable> playSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_svg, 
                                                                                  BinaryData::Play_Button_svgSize);
+    std::unique_ptr<juce::Drawable> playPressedSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_Pressed_svg, 
+                                                                                        BinaryData::Play_Button_Pressed_svgSize);
     std::unique_ptr<juce::Drawable> pauseSvg = juce::Drawable::createFromImageData(BinaryData::Pause_Button_svg, 
                                                                                   BinaryData::Pause_Button_svgSize);
+    std::unique_ptr<juce::Drawable> pausePressedSvg = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_svg, 
+                                                                                         BinaryData::Pause_Button_Pressed_svgSize);
 
     // Make button background transparent
     playPauseButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
     playPauseButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
 
-    // Store the drawables in the button
-    playPauseButton.setImages(playSvg.get(), nullptr, nullptr, nullptr, 
-                             pauseSvg.get());
+    // Store the drawables in the button with their pressed states
+    playPauseButton.setImages(playSvg.get(),          // normal
+                             nullptr,                  // over (use normal)
+                             playPressedSvg.get(),     // down
+                             nullptr,                  // disabled (use normal)
+                             pauseSvg.get(),          // normal (on)
+                             nullptr,                  // over (on) (use normal)
+                             pausePressedSvg.get(),    // down (on)
+                             nullptr);                 // disabled (on) (use normal)
 
     // Set initial state
     playPauseButton.setToggleState(audioProcessor.isTracking, juce::dontSendNotification);
