@@ -295,9 +295,9 @@ void KronosAudioProcessorEditor::resized()
 
     // Position the unit labels above the time labels
     float unitLabelHeight = 20;
-    float unitLabelOffset = 0; // Reduced from 35 to move labels down
+    float unitLabelOffset = 0;
 
-    hourUnitLabel.setBounds(hoursLabel.getX(),
+    hourUnitLabel.setBounds(hoursLabel.getX() - 5,  // Nudged 5 pixels to the left
                            hoursLabel.getY() - unitLabelHeight - unitLabelOffset,
                            hoursLabel.getWidth(),
                            unitLabelHeight);
@@ -307,7 +307,7 @@ void KronosAudioProcessorEditor::resized()
                              minutesLabel.getWidth(),
                              unitLabelHeight);
 
-    secondUnitLabel.setBounds(secondsLabel.getX(),
+    secondUnitLabel.setBounds(secondsLabel.getX() + 2,
                              secondsLabel.getY() - unitLabelHeight - unitLabelOffset,
                              secondsLabel.getWidth(),
                              unitLabelHeight);
