@@ -153,8 +153,8 @@ void KronosAudioProcessorEditor::timerCallback()
     
     // Get the bounds of the Previous Sessions panel
     auto bounds = getLocalBounds();
-    auto bottomSection = bounds.removeFromBottom(140);
-    bottomSection.removeFromTop(margin * 6);
+    auto bottomSection = bounds.removeFromBottom(160);
+    bottomSection.removeFromTop(margin * 5);  // Match new top margin
     bottomSection.removeFromBottom(margin);
     
     // Update date labels with scrolling
@@ -215,16 +215,17 @@ void KronosAudioProcessorEditor::resized()
     auto bounds = getLocalBounds();
     auto buttonHeight = 60;
     auto margin = 10;
-    auto dateHeight = 20;
+    auto dateHeight = 25;  // Increased height remains
     auto titleHeight = 80;
     auto playPauseWidth = 60;
+    auto previousSessionsHeight = 160;
 
     // Title area
     bounds.removeFromTop(titleHeight);
     bounds.removeFromTop(margin * 3);
 
     // Time display area - store the bounds
-    timeDisplayBounds = bounds.removeFromTop(buttonHeight * 2.5);  // Store in member variable
+    timeDisplayBounds = bounds.removeFromTop(buttonHeight * 2.5);
 
     // Calculate center positions
     auto centerX = getWidth() / 2;
@@ -259,9 +260,9 @@ void KronosAudioProcessorEditor::resized()
                           labelWidth,
                           labelHeight);
 
-    // Move dates even further down
-    auto bottomSection = bounds.removeFromBottom(140);  // Keep this the same
-    bottomSection.removeFromTop(margin * 6);  // Increased from 4 to 6 margins for more space
+    // Move dates section
+    auto bottomSection = bounds.removeFromBottom(previousSessionsHeight);
+    bottomSection.removeFromTop(margin * 5);  // Increased from 4 to move labels down
     bottomSection.removeFromBottom(margin);
     
     // Position date labels in the bottom section
@@ -293,10 +294,10 @@ void KronosAudioProcessorEditor::resized()
                              stackedButtonWidth, 
                              stackedButtonHeight);
 
-    // Position scroll buttons closer to the Previous Sessions panel
+    // Adjust scroll button positions to match new label positions
     int scrollButtonSize = 25;
-    int buttonX = getWidth() - scrollButtonSize - (margin * 11);  // Reduced margin further
-    int buttonsY = getHeight() - 140 + (margin * 6);  // Align with Previous Sessions panel
+    int buttonX = getWidth() - scrollButtonSize - (margin * 11);
+    int buttonsY = getHeight() - previousSessionsHeight + (margin * 6);  // Keep at 11
     
     scrollUpButton.setBounds(buttonX, buttonsY, scrollButtonSize, scrollButtonSize);
     scrollDownButton.setBounds(buttonX, buttonsY + scrollButtonSize + 5, scrollButtonSize, scrollButtonSize);
@@ -389,9 +390,9 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                                                                  BinaryData::Previous_Sessions_svgSize);
     if (previousSessionsSvg != nullptr)
     {
-        // Create area for previous sessions at bottom
-        float desiredWidth = 300.0f;  // Adjust as needed
-        float desiredHeight = 100.0f;  // Adjust as needed
+        // Create taller area for previous sessions
+        float desiredWidth = 300.0f;
+        float desiredHeight = 140.0f;  // Increased from 100.0f to match new panel height
         
         float x = getWidth() / 2.0f - (desiredWidth / 2.0f);
         float y = getHeight() - desiredHeight - 10.0f;  // 10px from bottom
@@ -545,8 +546,8 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
 
     // Get the bounds of the Previous Sessions panel
     auto bounds = getLocalBounds();
-    auto bottomSection = bounds.removeFromBottom(140);
-    bottomSection.removeFromTop(margin * 6);
+    auto bottomSection = bounds.removeFromBottom(160);
+    bottomSection.removeFromTop(margin * 5);  // Match new top margin
     bottomSection.removeFromBottom(margin);
 
     // Draw bars for visible dates
