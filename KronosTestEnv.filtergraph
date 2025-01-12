@@ -12,7 +12,7 @@
         <BUS index="0" layout="disabled"/>
       </INPUTS>
       <OUTPUTS>
-        <BUS index="0" layout="L R"/>
+        <BUS index="0" layout="C"/>
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
@@ -34,7 +34,7 @@
   <FILTER uid="3" x="0.5" y="0.9" useARA="0">
     <PLUGIN name="Audio Output" descriptiveName="" format="Internal" category="I/O devices"
             manufacturer="JUCE" version="1.0" file="" uniqueId="724248cb"
-            isInstrument="0" fileTime="0" infoUpdateTime="0" numInputs="2"
+            isInstrument="0" fileTime="0" infoUpdateTime="0" numInputs="1"
             numOutputs="0" isShell="0" hasARAExtension="0" uid="724248cb"/>
     <STATE>0.</STATE>
     <LAYOUT>
@@ -61,14 +61,14 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="5" x="0.70625" y="0.2721774193548387" useARA="0" uiLastX_Normal="935"
-          uiLastY_Normal="237" uiopen_Normal="0">
+  <FILTER uid="5" x="0.70625" y="0.2730769230769231" useARA="0" uiLastX_Normal="948"
+          uiLastY_Normal="268" uiopen_Normal="0">
     <PLUGIN name="Kronos" format="VST3" category="Fx|Tools" manufacturer="Jack.Lion"
-            version="1.0.0" file="C:\Program Files\Common Files\VST3\Kronos.vst3\Contents\x86_64-win\Kronos.vst3"
-            uniqueId="f886c008" isInstrument="0" fileTime="193c2e2a155" infoUpdateTime="193c2e58c6d"
+            version="1.0.0" file="/Users/jacobleone/Library/Audio/Plug-Ins/VST3/Kronos.vst3"
+            uniqueId="f886c008" isInstrument="0" fileTime="193c767f05f" infoUpdateTime="194586a2113"
             numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
-            uid="e955ce71"/>
-    <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
+            uid="acf7765d"/>
+    <STATE>1032.VMjLg7+....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XSNv3hUMoFSmoGat3hKt7zJlcUXxEDZisVRxH1a3vVX3fjTLQmKogjYTwVXogiQY8FMwjENHIUUTkEUKMCR38TNtHzSKkjLgQGNwH1TQcEV5UkQH8VSGUEdEECVwsFag0FLogzcHIDR5giQic1cFU0avXUVIQSLTsVSwDFcQEiX3fDdLkGTS4DZtHTVmkjLZ0DNFk0ZvjFR2gjPHkGNrIldvnWXpUkUOglKogjYLcjV0MVaPcVRxHFNHIESn4BdhsVSxH1a3vVXDUjQisVSW8DZHMDS3Q0TKYGQSszcDMTU34RZNYGQo4jdhk1R34RdLMmKS0TMtLDS1fzPLgGUSsjcDM0R24xPUgmKo4jcDklS5IVZKgmK4wzbtLUS03xPLYCRCwDdTM0R1QzTKYmZCUEdtjlS1QTZNomXosDdtjGSy4xTMUiKCwjMHMDS3Q0TKYGQSsjclMTU34RZNYGQo4jdhk1R34RdLMmKS0TMtLDS1fzPLgGUSsjcDM0R1I1PUgmKo4jcDklS5IVZKgmK4wzbtLUS03xPLYCRCwDdTM0R1QzTKYGVCUEdtjlS1QTZNomXosDdtjGSy4xTMUiKCwjMHMDS3Q0TKYGQSsjcTMTU34RZNYGQo4jdhk1R34RdLMmKS0TMtLDS1fzPLgGUSsjcDM0R1A0PUgmKo4jcDklS5IVZKgmK4wzbtLUS03xPLYCRCwDdTM0R1QzTKYGSCUEdtjlS1QTZNomXosDdtjGSy4xTMUiKCwjMHMDS3Q0TKYGQSsjcHMTU34RZNYGQo4jdhk1R34RdLMmKS0TMtLDSn4hPi8FLVkETUwlXDUjQisFLogDdtjFSvnmPLcmdRwjc5kVS14RdNgmKowDL5IDS2omTLcmd4wDLDMES1fzPLgGUSsjcDM0R1gzTOkmKCwjcxkFS1gzTMMmKSwzbtjGS3fTdMYmK44DdtjFSvnmPLcmdBwjd5kFS54xPLYCRCwDdTM0R1QzTKYGUS8DdDMDS1IWZLYGRS0zbtLESy4RZMgCQC4jctjmS34RZLAidBwzc5IDSxn2TLAiKCwjMHMDS3Q0TKYGQSsjclM0S2gzPLYmbowjcHMUSy4xTLMmKS4DNpMDS1IWZHU2LC4hKt3hKt3hKt3hKlIUUMQUTPkzUZESQFM1ZQQEV5UjQtDDQlAEMAcEV40zQtDDQ14hK5EjKt3hKt3hKt3hRUACTEEzZh8VVWgkdUYTTmE0UXwyKIMzasA2atUlaz4COuX0TTMCTrU2Yo41TzEFck4C.</STATE>
     <LAYOUT>
       <INPUTS>
         <BUS index="0" layout="L R"/>
@@ -91,26 +91,7 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="7" x="0.57375" y="0.3165322580645161" useARA="0" uiLastX_Normal="407"
-          uiLastY_Normal="304" uiopen_Normal="0">
-    <PLUGIN name="vstPlayer" format="VST3" category="Instrument|Synth" manufacturer="Mirax Labs"
-            version="3.0.116" file="C:\Program Files\Common Files\VST3\vstPlayer.vst3"
-            uniqueId="8fdefd46" isInstrument="1" fileTime="18df7daad00" infoUpdateTime="193c2e58c6e"
-            numInputs="0" numOutputs="0" isShell="0" hasARAExtension="0"
-            uid="ee63cfc"/>
-    <STATE>662.VMjLgzn....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9PSLx3hUMczXWEjKt3hYt3hKt.kKt3hKt3BS5gEcyQjKtPjKmYTR5AkaA4hKtfjYikWTGIlKL4hK5EjKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKt3hKtXGcUMTRSgTaB4hKtXWdOMCLFElYXcUV30zUZUGMV8DZDk1R1gjPHsFMwfUcQYkVzMlUOgFUEUkQvHjSncSZOYlcCE1YMczXlQ0UZc0ZFkkdmY0SnY1PLYGRBgDLqYjTqsVLY4VTW8DZTMDS1gjPHY2cVgEM2YkV4EkLSQGLogzcHIDR3UkQhsVQFMFNHIDSn4BZiU2cVM1bUY0Sn4RZKYGUo0DdLMTS2wTZLomZC4DLtjFSxvTZHYlKWgELMcUVpASZHcGRBgTdq0VXoASZHYGRn8zMtbTXms1Qg8VSGMVcyLzS0YmUXkWTs8jKt3hKt3hKt3hKt3hRUACTEEzZh8VVWgkdUYTTmE0UX4BQP4hPqcjXm0jLh4BQP4xPt.0Qt3hKt3hKt3hKtQUUCUEQTg2ZrM1YQcUVDUjQicVP77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
-    <LAYOUT>
-      <INPUTS>
-        <BUS index="0" layout="L R"/>
-      </INPUTS>
-      <OUTPUTS>
-        <BUS index="0" layout="L R"/>
-      </OUTPUTS>
-    </LAYOUT>
-  </FILTER>
   <CONNECTION srcFilter="2" srcChannel="4096" dstFilter="6" dstChannel="4096"/>
   <CONNECTION srcFilter="6" srcChannel="0" dstFilter="3" dstChannel="0"/>
   <CONNECTION srcFilter="6" srcChannel="1" dstFilter="3" dstChannel="1"/>
-  <CONNECTION srcFilter="7" srcChannel="0" dstFilter="3" dstChannel="0"/>
-  <CONNECTION srcFilter="7" srcChannel="1" dstFilter="3" dstChannel="1"/>
 </FILTERGRAPH>

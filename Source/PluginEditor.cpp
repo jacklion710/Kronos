@@ -178,6 +178,52 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     {
         label.setName("DateLabel");
     }
+
+    menuButton.setButtonText("...");
+    addAndMakeVisible(menuButton);
+    menuButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
+    menuButton.setColour(juce::TextButton::textColourOffId, juce::Colour(0xE6, 0xE6, 0xFF));  // Match other text
+    menuButton.setColour(juce::TextButton::textColourOnId, juce::Colour(0xE6, 0xE6, 0xFF));   // Match when pressed
+    menuButton.setColour(juce::ComboBox::outlineColourId, juce::Colours::transparentBlack);    // Remove border
+    menuButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::transparentBlack);  // Remove press color
+    menuButton.onClick = [this]() {
+        juce::PopupMenu menu;
+        menu.setLookAndFeel(&customLookAndFeel);
+        menu.addItem(1, "About");
+        
+        menu.showMenuAsync(juce::PopupMenu::Options()
+            .withTargetComponent(&menuButton),
+            [this](int result) {
+                if (result == 1) // About was selected
+                {
+                    auto* window = new juce::AlertWindow(
+                        "About Kronos",
+                        "Kronos v1.0.0\n"
+                        "Created by Jack Lion\n"
+                        "https://jacklion.com\n\n"
+                        "https://jacklion.gumroad.com\n\n"
+                        ""
+                        "A simple time tracking plugin for your DAW.",
+                        juce::MessageBoxIconType::InfoIcon);
+                    
+                    window->addButton("Close", 0);
+                    window->setLookAndFeel(&customLookAndFeel);
+                    
+                    // Make the window larger with more padding
+                    window->setSize(400, 250);
+                    
+                    // Center on screen and make it modal
+                    window->centreAroundComponent(this, window->getWidth(), window->getHeight());
+                    window->setAlwaysOnTop(true);
+                    
+                    window->enterModalState(true, juce::ModalCallbackFunction::create(
+                        [window](int) {
+                            window->setLookAndFeel(nullptr);
+                            delete window;
+                        }), true);
+                }
+            });
+    };
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -363,6 +409,10 @@ void KronosAudioProcessorEditor::resized()
     
     scrollUpButton.setBounds(buttonX, buttonsY, scrollButtonSize, scrollButtonSize);
     scrollDownButton.setBounds(buttonX, buttonsY + scrollButtonSize + 5, scrollButtonSize, scrollButtonSize);
+
+    auto menuButtonSize = 30;
+    menuButton.setBounds(getWidth() - menuButtonSize - 10, 10, 
+                        menuButtonSize, menuButtonSize);
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
@@ -377,6 +427,7 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
     hourUnitLabel.setLookAndFeel(nullptr);
     minuteUnitLabel.setLookAndFeel(nullptr);
     secondUnitLabel.setLookAndFeel(nullptr);
+    menuButton.setLookAndFeel(nullptr);
 }
 
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)

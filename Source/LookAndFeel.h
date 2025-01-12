@@ -28,6 +28,20 @@ public:
 
     void drawLabel(juce::Graphics& g, juce::Label& label) override;
 
+    juce::Font getTextButtonFont(juce::TextButton&, int buttonHeight) override;
+
+    void drawPopupMenuItem(juce::Graphics&, const juce::Rectangle<int>& area,
+                          bool isSeparator, bool isActive, bool isHighlighted,
+                          bool isTicked, bool hasSubMenu, const juce::String& text,
+                          const juce::String& shortcutKeyText,
+                          const juce::Drawable* icon, const juce::Colour* textColour) override;
+
+    void drawPopupMenuBackground(juce::Graphics&, int width, int height) override;
+
+    void drawAlertBox(juce::Graphics&, juce::AlertWindow&, 
+                     const juce::Rectangle<int>& textArea, 
+                     juce::TextLayout&) override;
+
 private:
     void setupDarkColorScheme();
     void setupLightColorScheme();
