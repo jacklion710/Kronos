@@ -111,13 +111,6 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         updateDateLabels();
     };
 
-    // Initialize visual mode toggle button
-    addAndMakeVisible(visualModeButton);
-    visualModeButton.setButtonText("Show Bars");
-    visualModeButton.onClick = [this]() {
-        toggleVisualMode();
-    };
-
     // Add mouse listener
     addMouseListener(this, true);
 
@@ -129,12 +122,6 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     
     scrollUpButton.addListener(this);
     scrollDownButton.addListener(this);
-
-    // Initialize visual states from processor
-    showBars = audioProcessor.isShowBarsEnabled();
-    visualModeButton.setButtonText(showBars ? "Show Times" : "Show Bars");
-    
-    updateSortButtonText(); // This will reflect the loaded sort mode
 
     // Add the unit labels
     addAndMakeVisible(hourUnitLabel);
@@ -255,33 +242,15 @@ void KronosAudioProcessorEditor::timerCallback()
         if (dateIndex < dates.size())
         {
             auto date = dates[dateIndex];
-            auto timeSpent = audioProcessor.getTimeForDate(date);
             
             // Calculate position within the Previous Sessions panel
             float y = bottomSection.getY() + (i * dateHeight);
             
-            if (showBars)
-            {
-                float barWidth = 70.0f;
-                float startX = (getWidth() - barWidth) / 2.0f;
-                dateLabels[i].setBounds(startX - 100, y, 100, dateHeight);
-                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
-                                    juce::dontSendNotification);
-            }
-            else
-            {
-                auto hours = timeSpent / 3600;
-                auto minutes = (timeSpent % 3600) / 60;
-                auto seconds = timeSpent % 60;
-                juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
-                                     (int)hours, (int)minutes, (int)seconds);
-                
-                float totalWidth = 250;
-                float startX = (getWidth() - totalWidth) / 2.0f;
-                dateLabels[i].setBounds(startX, y, totalWidth, dateHeight);
-                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr, 
-                                    juce::dontSendNotification);
-            }
+            float barWidth = 70.0f;
+            float startX = (getWidth() - barWidth) / 2.0f;
+            dateLabels[i].setBounds(startX - 100, y, 100, dateHeight);
+            dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
+                                juce::dontSendNotification);
             
             // Only show label if it's within the Previous Sessions panel
             dateLabels[i].setVisible(y >= bottomSection.getY() && 
@@ -293,10 +262,8 @@ void KronosAudioProcessorEditor::timerCallback()
         }
     }
 
-    if (showBars)
-    {
-        repaint();
-    }
+    // Always draw the bars
+    repaint();
 }
 
 void KronosAudioProcessorEditor::resized()
@@ -329,7 +296,6 @@ void KronosAudioProcessorEditor::resized()
     // Center time label
     auto timeLabelWidth = timeWidth - margin * 2;
     auto timeLabelHeight = buttonHeight * 2;     // Taller for bigger display
-    auto timeDisplayArea = timeDisplayBounds.toFloat();
     auto labelWidth = timeLabelWidth / 3;  // Split into thirds
     auto labelHeight = timeLabelHeight;
 
@@ -395,12 +361,6 @@ void KronosAudioProcessorEditor::resized()
                            getHeight() - (stackedButtonHeight * 2) - (stackedMargin * 2),
                            stackedButtonWidth, 
                            stackedButtonHeight);
-
-    // Visual mode button below
-    visualModeButton.setBounds(stackedMargin, 
-                             getHeight() - stackedButtonHeight - stackedMargin,
-                             stackedButtonWidth, 
-                             stackedButtonHeight);
 
     // Adjust scroll button positions to match new label positions
     int scrollButtonSize = 25;
@@ -549,10 +509,8 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.drawText("KRONOS", juce::Rectangle<int>(0, 17, getWidth(), 50),  // Moved from 15 to 17
                juce::Justification::centred, true);
 
-    if (showBars)
-    {
-        drawTimeBars(g);
-    }
+    // Draw time bars unconditionally
+    drawTimeBars(g);
 }
 
 void KronosAudioProcessorEditor::updateSortButtonText()
@@ -574,25 +532,18 @@ void KronosAudioProcessorEditor::updateDateLabels()
             auto date = dates[i];
             auto timeSpent = audioProcessor.getTimeForDate(date);
             
-            if (showBars)
-            {
-                dateLabels[i].setVisible(false);
-            }
-            else
-            {
-                dateLabels[i].setVisible(true);
-                auto hours = timeSpent / 3600;
-                auto minutes = (timeSpent % 3600) / 60;
-                auto seconds = timeSpent % 60;
-                
-                juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
-                                                              (int)hours, 
-                                                              (int)minutes, 
-                                                              (int)seconds);
-                
-                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr, 
-                                     juce::dontSendNotification);
-            }
+            dateLabels[i].setVisible(true);
+            auto hours = timeSpent / 3600;
+            auto minutes = (timeSpent % 3600) / 60;
+            auto seconds = timeSpent % 60;
+            
+            juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
+                                                          (int)hours, 
+                                                          (int)minutes, 
+                                                          (int)seconds);
+            
+            dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr, 
+                                 juce::dontSendNotification);
         }
         else
         {
@@ -600,46 +551,6 @@ void KronosAudioProcessorEditor::updateDateLabels()
         }
     }
     repaint();
-}
-
-void KronosAudioProcessorEditor::toggleVisualMode()
-{
-    showBars = !showBars;
-    audioProcessor.setShowBarsEnabled(showBars);  // Save state to processor
-    visualModeButton.setButtonText(showBars ? "Show Times" : "Show Bars");
-    
-    // Calculate total width for centering
-    float dateWidth = 120.0f;  // Width for date text
-    float dashWidth = 20.0f;   // Width for " - "
-    float timeWidth = 110.0f;  // Width for time text (or bar)
-    float totalWidth = dateWidth + dashWidth + timeWidth;
-    float startX = (getWidth() - totalWidth) / 2.0f;
-
-    // Recalculate label bounds based on mode
-    auto dates = audioProcessor.getSortedDates();
-    for (int i = 0; i < 3; ++i)
-    {
-        if (i < dates.size())
-        {
-            auto labelY = dateLabels[i].getBounds().getY();
-            auto labelHeight = dateLabels[i].getBounds().getHeight();
-            
-            if (showBars)
-            {
-                // Shorter width for date + dash only
-                dateLabels[i].setBounds(startX, labelY, 
-                                      dateWidth + dashWidth, labelHeight);
-            }
-            else
-            {
-                // Full width for date + dash + time, centered
-                dateLabels[i].setBounds(startX, labelY, 
-                                      totalWidth, labelHeight);
-            }
-        }
-    }
-    
-    timerCallback();
 }
 
 float KronosAudioProcessorEditor::getTimeRatio(juce::int64 time, juce::int64 maxTime) const
@@ -650,8 +561,6 @@ float KronosAudioProcessorEditor::getTimeRatio(juce::int64 time, juce::int64 max
 
 void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
 {
-    if (!showBars) return;  // Don't draw bars if we're showing times
-    
     auto dates = audioProcessor.getSortedDates();
     if (dates.isEmpty()) return;
 
@@ -666,7 +575,7 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
     // Get the bounds of the Previous Sessions panel
     auto bounds = getLocalBounds();
     auto bottomSection = bounds.removeFromBottom(160);
-    bottomSection.removeFromTop(margin * 5);  // Match new top margin
+    bottomSection.removeFromTop(margin * 5);
     bottomSection.removeFromBottom(margin);
 
     // Draw bars for visible dates
@@ -680,18 +589,16 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
             auto timeSpent = audioProcessor.getTimeForDate(date);
             float ratio = getTimeRatio(timeSpent, maxTime);
             
-            // Calculate bar position
+            // Calculate positions
             float barHeight = 16.0f;
-            float maxBarWidth = 70.0f;
+            float maxBarWidth = 100.0f;  // Increased from 70.0f
             float dateWidth = 120.0f;
             float dashWidth = 20.0f;
             float totalWidth = dateWidth + dashWidth + maxBarWidth;
             float startX = (getWidth() - totalWidth) / 2.0f;
             
-            // Calculate Y position with scroll offset
             float y = bottomSection.getY() + (i * dateHeight);
             
-            // Only draw if within bounds
             if (y >= bottomSection.getY() && y + barHeight <= bottomSection.getBottom())
             {
                 // Position date label
@@ -700,17 +607,32 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
                                     juce::dontSendNotification);
                 dateLabels[i].setVisible(true);
                 
-                // Draw bar background (darker charcoal)
+                // Draw bar background
                 float barX = startX + dateWidth + dashWidth;
                 g.setColour(juce::Colour(40, 40, 40));
                 g.fillRoundedRectangle(barX, y + (dateHeight - barHeight) / 2, 
                                      maxBarWidth, barHeight, 3.0f);
                 
-                // Draw actual bar (matching UI blue)
+                // Draw actual bar
                 float barWidth = juce::jmax(2.0f, ratio * maxBarWidth);
                 g.setColour(juce::Colour(64, 64, 255));
                 g.fillRoundedRectangle(barX, y + (dateHeight - barHeight) / 2, 
                                      barWidth, barHeight, 3.0f);
+
+                // Format and draw time text
+                auto hours = timeSpent / 3600;
+                auto minutes = (timeSpent % 3600) / 60;
+                auto seconds = timeSpent % 60;
+                juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
+                                                             (int)hours, (int)minutes, (int)seconds);
+                
+                // Draw time text centered over the bar with slight vertical offset
+                g.setColour(juce::Colour(0xE6, 0xE6, 0xFF));  // Light blue-white color
+                g.setFont(juce::Font("ASTERA", 14.0f, juce::Font::plain));
+                float textY = y + (dateHeight - barHeight) / 2 + 2.0f; // Added 2.0f for slight downward adjustment
+                g.drawText(timeStr, barX, textY, 
+                          maxBarWidth, barHeight,
+                          juce::Justification::centred, true);
             }
             else
             {

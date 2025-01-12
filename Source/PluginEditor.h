@@ -29,6 +29,8 @@ public:
                        const juce::MouseWheelDetails& wheel) override;
     void buttonClicked(juce::Button* button) override;
 
+    void drawTimeBars(juce::Graphics& g);
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
@@ -49,10 +51,6 @@ private:
 
     juce::TextButton sortModeButton;
 
-    bool showBars = false;
-    juce::TextButton visualModeButton;
-    void drawTimeBars(juce::Graphics& g);
-    void toggleVisualMode();
     float getTimeRatio(juce::int64 time, juce::int64 maxTime) const;
 
     void updateSortButtonText();
