@@ -370,9 +370,12 @@ void KronosAudioProcessorEditor::resized()
     scrollUpButton.setBounds(buttonX, buttonsY, scrollButtonSize, scrollButtonSize);
     scrollDownButton.setBounds(buttonX, buttonsY + scrollButtonSize + 5, scrollButtonSize, scrollButtonSize);
 
+    // Position menu button in top-right corner
     auto menuButtonSize = 30;
-    menuButton.setBounds(getWidth() - menuButtonSize - 10, 10, 
-                        menuButtonSize, menuButtonSize);
+    menuButton.setBounds(getWidth() - menuButtonSize - 10,  // X position (10px from right)
+                        0.5,                                   // Y position (changed from 10 to 5)
+                        menuButtonSize, 
+                        menuButtonSize);
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
@@ -469,12 +472,11 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                                                                  BinaryData::Previous_Sessions_svgSize);
     if (previousSessionsSvg != nullptr)
     {
-        // Create taller area for previous sessions
         float desiredWidth = 300.0f;
-        float desiredHeight = 140.0f;  // Increased from 100.0f to match new panel height
+        float desiredHeight = 140.0f;
         
         float x = getWidth() / 2.0f - (desiredWidth / 2.0f);
-        float y = getHeight() - desiredHeight - 10.0f;  // 10px from bottom
+        float y = getHeight() - desiredHeight - 10.0f;
         
         juce::Rectangle<float> sessionsArea(x, y, desiredWidth, desiredHeight);
         
@@ -501,13 +503,45 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                             1.0f);
     }
 
-    // Draw title text - adjusted position and size
-    auto asteraFont = juce::Font(24.0f);  // Increased from 20.0f
+    // Draw title text with glow effect
+    auto asteraFont = juce::Font(24.0f);
     asteraFont.setTypefaceName("ASTERA");
     g.setFont(asteraFont);
-    g.setColour(getLookAndFeel().findColour(juce::Label::textColourId));
-    g.drawText("KRONOS", juce::Rectangle<int>(0, 17, getWidth(), 50),  // Moved from 15 to 17
-               juce::Justification::centred, true);
+    
+    auto titleBounds = juce::Rectangle<int>(0, 17, getWidth(), 50);
+    auto text = "KRONOS";
+    
+    // Draw stroke layers with a dark blue-grey color
+    g.setColour(juce::Colour(30, 50, 150));  // Dark blue-grey
+    
+    // Increased stroke size specifically for title
+    float strokeSize = 2.5f;  // Increased from 1.25f
+    float positions[][2] = {
+        {-strokeSize, -strokeSize},
+        {-strokeSize, strokeSize},
+        {strokeSize, -strokeSize},
+        {strokeSize, strokeSize},
+        {0, strokeSize},
+        {0, -strokeSize},
+        {strokeSize, 0},
+        {-strokeSize, 0},
+        // Add diagonal positions for thicker appearance
+        {-strokeSize * 0.7f, -strokeSize * 0.7f},
+        {-strokeSize * 0.7f, strokeSize * 0.7f},
+        {strokeSize * 0.7f, -strokeSize * 0.7f},
+        {strokeSize * 0.7f, strokeSize * 0.7f}
+    };
+    
+    // Draw stroke positions
+    for (auto& pos : positions)
+    {
+        auto offsetBounds = titleBounds.translated(pos[0], pos[1]);
+        g.drawText(text, offsetBounds, juce::Justification::centred, true);
+    }
+    
+    // Draw main text
+    g.setColour(juce::Colour(0xE6, 0xE6, 0xFF));  // Light blue-white color
+    g.drawText(text, titleBounds, juce::Justification::centred, true);
 
     // Draw time bars unconditionally
     drawTimeBars(g);

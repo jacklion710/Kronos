@@ -42,6 +42,11 @@ public:
                      const juce::Rectangle<int>& textArea, 
                      juce::TextLayout&) override;
 
+    juce::Font getAlertWindowMessageFont() override
+    {
+        return juce::Font(14.0f);
+    }
+
 private:
     void setupDarkColorScheme();
     void setupLightColorScheme();
