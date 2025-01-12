@@ -50,14 +50,14 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     playPauseButton.setButtonText(""); // Clear text as we'll use images
 
     // Load SVG assets
-    std::unique_ptr<juce::Drawable> playSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_svg, 
-                                                                                 BinaryData::Play_Button_svgSize);
-    std::unique_ptr<juce::Drawable> playPressedSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_Pressed_svg, 
-                                                                                        BinaryData::Play_Button_Pressed_svgSize);
-    std::unique_ptr<juce::Drawable> pauseSvg = juce::Drawable::createFromImageData(BinaryData::Pause_Button_svg, 
-                                                                                  BinaryData::Pause_Button_svgSize);
-    std::unique_ptr<juce::Drawable> pausePressedSvg = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_svg, 
-                                                                                         BinaryData::Pause_Button_Pressed_svgSize);
+    std::unique_ptr<juce::Drawable> playSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_Dark_svg, 
+                                                                                 BinaryData::Play_Button_Dark_svgSize);
+    std::unique_ptr<juce::Drawable> playPressedSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_Pressed_Dark_svg, 
+                                                                                        BinaryData::Play_Button_Pressed_Dark_svgSize);
+    std::unique_ptr<juce::Drawable> pauseSvg = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Dark_svg, 
+                                                                                  BinaryData::Pause_Button_Dark_svgSize);
+    std::unique_ptr<juce::Drawable> pausePressedSvg = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_Dark_svg, 
+                                                                                         BinaryData::Pause_Button_Pressed_Dark_svgSize);
 
     // Make button background transparent
     playPauseButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
@@ -418,8 +418,8 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.drawRect(bounds, borderThickness);
 
     // Load and draw background SVG slightly inset
-    auto backgroundSvg = juce::Drawable::createFromImageData(BinaryData::Background_svg, 
-                                                           BinaryData::Background_svgSize);
+    auto backgroundSvg = juce::Drawable::createFromImageData(BinaryData::Background_Dark_svg, 
+                                                           BinaryData::Background_Dark_svgSize);
     if (backgroundSvg != nullptr)
     {
         float padding = borderThickness + 1.0f;
@@ -450,8 +450,8 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     }
 
     // Time Display SVG - position independently from labels
-    auto timeDisplaySvg = juce::Drawable::createFromImageData(BinaryData::Time_Display_svg, 
-                                                            BinaryData::Time_Display_svgSize);
+    auto timeDisplaySvg = juce::Drawable::createFromImageData(BinaryData::Time_Display_Dark_svg, 
+                                                            BinaryData::Time_Display_Dark_svgSize);
     if (timeDisplaySvg != nullptr)
     {
         float desiredWidth = 400.0f;
@@ -468,8 +468,8 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     }
 
     // Load and draw Previous Sessions SVG
-    auto previousSessionsSvg = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_svg, 
-                                                                 BinaryData::Previous_Sessions_svgSize);
+    auto previousSessionsSvg = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_Dark_svg, 
+                                                                 BinaryData::Previous_Sessions_Dark_svgSize);
     if (previousSessionsSvg != nullptr)
     {
         float desiredWidth = 300.0f;
@@ -487,8 +487,8 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     }
 
     // Load and draw header SVG
-    auto headerSvg = juce::Drawable::createFromImageData(BinaryData::Header_svg,
-                                                       BinaryData::Header_svgSize);
+    auto headerSvg = juce::Drawable::createFromImageData(BinaryData::Header_Dark_svg,
+                                                       BinaryData::Header_Dark_svgSize);
     if (headerSvg != nullptr)
     {
         float originalWidth = 400.0f;
