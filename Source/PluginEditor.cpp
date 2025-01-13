@@ -47,7 +47,8 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     
     // Initialize play/pause button
     addAndMakeVisible(playPauseButton);
-    playPauseButton.setButtonText(""); // Clear text as we'll use images
+    playPauseButton.setButtonText("");
+    playPauseButton.addListener(this);  // Use the Button::Listener interface
 
     // Load SVG assets
     std::unique_ptr<juce::Drawable> playSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_Dark_svg, 
@@ -73,18 +74,19 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                              pausePressedSvg.get(),    // down (on)
                              nullptr);                 // disabled (on) (use normal)
 
-    // Set initial state
+    // Set initial toggle state based on processor
     playPauseButton.setToggleState(audioProcessor.isTracking, juce::dontSendNotification);
 
-    playPauseButton.onClick = [this]() {
-        if (audioProcessor.isTracking) {
-            audioProcessor.stopTracking();
-            playPauseButton.setToggleState(false, juce::dontSendNotification);
-        } else {
-            audioProcessor.startTracking();
-            playPauseButton.setToggleState(true, juce::dontSendNotification);
-        }
+    // Replace the onClick handler with mouseDown and mouseUp handlers
+    playPauseButton.onStateChange = [this]()
+    {
+        // This ensures the button's visual state matches its toggle state
+        repaint();
     };
+
+    playPauseButton.onClick = nullptr; // Remove old handler
+    
+    playPauseButton.addMouseListener(this, false);
     
     // Initialize theme toggle button
     addAndMakeVisible(themeToggleButton);
@@ -245,6 +247,28 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
 
 void KronosAudioProcessorEditor::timerCallback()
 {
+    if (isTransitioningButton)
+    {
+        isTransitioningButton = false;
+        
+        // Now actually toggle the tracking state
+        if (audioProcessor.isTracking)
+        {
+            audioProcessor.stopTracking();
+            playPauseButton.setToggleState(false, juce::dontSendNotification);
+        }
+        else
+        {
+            audioProcessor.startTracking();
+            playPauseButton.setToggleState(true, juce::dontSendNotification);
+        }
+            
+        // Restart the timer for regular updates
+        startTimerHz(1);
+        return;
+    }
+    
+    // Handle regular timer updates
     auto seconds = audioProcessor.getTotalTimeInSeconds();
     auto hours = seconds / 3600;
     auto minutes = (seconds % 3600) / 60;
@@ -719,16 +743,42 @@ void KronosAudioProcessorEditor::constrainScrollOffset()
 
 void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
 {
-    if (button == &scrollUpButton)
+    if (button == &playPauseButton && !isTransitioningButton)
     {
-        scrollOffset -= dateHeight;
-        constrainScrollOffset();
-        timerCallback();
+        // Set transitioning flag and start short timer
+        isTransitioningButton = true;
+        startTimer(50);  // 50ms delay to ensure pressed state is visible
+        
+        // Just let the button show its pressed state
+        // Don't toggle state yet - timer callback will handle it
+        return;
     }
-    else if (button == &scrollDownButton)
+    // ... handle other buttons ...
+}
+
+void KronosAudioProcessorEditor::mouseDown(const juce::MouseEvent& event)
+{
+    if (event.eventComponent == &playPauseButton)
     {
-        scrollOffset += dateHeight;
-        constrainScrollOffset();
-        timerCallback();
+        // Just let the button show its pressed state
+        // Don't take any action yet
+    }
+}
+
+void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
+{
+    if (event.eventComponent == &playPauseButton)
+    {
+        // Now handle the action and state change
+        if (audioProcessor.isTracking)
+        {
+            audioProcessor.stopTracking();
+            playPauseButton.setToggleState(false, juce::dontSendNotification);
+        }
+        else
+        {
+            audioProcessor.startTracking();
+            playPauseButton.setToggleState(true, juce::dontSendNotification);
+        }
     }
 }

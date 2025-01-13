@@ -31,6 +31,9 @@ public:
 
     void drawTimeBars(juce::Graphics& g);
 
+    void mouseDown(const juce::MouseEvent& event) override;
+    void mouseUp(const juce::MouseEvent& event) override;
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
@@ -86,6 +89,10 @@ private:
     juce::ColourGradient borderGradientCache;
 
     bool needsRepaint = true;
+
+    // Add this to track button state transition
+    bool isTransitioningButton = false;
+    const int buttonTransitionDelay = 50; // milliseconds
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
