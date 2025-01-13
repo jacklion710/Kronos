@@ -229,21 +229,42 @@ void KronosAudioProcessorEditor::timerCallback()
 {
     if (isTransitioningButton)
     {
-        isTransitioningButton = false;
+        DBG("Timer fired - Completing transition");
+        DBG("Current tracking state before action: " + juce::String(audioProcessor.isTracking ? "true" : "false"));
         
         // Now actually toggle the tracking state and immediately show opposite button
         if (audioProcessor.isTracking)
         {
+            DBG("Stopping tracking and switching to play button");
             audioProcessor.stopTracking();
             playPauseButton.setToggleState(false, juce::dontSendNotification);
+            playPauseButton.setImages(playSvgCache.get(),          // normal
+                                    nullptr,                        // over
+                                    playPressedSvgCache.get(),      // down
+                                    nullptr,                        // disabled
+                                    playSvgCache.get(),            // normal (on)
+                                    nullptr,                        // over (on)
+                                    playPressedSvgCache.get(),      // down (on)
+                                    nullptr);                       // disabled (on)
         }
         else
         {
+            DBG("Starting tracking and switching to pause button");
             audioProcessor.startTracking();
             playPauseButton.setToggleState(true, juce::dontSendNotification);
+            playPauseButton.setImages(pauseSvgCache.get(),          // normal
+                                    nullptr,                         // over
+                                    pausePressedSvgCache.get(),     // down
+                                    nullptr,                         // disabled
+                                    pauseSvgCache.get(),            // normal (on)
+                                    nullptr,                         // over (on)
+                                    pausePressedSvgCache.get(),     // down (on)
+                                    nullptr);                        // disabled (on)
         }
             
-        // Restart the timer for regular updates
+        DBG("Restarting regular timer");
+        DBG("Final tracking state: " + juce::String(audioProcessor.isTracking ? "true" : "false"));
+        isTransitioningButton = false;  // Reset flag after transition is complete
         startTimerHz(1);
         return;
     }
@@ -723,26 +744,50 @@ void KronosAudioProcessorEditor::constrainScrollOffset()
 
 void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
 {
-    if (button == &playPauseButton && !isTransitioningButton)
+    // Completely ignore the button clicked event
+    if (button == &playPauseButton)
     {
-        // Set transitioning flag and start short timer
-        isTransitioningButton = true;
-        
-        // Keep the button in its current state during transition
-        playPauseButton.setToggleState(playPauseButton.getToggleState(), juce::dontSendNotification);
-        
-        startTimer(50);  // 50ms delay to ensure pressed state is visible
-        return;
+        DBG("Button clicked - ignoring in favor of mouse events");
     }
-    // ... handle other buttons ...
 }
 
 void KronosAudioProcessorEditor::mouseDown(const juce::MouseEvent& event)
 {
-    if (event.eventComponent == &playPauseButton)
+    if (event.eventComponent == &playPauseButton && !isTransitioningButton)
     {
-        // Just let the button show its pressed state
-        // Don't take any action yet
+        DBG("Mouse down on button - Starting transition sequence");
+        DBG("Current tracking state before transition: " + juce::String(audioProcessor.isTracking ? "true" : "false"));
+        
+        // Set transitioning flag first to prevent double triggers
+        isTransitioningButton = true;
+        
+        // Force the pressed state to be visible
+        if (!audioProcessor.isTracking)  // Changed condition to match the state we're going TO
+        {
+            DBG("Setting play pressed state (transitioning to pause)");
+            playPauseButton.setImages(playPressedSvgCache.get(),    // normal
+                                    nullptr,                         // over
+                                    playPressedSvgCache.get(),      // down
+                                    nullptr,                         // disabled
+                                    playPressedSvgCache.get(),      // normal (on)
+                                    nullptr,                         // over (on)
+                                    playPressedSvgCache.get(),      // down (on)
+                                    nullptr);                        // disabled (on)
+        }
+        else
+        {
+            DBG("Setting pause pressed state (transitioning to play)");
+            playPauseButton.setImages(pausePressedSvgCache.get(),   // normal
+                                    nullptr,                         // over
+                                    pausePressedSvgCache.get(),     // down
+                                    nullptr,                         // disabled
+                                    pausePressedSvgCache.get(),     // normal (on)
+                                    nullptr,                         // over (on)
+                                    pausePressedSvgCache.get(),     // down (on)
+                                    nullptr);                        // disabled (on)
+        }
+        
+        startTimer(100);  // Start the transition timer
     }
 }
 
