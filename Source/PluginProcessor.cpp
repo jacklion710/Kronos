@@ -25,6 +25,7 @@ KronosAudioProcessor::KronosAudioProcessor()
        parameters(*this, nullptr, "Parameters", {})
 #endif
 {
+    currentDateKey = juce::Time::getCurrentTime().formatted("%Y-%m-%d");
     startTime = juce::Time::getCurrentTime();
     isTracking = true;
     totalTimeInSeconds = 0;
@@ -360,20 +361,51 @@ void KronosAudioProcessor::suspendProcessing(bool shouldSuspend)
     }
 }
 
+void KronosAudioProcessor::checkAndHandleDateChange()
+{
+    auto now = juce::Time::getCurrentTime();
+    juce::String newDateKey = now.formatted("%Y-%m-%d");
+    
+    // If the date has changed
+    if (currentDateKey != newDateKey)
+    {
+        if (isTracking)
+        {
+            // Save the final time for the previous date
+            if (currentDateKey.isNotEmpty())
+            {
+                auto finalTime = timePerDate[currentDateKey];
+                timePerDate.set(currentDateKey, finalTime);
+            }
+            
+            // Initialize the new date with 0 time
+            currentDateKey = newDateKey;
+            timePerDate.set(currentDateKey, 0);
+            addSessionDate(); // Add the new date to our sessions
+        }
+        else
+        {
+            currentDateKey = newDateKey;
+        }
+    }
+}
+
 void KronosAudioProcessor::timerCallback()
 {
     if (isTracking)
     {
-        // Just increment by one second for the timer
+        // Check for date change first
+        checkAndHandleDateChange();
+        
+        // Increment total time
         totalTimeInSeconds++;
         
-        // Update today's time
-        auto currentTime = juce::Time::getCurrentTime();
-        auto dateKey = currentTime.formatted("%Y-%m-%d");
-        timePerDate.set(dateKey, totalTimeInSeconds);
+        // Update current date's time independently
+        auto currentTime = timePerDate[currentDateKey];
+        timePerDate.set(currentDateKey, currentTime + 1);
         
         // Update start time to maintain accuracy
-        startTime = currentTime;
+        startTime = juce::Time::getCurrentTime();
     }
 }
 
