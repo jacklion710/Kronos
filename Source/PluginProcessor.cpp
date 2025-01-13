@@ -45,15 +45,33 @@ KronosAudioProcessor::~KronosAudioProcessor()
 
 void KronosAudioProcessor::startTracking()
 {
-    if (!isTracking && !isSuspended())
+    if (!isTracking)
     {
-        isTracking = true;
-        startTime = juce::Time::getCurrentTime();
-        startTimer(1000);
+        // Get current date
+        auto today = juce::Time::getCurrentTime();
+        juce::String dateKey = today.formatted("%Y-%m-%d");
         
-        // Save state immediately after changing it
-        juce::MemoryBlock state;
-        getStateInformation(state);
+        // Check if we already have time logged for today
+        if (timePerDate.contains(dateKey))
+        {
+            // Start from the existing time for today
+            totalTimeInSeconds = timePerDate[dateKey];
+            DBG("Resuming tracking from existing time: " + juce::String(totalTimeInSeconds) + " seconds");
+        }
+        else
+        {
+            // Start fresh for a new day
+            totalTimeInSeconds = 0;
+            DBG("Starting fresh tracking for new date: " + dateKey);
+        }
+        
+        startTime = juce::Time::getCurrentTime();
+        isTracking = true;
+        startTimer(1000);  // Start the timer for updates
+        
+        // Immediately update the time to ensure sync
+        timePerDate.set(dateKey, totalTimeInSeconds);
+        DBG("Tracking started with initial time: " + juce::String(totalTimeInSeconds));
     }
 }
 
@@ -61,14 +79,23 @@ void KronosAudioProcessor::stopTracking()
 {
     if (isTracking)
     {
-        isTracking = false;
+        // Get final time including any partial seconds
         auto currentTime = juce::Time::getCurrentTime();
-        totalTimeInSeconds += (currentTime - startTime).inSeconds();
-        stopTimer();
+        auto elapsedSeconds = (currentTime - startTime).inSeconds();
+        totalTimeInSeconds += elapsedSeconds;
         
-        // Save state immediately after changing it
-        juce::MemoryBlock state;
-        getStateInformation(state);
+        // Store the current total time for today
+        auto today = juce::Time::getCurrentTime();
+        juce::String dateKey = today.formatted("%Y-%m-%d");
+        timePerDate.set(dateKey, totalTimeInSeconds);
+        
+        stopTimer();  // Stop the timer
+        
+        DBG("Tracking stopped. Total time for " + dateKey + ": " + 
+            juce::String(totalTimeInSeconds) + " seconds");
+        
+        isTracking = false;
+        startTime = juce::Time::getCurrentTime();  // Reset start time
     }
 }
 
@@ -76,8 +103,10 @@ juce::int64 KronosAudioProcessor::getTotalTimeInSeconds() const
 {
     if (isTracking)
     {
+        // Return real-time value including partial seconds
         auto currentTime = juce::Time::getCurrentTime();
-        return totalTimeInSeconds + (currentTime - startTime).inSeconds();
+        auto elapsedSeconds = (currentTime - startTime).inSeconds();
+        return totalTimeInSeconds + elapsedSeconds;
     }
     return totalTimeInSeconds;
 }
@@ -335,12 +364,16 @@ void KronosAudioProcessor::timerCallback()
 {
     if (isTracking)
     {
+        // Just increment by one second for the timer
         totalTimeInSeconds++;
         
         // Update today's time
-        auto today = juce::Time::getCurrentTime();
-        juce::String dateKey = today.formatted("%Y-%m-%d");
-        timePerDate.set(dateKey, timePerDate[dateKey] + 1);
+        auto currentTime = juce::Time::getCurrentTime();
+        auto dateKey = currentTime.formatted("%Y-%m-%d");
+        timePerDate.set(dateKey, totalTimeInSeconds);
+        
+        // Update start time to maintain accuracy
+        startTime = currentTime;
     }
 }
 
