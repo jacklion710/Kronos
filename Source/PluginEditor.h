@@ -76,6 +76,16 @@ private:
     std::unique_ptr<juce::Drawable> timeDisplaySvgCache;
     std::unique_ptr<juce::Drawable> previousSessionsSvgCache;
     std::unique_ptr<juce::Drawable> headerSvgCache;
+    std::unique_ptr<juce::Drawable> playSvgCache;
+    std::unique_ptr<juce::Drawable> playPressedSvgCache;
+    std::unique_ptr<juce::Drawable> pauseSvgCache;
+    std::unique_ptr<juce::Drawable> pausePressedSvgCache;
+
+    juce::Image gritTextureCache;
+
+    juce::ColourGradient borderGradientCache;
+
+    bool needsRepaint = true;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };

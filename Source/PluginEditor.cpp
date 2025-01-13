@@ -221,6 +221,26 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                                                                  BinaryData::Previous_Sessions_Dark_svgSize);
     headerSvgCache = juce::Drawable::createFromImageData(BinaryData::Header_Dark_svg,
                                                        BinaryData::Header_Dark_svgSize);
+
+    // Cache play/pause button SVGs
+    playSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Dark_svg, 
+                                                      BinaryData::Play_Button_Dark_svgSize);
+    playPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Pressed_Dark_svg, 
+                                                            BinaryData::Play_Button_Pressed_Dark_svgSize);
+    pauseSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Dark_svg, 
+                                                      BinaryData::Pause_Button_Dark_svgSize);
+    pausePressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_Dark_svg, 
+                                                             BinaryData::Pause_Button_Pressed_Dark_svgSize);
+
+    // Use cached SVGs for play/pause button
+    playPauseButton.setImages(playSvgCache.get(),          // normal
+                             nullptr,                       // over (use normal)
+                             playPressedSvgCache.get(),     // down
+                             nullptr,                       // disabled (use normal)
+                             pauseSvgCache.get(),          // normal (on)
+                             nullptr,                       // over (on) (use normal)
+                             pausePressedSvgCache.get(),    // down (on)
+                             nullptr);                      // disabled (on) (use normal)
 }
 
 void KronosAudioProcessorEditor::timerCallback()
