@@ -211,6 +211,16 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                 }
             });
     };
+
+    // Cache SVGs on initialization
+    backgroundSvgCache = juce::Drawable::createFromImageData(BinaryData::Background_Dark_svg, 
+                                                           BinaryData::Background_Dark_svgSize);
+    timeDisplaySvgCache = juce::Drawable::createFromImageData(BinaryData::Time_Display_Dark_svg, 
+                                                            BinaryData::Time_Display_Dark_svgSize);
+    previousSessionsSvgCache = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_Dark_svg, 
+                                                                 BinaryData::Previous_Sessions_Dark_svgSize);
+    headerSvgCache = juce::Drawable::createFromImageData(BinaryData::Header_Dark_svg,
+                                                       BinaryData::Header_Dark_svgSize);
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -401,34 +411,29 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     
     // Create gradient for border with multiple points for sine-wave like effect
     juce::ColourGradient borderGradient(
-        juce::Colour(130, 130, 130),  // Light grey (bottom left)
+        juce::Colour(130, 130, 130),
         bounds.getBottomLeft(),
-        juce::Colour(130, 130, 130),  // Light grey (top right)
+        juce::Colour(130, 130, 130),
         bounds.getTopRight(),
         false
     );
     
-    // Add intermediate points for the sine-wave like effect
-    borderGradient.addColour(0.25, juce::Colour(40, 40, 40));    // Dark (first quarter)
-    borderGradient.addColour(0.5, juce::Colour(40, 40, 40));     // Dark (middle)
-    borderGradient.addColour(0.75, juce::Colour(130, 130, 130)); // Light (third quarter)
+    borderGradient.addColour(0.25, juce::Colour(40, 40, 40));
+    borderGradient.addColour(0.5, juce::Colour(40, 40, 40));
+    borderGradient.addColour(0.75, juce::Colour(130, 130, 130));
     
-    // Draw border with gradient
     g.setGradientFill(borderGradient);
     g.drawRect(bounds, borderThickness);
 
-    // Load and draw background SVG slightly inset
-    auto backgroundSvg = juce::Drawable::createFromImageData(BinaryData::Background_Dark_svg, 
-                                                           BinaryData::Background_Dark_svgSize);
-    if (backgroundSvg != nullptr)
+    // Use cached background SVG
+    if (backgroundSvgCache != nullptr)
     {
         float padding = borderThickness + 1.0f;
         auto paddedBounds = bounds.reduced(padding);
-        
-        backgroundSvg->drawWithin(g, paddedBounds, 
-                                juce::RectanglePlacement::centred | 
-                                juce::RectanglePlacement::stretchToFit, 
-                                1.0f);
+        backgroundSvgCache->drawWithin(g, paddedBounds, 
+                                     juce::RectanglePlacement::centred | 
+                                     juce::RectanglePlacement::stretchToFit, 
+                                     1.0f);
     }
 
     // Draw grit texture overlay
@@ -436,71 +441,55 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                                                     BinaryData::Grit_jpgSize);
     if (gritImage.isValid())
     {
-        // Create a copy of the image that we can modify
         juce::Image gritCopy = gritImage.createCopy();
-        
-        // Adjust the alpha of the entire image
         gritCopy.multiplyAllAlphas(0.035f);
-        
-        // Create a slightly reduced bounds to fit inside border
         auto gritBounds = bounds.reduced(borderThickness + 1.0f);
-        
         g.drawImage(gritCopy, gritBounds,
                    juce::RectanglePlacement::stretchToFit);
     }
 
-    // Time Display SVG - position independently from labels
-    auto timeDisplaySvg = juce::Drawable::createFromImageData(BinaryData::Time_Display_Dark_svg, 
-                                                            BinaryData::Time_Display_Dark_svgSize);
-    if (timeDisplaySvg != nullptr)
+    // Use cached time display SVG
+    if (timeDisplaySvgCache != nullptr)
     {
         float desiredWidth = 400.0f;
-        float desiredHeight = 200.0f;  // Increased from 170.0f to make it taller
-        
+        float desiredHeight = 200.0f;
         float x = getWidth()/2 - desiredWidth/2;
         float y = timeDisplayBounds.getCentreY() - desiredHeight/2;
         
-        timeDisplaySvg->drawWithin(g, 
-                                 juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
-                                 juce::RectanglePlacement::centred | 
-                                 juce::RectanglePlacement::stretchToFit,
-                                 1.0f);
-    }
-
-    // Load and draw Previous Sessions SVG
-    auto previousSessionsSvg = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_Dark_svg, 
-                                                                 BinaryData::Previous_Sessions_Dark_svgSize);
-    if (previousSessionsSvg != nullptr)
-    {
-        float desiredWidth = 300.0f;
-        float desiredHeight = 140.0f;
-        
-        float x = getWidth() / 2.0f - (desiredWidth / 2.0f);
-        float y = getHeight() - desiredHeight - 10.0f;
-        
-        juce::Rectangle<float> sessionsArea(x, y, desiredWidth, desiredHeight);
-        
-        previousSessionsSvg->drawWithin(g, sessionsArea,
+        timeDisplaySvgCache->drawWithin(g, 
+                                      juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
                                       juce::RectanglePlacement::centred | 
                                       juce::RectanglePlacement::stretchToFit,
                                       1.0f);
     }
 
-    // Load and draw header SVG
-    auto headerSvg = juce::Drawable::createFromImageData(BinaryData::Header_Dark_svg,
-                                                       BinaryData::Header_Dark_svgSize);
-    if (headerSvg != nullptr)
+    // Use cached Previous Sessions SVG
+    if (previousSessionsSvgCache != nullptr)
+    {
+        float desiredWidth = 300.0f;
+        float desiredHeight = 140.0f;
+        float x = getWidth() / 2.0f - (desiredWidth / 2.0f);
+        float y = getHeight() - desiredHeight - 10.0f;
+        
+        previousSessionsSvgCache->drawWithin(g, 
+                                           juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
+                                           juce::RectanglePlacement::centred | 
+                                           juce::RectanglePlacement::stretchToFit,
+                                           1.0f);
+    }
+
+    // Use cached header SVG
+    if (headerSvgCache != nullptr)
     {
         float originalWidth = 400.0f;
         float originalHeight = 60.0f;
-        
         float x = (getWidth() - originalWidth) / 2.0f;
         float y = 10.0f;
         
-        headerSvg->drawWithin(g, 
-                            juce::Rectangle<float>(x, y, originalWidth, originalHeight),
-                            juce::RectanglePlacement::centred, 
-                            1.0f);
+        headerSvgCache->drawWithin(g, 
+                                 juce::Rectangle<float>(x, y, originalWidth, originalHeight),
+                                 juce::RectanglePlacement::centred, 
+                                 1.0f);
     }
 
     // Draw title text with glow effect

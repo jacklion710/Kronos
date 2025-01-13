@@ -72,5 +72,10 @@ private:
 
     juce::TextButton menuButton;
 
+    std::unique_ptr<juce::Drawable> backgroundSvgCache;
+    std::unique_ptr<juce::Drawable> timeDisplaySvgCache;
+    std::unique_ptr<juce::Drawable> previousSessionsSvgCache;
+    std::unique_ptr<juce::Drawable> headerSvgCache;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
