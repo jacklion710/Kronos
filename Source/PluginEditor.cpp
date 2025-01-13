@@ -45,34 +45,44 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         dateLabels[i].setJustificationType(juce::Justification::centred);
     }
     
-    // Initialize play/pause button
+    // Cache ALL SVGs first
+    backgroundSvgCache = juce::Drawable::createFromImageData(BinaryData::Background_Dark_svg, 
+                                                           BinaryData::Background_Dark_svgSize);
+    timeDisplaySvgCache = juce::Drawable::createFromImageData(BinaryData::Time_Display_Dark_svg, 
+                                                            BinaryData::Time_Display_Dark_svgSize);
+    previousSessionsSvgCache = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_Dark_svg, 
+                                                                 BinaryData::Previous_Sessions_Dark_svgSize);
+    headerSvgCache = juce::Drawable::createFromImageData(BinaryData::Header_Dark_svg,
+                                                       BinaryData::Header_Dark_svgSize);
+    
+    // Cache play/pause button SVGs
+    playSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Dark_svg, 
+                                                      BinaryData::Play_Button_Dark_svgSize);
+    playPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Pressed_Dark_svg, 
+                                                            BinaryData::Play_Button_Pressed_Dark_svgSize);
+    pauseSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Dark_svg, 
+                                                      BinaryData::Pause_Button_Dark_svgSize);
+    pausePressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_Dark_svg, 
+                                                             BinaryData::Pause_Button_Pressed_Dark_svgSize);
+
+    // THEN initialize play/pause button
     addAndMakeVisible(playPauseButton);
     playPauseButton.setButtonText("");
-    playPauseButton.addListener(this);  // Use the Button::Listener interface
-
-    // Load SVG assets
-    std::unique_ptr<juce::Drawable> playSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_Dark_svg, 
-                                                                                 BinaryData::Play_Button_Dark_svgSize);
-    std::unique_ptr<juce::Drawable> playPressedSvg = juce::Drawable::createFromImageData(BinaryData::Play_Button_Pressed_Dark_svg, 
-                                                                                        BinaryData::Play_Button_Pressed_Dark_svgSize);
-    std::unique_ptr<juce::Drawable> pauseSvg = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Dark_svg, 
-                                                                                  BinaryData::Pause_Button_Dark_svgSize);
-    std::unique_ptr<juce::Drawable> pausePressedSvg = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_Dark_svg, 
-                                                                                         BinaryData::Pause_Button_Pressed_Dark_svgSize);
+    playPauseButton.addListener(this);
 
     // Make button background transparent
     playPauseButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
     playPauseButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
 
-    // Store the drawables in the button with their pressed states
-    playPauseButton.setImages(playSvg.get(),          // normal
-                             nullptr,                  // over (use normal)
-                             playPressedSvg.get(),     // down
-                             nullptr,                  // disabled (use normal)
-                             pauseSvg.get(),          // normal (on)
-                             nullptr,                  // over (on) (use normal)
-                             pausePressedSvg.get(),    // down (on)
-                             nullptr);                 // disabled (on) (use normal)
+    // Use cached SVGs for play/pause button AFTER they're initialized
+    playPauseButton.setImages(playSvgCache.get(),          // normal
+                             nullptr,                       // over (use normal)
+                             playPressedSvgCache.get(),     // down
+                             nullptr,                       // disabled (use normal)
+                             pauseSvgCache.get(),          // normal (on)
+                             nullptr,                       // over (on) (use normal)
+                             pausePressedSvgCache.get(),    // down (on)
+                             nullptr);                      // disabled (on) (use normal)
 
     // Set initial toggle state based on processor
     playPauseButton.setToggleState(audioProcessor.isTracking, juce::dontSendNotification);
@@ -213,36 +223,6 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                 }
             });
     };
-
-    // Cache SVGs on initialization
-    backgroundSvgCache = juce::Drawable::createFromImageData(BinaryData::Background_Dark_svg, 
-                                                           BinaryData::Background_Dark_svgSize);
-    timeDisplaySvgCache = juce::Drawable::createFromImageData(BinaryData::Time_Display_Dark_svg, 
-                                                            BinaryData::Time_Display_Dark_svgSize);
-    previousSessionsSvgCache = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_Dark_svg, 
-                                                                 BinaryData::Previous_Sessions_Dark_svgSize);
-    headerSvgCache = juce::Drawable::createFromImageData(BinaryData::Header_Dark_svg,
-                                                       BinaryData::Header_Dark_svgSize);
-
-    // Cache play/pause button SVGs
-    playSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Dark_svg, 
-                                                      BinaryData::Play_Button_Dark_svgSize);
-    playPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Pressed_Dark_svg, 
-                                                            BinaryData::Play_Button_Pressed_Dark_svgSize);
-    pauseSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Dark_svg, 
-                                                      BinaryData::Pause_Button_Dark_svgSize);
-    pausePressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_Dark_svg, 
-                                                             BinaryData::Pause_Button_Pressed_Dark_svgSize);
-
-    // Use cached SVGs for play/pause button
-    playPauseButton.setImages(playSvgCache.get(),          // normal
-                             nullptr,                       // over (use normal)
-                             playPressedSvgCache.get(),     // down
-                             nullptr,                       // disabled (use normal)
-                             pauseSvgCache.get(),          // normal (on)
-                             nullptr,                       // over (on) (use normal)
-                             pausePressedSvgCache.get(),    // down (on)
-                             nullptr);                      // disabled (on) (use normal)
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -251,7 +231,7 @@ void KronosAudioProcessorEditor::timerCallback()
     {
         isTransitioningButton = false;
         
-        // Now actually toggle the tracking state
+        // Now actually toggle the tracking state and immediately show opposite button
         if (audioProcessor.isTracking)
         {
             audioProcessor.stopTracking();
@@ -747,10 +727,11 @@ void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
     {
         // Set transitioning flag and start short timer
         isTransitioningButton = true;
-        startTimer(50);  // 50ms delay to ensure pressed state is visible
         
-        // Just let the button show its pressed state
-        // Don't toggle state yet - timer callback will handle it
+        // Keep the button in its current state during transition
+        playPauseButton.setToggleState(playPauseButton.getToggleState(), juce::dontSendNotification);
+        
+        startTimer(50);  // 50ms delay to ensure pressed state is visible
         return;
     }
     // ... handle other buttons ...
