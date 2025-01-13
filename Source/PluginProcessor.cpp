@@ -25,7 +25,6 @@ KronosAudioProcessor::KronosAudioProcessor()
        parameters(*this, nullptr, "Parameters", {})
 #endif
 {
-    currentDateKey = juce::Time::getCurrentTime().formatted("%Y-%m-%d");
     startTime = juce::Time::getCurrentTime();
     isTracking = true;
     totalTimeInSeconds = 0;
@@ -61,17 +60,16 @@ void KronosAudioProcessor::startTracking()
         }
         else
         {
-            // Start fresh for a new day
-            totalTimeInSeconds = 0;
-            DBG("Starting fresh tracking for new date: " + dateKey);
+            // Start fresh for a new day in timePerDate only
+            timePerDate.set(dateKey, 0);  // Initialize new date at 0
+            // Keep existing totalTimeInSeconds
+            DBG("Starting fresh tracking for new date: " + dateKey + " with 0 seconds");
         }
         
         startTime = juce::Time::getCurrentTime();
         isTracking = true;
         startTimer(1000);  // Start the timer for updates
         
-        // Immediately update the time to ensure sync
-        timePerDate.set(dateKey, totalTimeInSeconds);
         DBG("Tracking started with initial time: " + juce::String(totalTimeInSeconds));
     }
 }
@@ -85,15 +83,18 @@ void KronosAudioProcessor::stopTracking()
         auto elapsedSeconds = (currentTime - startTime).inSeconds();
         totalTimeInSeconds += elapsedSeconds;
         
-        // Store the current total time for today
+        // Store the current time for today in timePerDate
         auto today = juce::Time::getCurrentTime();
         juce::String dateKey = today.formatted("%Y-%m-%d");
-        timePerDate.set(dateKey, totalTimeInSeconds);
+        
+        // Get existing time for today (if any) and add elapsed time
+        auto existingTime = timePerDate[dateKey];
+        timePerDate.set(dateKey, existingTime + elapsedSeconds);
         
         stopTimer();  // Stop the timer
         
         DBG("Tracking stopped. Total time for " + dateKey + ": " + 
-            juce::String(totalTimeInSeconds) + " seconds");
+            juce::String(timePerDate[dateKey]) + " seconds");
         
         isTracking = false;
         startTime = juce::Time::getCurrentTime();  // Reset start time
@@ -293,12 +294,37 @@ void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes
         // Stop any current timing operations
         stopTimer();
         
-        // Load total time first
-        totalTimeInSeconds = state.getProperty("totalTimeInSeconds", (juce::int64)0);
+        // Load time per date first
+        if (state.hasProperty("timePerDate"))
+        {
+            juce::String timePerDateString = state.getProperty("timePerDate");
+            juce::StringArray pairs;
+            pairs.addTokens(timePerDateString, ";", "");
+            
+            for (const auto& pair : pairs)
+            {
+                if (pair.isNotEmpty())
+                {
+                    auto parts = juce::StringArray::fromTokens(pair, "=", "");
+                    if (parts.size() == 2)
+                    {
+                        timePerDate.set(parts[0], parts[1].getLargeIntValue());
+                    }
+                }
+            }
+        }
+        
+        // Get current date's time if it exists
+        auto today = juce::Time::getCurrentTime();
+        juce::String dateKey = today.formatted("%Y-%m-%d");
+        if (timePerDate.contains(dateKey))
+        {
+            totalTimeInSeconds = timePerDate[dateKey];
+            DBG("Loaded existing time for today: " + juce::String(totalTimeInSeconds));
+        }
         
         // Load play/pause state
         bool newTrackingState = state.getProperty("isTracking", false);
-        
         isTracking = newTrackingState;
         
         if (isTracking && !isSuspended())
@@ -361,51 +387,30 @@ void KronosAudioProcessor::suspendProcessing(bool shouldSuspend)
     }
 }
 
-void KronosAudioProcessor::checkAndHandleDateChange()
-{
-    auto now = juce::Time::getCurrentTime();
-    juce::String newDateKey = now.formatted("%Y-%m-%d");
-    
-    // If the date has changed
-    if (currentDateKey != newDateKey)
-    {
-        if (isTracking)
-        {
-            // Save the final time for the previous date
-            if (currentDateKey.isNotEmpty())
-            {
-                auto finalTime = timePerDate[currentDateKey];
-                timePerDate.set(currentDateKey, finalTime);
-            }
-            
-            // Initialize the new date with 0 time
-            currentDateKey = newDateKey;
-            timePerDate.set(currentDateKey, 0);
-            addSessionDate(); // Add the new date to our sessions
-        }
-        else
-        {
-            currentDateKey = newDateKey;
-        }
-    }
-}
-
 void KronosAudioProcessor::timerCallback()
 {
     if (isTracking)
     {
-        // Check for date change first
-        checkAndHandleDateChange();
-        
-        // Increment total time
+        // Increment main display time
         totalTimeInSeconds++;
         
-        // Update current date's time independently
-        auto currentTime = timePerDate[currentDateKey];
-        timePerDate.set(currentDateKey, currentTime + 1);
+        // Update per-date tracking separately
+        auto currentTime = juce::Time::getCurrentTime();
+        juce::String dateKey = currentTime.formatted("%Y-%m-%d");
+        
+        // Initialize new date if needed
+        if (!timePerDate.contains(dateKey))
+        {
+            timePerDate.set(dateKey, 0);
+            DBG("New date initialized: " + dateKey);
+        }
+        
+        // Get existing time and increment
+        auto existingTime = timePerDate[dateKey];
+        timePerDate.set(dateKey, existingTime + 1);
         
         // Update start time to maintain accuracy
-        startTime = juce::Time::getCurrentTime();
+        startTime = currentTime;
     }
 }
 

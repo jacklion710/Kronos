@@ -115,7 +115,4 @@ private:
     void addDummyDates();
 
     bool showBarsEnabled = false;
-
-    juce::String currentDateKey;
-    void checkAndHandleDateChange();
 };
