@@ -744,10 +744,25 @@ void KronosAudioProcessorEditor::constrainScrollOffset()
 
 void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
 {
-    // Completely ignore the button clicked event
+    // Handle play/pause button
     if (button == &playPauseButton)
     {
         DBG("Button clicked - ignoring in favor of mouse events");
+    }
+    // Handle scroll buttons
+    else if (button == &scrollUpButton)
+    {
+        scrollOffset = std::max(0.0f, scrollOffset - dateHeight);
+        constrainScrollOffset();
+        updateDateLabels();
+        repaint();
+    }
+    else if (button == &scrollDownButton)
+    {
+        scrollOffset += dateHeight;
+        constrainScrollOffset();
+        updateDateLabels();
+        repaint();
     }
 }
 
