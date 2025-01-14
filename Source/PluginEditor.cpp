@@ -43,6 +43,11 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         addAndMakeVisible(dateLabels[i]);
         dateLabels[i].setFont(asteraFontSmall);
         dateLabels[i].setJustificationType(juce::Justification::centred);
+        // Set initial color based on theme
+        dateLabels[i].setColour(juce::Label::textColourId, 
+            audioProcessor.isDarkMode() ? 
+                juce::Colour(0xE6, 0xE6, 0xFF) :  // Light blue-white for dark mode
+                juce::Colour(0xE6, 0xD5, 0xBF));  // Beige for light mode
     }
     
     // Cache ALL SVGs first - Dark Mode
@@ -137,6 +142,17 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         customLookAndFeel.setDarkMode(!isDark);
         audioProcessor.setDarkMode(!isDark);
         themeToggleButton.setButtonText(!isDark ? "L" : "D");
+        
+        // Update date label colors
+        auto newColor = !isDark ? 
+            juce::Colour(0xE6, 0xD5, 0xBF) :  // Beige for light mode
+            juce::Colour(0xE6, 0xE6, 0xFF);   // Light blue-white for dark mode
+            
+        for (auto& label : dateLabels)
+        {
+            label.setColour(juce::Label::textColourId, newColor);
+        }
+        
         updateButtonImages();
         repaint();
     };
@@ -501,16 +517,26 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     
     // Create gradient for border with multiple points for sine-wave like effect
     juce::ColourGradient borderGradient(
-        juce::Colour(130, 130, 130),
+        audioProcessor.isDarkMode() ?
+            juce::Colour(130, 130, 130) :           // Dark mode highlight
+            juce::Colour(160, 140, 120),            // Light mode warm highlight
         bounds.getBottomLeft(),
-        juce::Colour(130, 130, 130),
+        audioProcessor.isDarkMode() ?
+            juce::Colour(130, 130, 130) :           // Dark mode highlight
+            juce::Colour(160, 140, 120),            // Light mode warm highlight
         bounds.getTopRight(),
         false
     );
     
-    borderGradient.addColour(0.25, juce::Colour(40, 40, 40));
-    borderGradient.addColour(0.5, juce::Colour(40, 40, 40));
-    borderGradient.addColour(0.75, juce::Colour(130, 130, 130));
+    borderGradient.addColour(0.25, audioProcessor.isDarkMode() ?
+        juce::Colour(40, 40, 40) :                  // Dark mode shadow
+        juce::Colour(100, 85, 70));                 // Light mode warm shadow
+    borderGradient.addColour(0.5, audioProcessor.isDarkMode() ?
+        juce::Colour(40, 40, 40) :                  // Dark mode shadow
+        juce::Colour(100, 85, 70));                 // Light mode warm shadow
+    borderGradient.addColour(0.75, audioProcessor.isDarkMode() ?
+        juce::Colour(130, 130, 130) :              // Dark mode highlight
+        juce::Colour(160, 140, 120));              // Light mode warm highlight
     
     g.setGradientFill(borderGradient);
     g.drawRect(bounds, borderThickness);
@@ -594,11 +620,15 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     auto titleBounds = juce::Rectangle<int>(0, 17, getWidth(), 50);
     auto text = "KRONOS";
     
-    // Draw stroke layers with a dark blue-grey color
-    g.setColour(juce::Colour(30, 50, 150));  // Dark blue-grey
+    // Draw stroke layers with theme-appropriate color
+    if (audioProcessor.isDarkMode()) {
+        g.setColour(juce::Colour(30, 50, 150));  // Dark blue-grey for dark mode
+    } else {
+        g.setColour(juce::Colour(120, 100, 80));  // Warm metallic grey for light mode
+    }
     
     // Increased stroke size specifically for title
-    float strokeSize = 2.5f;  // Increased from 1.25f
+    float strokeSize = 2.5f;
     float positions[][2] = {
         {-strokeSize, -strokeSize},
         {-strokeSize, strokeSize},
@@ -622,8 +652,8 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
         g.drawText(text, offsetBounds, juce::Justification::centred, true);
     }
     
-    // Draw main text
-    g.setColour(juce::Colour(0xE6, 0xE6, 0xFF));  // Light blue-white color
+    // Draw main text with theme-appropriate color
+    g.setColour(juce::Colours::white);  // Keep text white for both modes
     g.drawText(text, titleBounds, juce::Justification::centred, true);
 
     // Draw time bars unconditionally

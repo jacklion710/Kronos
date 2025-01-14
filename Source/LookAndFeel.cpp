@@ -69,12 +69,11 @@ void KronosLookAndFeel::setupLightColorScheme()
 void KronosLookAndFeel::setDarkMode(bool isDark)
 {
     darkModeEnabled = isDark;
+    glowingLabelLookAndFeel.setDarkMode(isDark);
     if (isDark)
         setupDarkColorScheme();
     else
         setupLightColorScheme();
-        
-    // Notify any components using this LookAndFeel to repaint
     sendChangeMessage();
 }
 
@@ -84,8 +83,12 @@ void KronosLookAndFeel::GlowingLabelLookAndFeel::drawLabel(juce::Graphics& g, ju
     auto text = label.getText();
     auto font = label.getFont();
 
+    // Theme-appropriate glow color
+    auto glowColor = darkModeEnabled ? 
+        juce::Colour(64, 64, 255).withAlpha(0.2f) :     // Blue glow for dark mode
+        juce::Colour(160, 140, 120).withAlpha(0.2f);    // Soft warm grey for light mode
+
     // Draw glow (multiple passes with decreasing alpha)
-    auto glowColor = juce::Colour(64, 64, 255).withAlpha(0.2f);
     for (float i = 6; i > 0; --i)
     {
         g.setColour(glowColor.withAlpha(glowColor.getFloatAlpha() / i));
@@ -94,29 +97,39 @@ void KronosLookAndFeel::GlowingLabelLookAndFeel::drawLabel(juce::Graphics& g, ju
         g.drawText(text, glowBounds, label.getJustificationType(), true);
     }
 
+    // Theme-appropriate stroke color
+    auto strokeColor = darkModeEnabled ?
+        juce::Colour(30, 50, 150) :         // Dark blue-grey for dark mode
+        juce::Colour(120, 100, 80);         // Warm metallic grey for light mode
+
     // Draw multiple colored strokes for a neon effect
     float strokeWidth = 0.8f;
-    
-    // Inner blue stroke with reduced alpha
-    g.setColour(juce::Colour(64, 64, 255).withAlpha(0.6f));
+    g.setColour(strokeColor);
     g.setFont(font);
+    
     for (float x = -strokeWidth; x <= strokeWidth; x += strokeWidth)
         for (float y = -strokeWidth; y <= strokeWidth; y += strokeWidth)
             if (x != 0 || y != 0)
                 g.drawText(text, bounds.translated(x, y), label.getJustificationType(), true);
 
-    // Outer white stroke with reduced alpha
-    g.setColour(juce::Colours::white.withAlpha(0.7f));
-    g.setFont(font);
-    g.drawText(text, bounds, label.getJustificationType(), true);
-
-    // Draw main text
-    g.setColour(label.findColour(juce::Label::textColourId));
+    // Draw main text in white
+    g.setColour(juce::Colours::white);
     g.drawText(text, bounds, label.getJustificationType(), true);
 }
 
 void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
 {
+    // Special handling for "Previous Sessions" text
+    if (label.getName().contains("PreviousSessions"))
+    {
+        // Use same very muted grey for both modes
+        g.setColour(juce::Colour(0x30, 0x30, 0x35));    // Very muted grey with slight blue tint
+        g.setFont(label.getFont());
+        g.drawText(label.getText(), label.getLocalBounds(), 
+                  label.getJustificationType(), true);
+        return;
+    }
+    
     // Check if this is a time label or date label
     if (label.getName().contains("TimeLabel") || label.getName().contains("DateLabel"))
     {
@@ -124,15 +137,14 @@ void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
         auto text = label.getText();
         auto font = label.getFont();
         
-        // Draw multiple layers for stroke effect
         auto textArea = bounds.withSizeKeepingCentre(bounds.getWidth(), bounds.getHeight());
         
-        // Draw stroke layers with a dark blue-grey color
-        g.setColour(juce::Colour(30, 50, 150));  // Dark blue-grey
+        // Get theme-appropriate stroke color
+        g.setColour(getStrokeColor());
         g.setFont(font);
         
         // Multiple offset positions for stroke effect
-        float strokeSize = label.getName().contains("TimeLabel") ? 1.25f : 0.75f; // Smaller stroke for date labels
+        float strokeSize = label.getName().contains("TimeLabel") ? 1.25f : 0.75f;
         float positions[][2] = {
             {-strokeSize, -strokeSize},
             {-strokeSize, strokeSize},
@@ -153,13 +165,30 @@ void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
                       true);
         }
         
-        // Draw main text
-        g.setColour(label.findColour(juce::Label::textColourId));
+        // Draw main text in pure white
+        g.setColour(juce::Colours::white);
         g.drawText(text, textArea.toNearestInt(), label.getJustificationType(), true);
+    }
+    else if (label.getName().contains("BarTimeLabel"))  // Time labels over bars
+    {
+        auto bounds = label.getLocalBounds().toFloat();
+        auto text = label.getText();
+        
+        // First draw black stroke
+        g.setColour(juce::Colours::black);
+        float blackStrokeSize = 1.5f;  // Increased stroke size for better visibility
+        for (float x = -blackStrokeSize; x <= blackStrokeSize; x += blackStrokeSize)
+            for (float y = -blackStrokeSize; y <= blackStrokeSize; y += blackStrokeSize)
+                if (x != 0 || y != 0)
+                    g.drawText(text, bounds.translated(x, y), 
+                             label.getJustificationType(), true);
+        
+        // Draw main text in white
+        g.setColour(juce::Colours::white);
+        g.drawText(text, bounds, label.getJustificationType(), true);
     }
     else
     {
-        // Default label drawing for other labels
         LookAndFeel_V4::drawLabel(g, label);
     }
 }

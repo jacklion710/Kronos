@@ -8,6 +8,9 @@ public:
     {
     public:
         void drawLabel(juce::Graphics& g, juce::Label& label) override;
+        void setDarkMode(bool isDark) { darkModeEnabled = isDark; }
+    private:
+        bool darkModeEnabled = true;
     };
 
     enum ColourIds
@@ -22,6 +25,7 @@ public:
     
     // Add color scheme methods
     void setDarkMode(bool isDark);
+
     bool isDarkMode() const { return darkModeEnabled; }
 
     GlowingLabelLookAndFeel glowingLabelLookAndFeel;
@@ -45,6 +49,28 @@ public:
     juce::Font getAlertWindowMessageFont() override
     {
         return juce::Font(14.0f);
+    }
+
+    // Add color getters for theme-aware colors
+    juce::Colour getStrokeColor() const
+    {
+        return darkModeEnabled ? 
+            juce::Colour(30, 50, 150) :     // Dark blue-grey for dark mode
+            juce::Colour(120, 100, 80);     // Warm metallic grey for light mode
+    }
+
+    juce::Colour getGlowColor() const
+    {
+        return darkModeEnabled ? 
+            juce::Colour(64, 64, 255) :     // Blue for dark mode
+            juce::Colour(160, 140, 120);    // Soft warm grey for light mode
+    }
+
+    juce::Colour getTextColor() const
+    {
+        return darkModeEnabled ? 
+            juce::Colour(0xE6, 0xE6, 0xFF) :    // Light blue-white for dark mode
+            juce::Colour(0xE6, 0xD5, 0xBF);     // Beige for light mode
     }
 
 private:
