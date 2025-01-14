@@ -45,7 +45,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         dateLabels[i].setJustificationType(juce::Justification::centred);
     }
     
-    // Cache ALL SVGs first
+    // Cache ALL SVGs first - Dark Mode
     backgroundSvgCache = juce::Drawable::createFromImageData(BinaryData::Background_Dark_svg, 
                                                            BinaryData::Background_Dark_svgSize);
     timeDisplaySvgCache = juce::Drawable::createFromImageData(BinaryData::Time_Display_Dark_svg, 
@@ -54,8 +54,6 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                                                                  BinaryData::Previous_Sessions_Dark_svgSize);
     headerSvgCache = juce::Drawable::createFromImageData(BinaryData::Header_Dark_svg,
                                                        BinaryData::Header_Dark_svgSize);
-    
-    // Cache play/pause button SVGs
     playSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Dark_svg, 
                                                       BinaryData::Play_Button_Dark_svgSize);
     playPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Pressed_Dark_svg, 
@@ -64,6 +62,24 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                                                       BinaryData::Pause_Button_Dark_svgSize);
     pausePressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_Dark_svg, 
                                                              BinaryData::Pause_Button_Pressed_Dark_svgSize);
+
+    // Cache Light Mode variants
+    backgroundLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Background_Light_svg, 
+                                                           BinaryData::Background_Light_svgSize);
+    timeDisplayLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Time_Display_Light_svg, 
+                                                            BinaryData::Time_Display_Light_svgSize);
+    previousSessionsLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_Light_svg, 
+                                                                 BinaryData::Previous_Sessions_Light_svgSize);
+    headerLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Header_Light_svg,
+                                                       BinaryData::Header_Light_svgSize);
+    playLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Light_svg, 
+                                                      BinaryData::Play_Button_Light_svgSize);
+    playPressedLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Play_Button_Pressed_Light_svg, 
+                                                            BinaryData::Play_Button_Pressed_Light_svgSize);
+    pauseLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Light_svg, 
+                                                      BinaryData::Pause_Button_Light_svgSize);
+    pausePressedLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_Light_svg, 
+                                                             BinaryData::Pause_Button_Pressed_Light_svgSize);
 
     // THEN initialize play/pause button
     addAndMakeVisible(playPauseButton);
@@ -94,7 +110,22 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         repaint();
     };
 
-    playPauseButton.onClick = nullptr; // Remove old handler
+    playPauseButton.onClick = [this]() {
+        isTransitioningButton = true;
+        startTimer(buttonTransitionDelay);
+        
+        if (audioProcessor.isTracking)
+        {
+            audioProcessor.stopTracking();
+        }
+        else
+        {
+            audioProcessor.startTracking();
+        }
+        
+        updateButtonImages();
+        repaint();
+    };
     
     playPauseButton.addMouseListener(this, false);
     
@@ -104,8 +135,9 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     themeToggleButton.onClick = [this]() {
         bool isDark = customLookAndFeel.isDarkMode();
         customLookAndFeel.setDarkMode(!isDark);
-        audioProcessor.setDarkMode(!isDark);  // Save the state
+        audioProcessor.setDarkMode(!isDark);
         themeToggleButton.setButtonText(!isDark ? "L" : "D");
+        updateButtonImages();
         repaint();
     };
     
@@ -223,6 +255,19 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                 }
             });
     };
+
+    float targetButtonSize = 60.0f; // Match your button size
+
+    // Normalize all button-related SVGs
+    playSvgCache = createNormalizedDrawable(playSvgCache.get(), targetButtonSize);
+    playPressedSvgCache = createNormalizedDrawable(playPressedSvgCache.get(), targetButtonSize * 0.95f);
+    pauseSvgCache = createNormalizedDrawable(pauseSvgCache.get(), targetButtonSize);
+    pausePressedSvgCache = createNormalizedDrawable(pausePressedSvgCache.get(), targetButtonSize * 0.95f);
+
+    playLightSvgCache = createNormalizedDrawable(playLightSvgCache.get(), targetButtonSize);
+    playPressedLightSvgCache = createNormalizedDrawable(playPressedLightSvgCache.get(), targetButtonSize * 0.95f);
+    pauseLightSvgCache = createNormalizedDrawable(pauseLightSvgCache.get(), targetButtonSize);
+    pausePressedLightSvgCache = createNormalizedDrawable(pausePressedLightSvgCache.get(), targetButtonSize * 0.95f);
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -230,40 +275,40 @@ void KronosAudioProcessorEditor::timerCallback()
     if (isTransitioningButton)
     {
         DBG("Timer fired - Completing transition");
-        DBG("Current tracking state before action: " + juce::String(audioProcessor.isTracking ? "true" : "false"));
         
-        // Now actually toggle the tracking state and immediately show opposite button
+        bool isDark = audioProcessor.isDarkMode();
+        auto& currentPlay = isDark ? playSvgCache : playLightSvgCache;
+        auto& currentPlayPressed = isDark ? playPressedSvgCache : playPressedLightSvgCache;
+        auto& currentPause = isDark ? pauseSvgCache : pauseLightSvgCache;
+        auto& currentPausePressed = isDark ? pausePressedSvgCache : pausePressedLightSvgCache;
+        
+        // Show the opposite button (not pressed state)
         if (audioProcessor.isTracking)
         {
-            DBG("Stopping tracking and switching to play button");
-            audioProcessor.stopTracking();
-            playPauseButton.setToggleState(false, juce::dontSendNotification);
-            playPauseButton.setImages(playSvgCache.get(),          // normal
-                                    nullptr,                        // over
-                                    playPressedSvgCache.get(),      // down
-                                    nullptr,                        // disabled
-                                    playSvgCache.get(),            // normal (on)
-                                    nullptr,                        // over (on)
-                                    playPressedSvgCache.get(),      // down (on)
-                                    nullptr);                       // disabled (on)
+            DBG("Switching to pause button");
+            playPauseButton.setImages(currentPause.get(),         // normal
+                                    nullptr,                      // over
+                                    currentPausePressed.get(),    // down
+                                    nullptr,                      // disabled
+                                    currentPause.get(),           // normal (on)
+                                    nullptr,                      // over (on)
+                                    currentPausePressed.get(),    // down (on)
+                                    nullptr);                     // disabled (on)
         }
         else
         {
-            DBG("Starting tracking and switching to pause button");
-            audioProcessor.startTracking();
-            playPauseButton.setToggleState(true, juce::dontSendNotification);
-            playPauseButton.setImages(pauseSvgCache.get(),          // normal
-                                    nullptr,                         // over
-                                    pausePressedSvgCache.get(),     // down
-                                    nullptr,                         // disabled
-                                    pauseSvgCache.get(),            // normal (on)
-                                    nullptr,                         // over (on)
-                                    pausePressedSvgCache.get(),     // down (on)
-                                    nullptr);                        // disabled (on)
+            DBG("Switching to play button");
+            playPauseButton.setImages(currentPlay.get(),          // normal
+                                    nullptr,                      // over
+                                    currentPlayPressed.get(),     // down
+                                    nullptr,                      // disabled
+                                    currentPlay.get(),            // normal (on)
+                                    nullptr,                      // over (on)
+                                    currentPlayPressed.get(),     // down (on)
+                                    nullptr);                     // disabled (on)
         }
             
         DBG("Restarting regular timer");
-        DBG("Final tracking state: " + juce::String(audioProcessor.isTracking ? "true" : "false"));
         isTransitioningButton = false;  // Reset flag after transition is complete
         startTimerHz(1);
         return;
@@ -471,14 +516,15 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.drawRect(bounds, borderThickness);
 
     // Use cached background SVG
-    if (backgroundSvgCache != nullptr)
+    if (backgroundSvgCache != nullptr && backgroundLightSvgCache != nullptr)
     {
         float padding = borderThickness + 1.0f;
         auto paddedBounds = bounds.reduced(padding);
-        backgroundSvgCache->drawWithin(g, paddedBounds, 
-                                     juce::RectanglePlacement::centred | 
-                                     juce::RectanglePlacement::stretchToFit, 
-                                     1.0f);
+        auto& currentCache = audioProcessor.isDarkMode() ? backgroundSvgCache : backgroundLightSvgCache;
+        currentCache->drawWithin(g, paddedBounds, 
+                               juce::RectanglePlacement::centred | 
+                               juce::RectanglePlacement::stretchToFit, 
+                               1.0f);
     }
 
     // Draw grit texture overlay
@@ -494,47 +540,50 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     }
 
     // Use cached time display SVG
-    if (timeDisplaySvgCache != nullptr)
+    if (timeDisplaySvgCache != nullptr && timeDisplayLightSvgCache != nullptr)
     {
         float desiredWidth = 400.0f;
         float desiredHeight = 200.0f;
         float x = getWidth()/2 - desiredWidth/2;
         float y = timeDisplayBounds.getCentreY() - desiredHeight/2;
         
-        timeDisplaySvgCache->drawWithin(g, 
-                                      juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
-                                      juce::RectanglePlacement::centred | 
-                                      juce::RectanglePlacement::stretchToFit,
-                                      1.0f);
+        auto& currentCache = audioProcessor.isDarkMode() ? timeDisplaySvgCache : timeDisplayLightSvgCache;
+        currentCache->drawWithin(g, 
+                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
+                               juce::RectanglePlacement::centred | 
+                               juce::RectanglePlacement::stretchToFit,
+                               1.0f);
     }
 
     // Use cached Previous Sessions SVG
-    if (previousSessionsSvgCache != nullptr)
+    if (previousSessionsSvgCache != nullptr && previousSessionsLightSvgCache != nullptr)
     {
         float desiredWidth = 300.0f;
         float desiredHeight = 140.0f;
         float x = getWidth() / 2.0f - (desiredWidth / 2.0f);
         float y = getHeight() - desiredHeight - 10.0f;
         
-        previousSessionsSvgCache->drawWithin(g, 
-                                           juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
-                                           juce::RectanglePlacement::centred | 
-                                           juce::RectanglePlacement::stretchToFit,
-                                           1.0f);
+        auto& currentCache = audioProcessor.isDarkMode() ? previousSessionsSvgCache : previousSessionsLightSvgCache;
+        currentCache->drawWithin(g, 
+                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
+                               juce::RectanglePlacement::centred | 
+                               juce::RectanglePlacement::stretchToFit,
+                               1.0f);
     }
 
     // Use cached header SVG
-    if (headerSvgCache != nullptr)
+    if (headerSvgCache != nullptr && headerLightSvgCache != nullptr)
     {
         float originalWidth = 400.0f;
         float originalHeight = 60.0f;
         float x = (getWidth() - originalWidth) / 2.0f;
         float y = 10.0f;
         
-        headerSvgCache->drawWithin(g, 
-                                 juce::Rectangle<float>(x, y, originalWidth, originalHeight),
-                                 juce::RectanglePlacement::centred, 
-                                 1.0f);
+        auto& currentCache = audioProcessor.isDarkMode() ? headerSvgCache : headerLightSvgCache;
+        currentCache->drawWithin(g, 
+                               juce::Rectangle<float>(x, y, originalWidth, originalHeight),
+                               juce::RectanglePlacement::centred, 
+                               1.0f);
     }
 
     // Draw title text with glow effect
@@ -771,38 +820,37 @@ void KronosAudioProcessorEditor::mouseDown(const juce::MouseEvent& event)
     if (event.eventComponent == &playPauseButton && !isTransitioningButton)
     {
         DBG("Mouse down on button - Starting transition sequence");
-        DBG("Current tracking state before transition: " + juce::String(audioProcessor.isTracking ? "true" : "false"));
-        
-        // Set transitioning flag first to prevent double triggers
         isTransitioningButton = true;
+        bool isDark = audioProcessor.isDarkMode();
         
-        // Force the pressed state to be visible
-        if (!audioProcessor.isTracking)  // Changed condition to match the state we're going TO
+        // Get the correct themed assets
+        auto& currentPlay = isDark ? playSvgCache : playLightSvgCache;
+        auto& currentPlayPressed = isDark ? playPressedSvgCache : playPressedLightSvgCache;
+        auto& currentPause = isDark ? pauseSvgCache : pauseLightSvgCache;
+        auto& currentPausePressed = isDark ? pausePressedSvgCache : pausePressedLightSvgCache;
+        
+        if (audioProcessor.isTracking)
         {
-            DBG("Setting play pressed state (transitioning to pause)");
-            playPauseButton.setImages(playPressedSvgCache.get(),    // normal
-                                    nullptr,                         // over
-                                    playPressedSvgCache.get(),      // down
-                                    nullptr,                         // disabled
-                                    playPressedSvgCache.get(),      // normal (on)
-                                    nullptr,                         // over (on)
-                                    playPressedSvgCache.get(),      // down (on)
-                                    nullptr);                        // disabled (on)
+            playPauseButton.setImages(currentPausePressed.get(),    // normal
+                                    nullptr,                        // over
+                                    currentPausePressed.get(),      // down
+                                    nullptr,                        // disabled
+                                    currentPausePressed.get(),      // normal (on)
+                                    nullptr,                        // over (on)
+                                    currentPausePressed.get(),      // down (on)
+                                    nullptr);                       // disabled (on)
         }
         else
         {
-            DBG("Setting pause pressed state (transitioning to play)");
-            playPauseButton.setImages(pausePressedSvgCache.get(),   // normal
-                                    nullptr,                         // over
-                                    pausePressedSvgCache.get(),     // down
-                                    nullptr,                         // disabled
-                                    pausePressedSvgCache.get(),     // normal (on)
-                                    nullptr,                         // over (on)
-                                    pausePressedSvgCache.get(),     // down (on)
-                                    nullptr);                        // disabled (on)
+            playPauseButton.setImages(currentPlayPressed.get(),     // normal
+                                    nullptr,                        // over
+                                    currentPlayPressed.get(),       // down
+                                    nullptr,                        // disabled
+                                    currentPlayPressed.get(),       // normal (on)
+                                    nullptr,                        // over (on)
+                                    currentPlayPressed.get(),       // down (on)
+                                    nullptr);                       // disabled (on)
         }
-        
-        startTimer(100);  // Start the transition timer
     }
 }
 
@@ -810,7 +858,10 @@ void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
 {
     if (event.eventComponent == &playPauseButton)
     {
-        // Now handle the action and state change
+        // Start the transition timer when mouse is released
+        startTimer(buttonTransitionDelay);
+        
+        // Toggle tracking state
         if (audioProcessor.isTracking)
         {
             audioProcessor.stopTracking();
@@ -822,4 +873,55 @@ void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
             playPauseButton.setToggleState(true, juce::dontSendNotification);
         }
     }
+}
+
+void KronosAudioProcessorEditor::updateButtonImages()
+{
+    bool isDark = audioProcessor.isDarkMode();
+    
+    // Get the correct themed assets
+    auto& currentPlay = isDark ? playSvgCache : playLightSvgCache;
+    auto& currentPlayPressed = isDark ? playPressedSvgCache : playPressedLightSvgCache;
+    auto& currentPause = isDark ? pauseSvgCache : pauseLightSvgCache;
+    auto& currentPausePressed = isDark ? pausePressedSvgCache : pausePressedLightSvgCache;
+    
+    // Set the button images based on tracking state
+    if (audioProcessor.isTracking)
+    {
+        playPauseButton.setImages(currentPause.get(),            // normal
+                                nullptr,                         // over
+                                currentPausePressed.get(),       // down
+                                nullptr,                         // disabled
+                                currentPause.get(),              // normal on
+                                nullptr,                         // over on
+                                currentPausePressed.get(),       // down on
+                                nullptr);                        // disabled on
+    }
+    else
+    {
+        playPauseButton.setImages(currentPlay.get(),            // normal
+                                nullptr,                         // over
+                                currentPlayPressed.get(),        // down
+                                nullptr,                         // disabled
+                                currentPlay.get(),               // normal on
+                                nullptr,                         // over on
+                                currentPlayPressed.get(),        // down on
+                                nullptr);                        // disabled on
+    }
+}
+
+std::unique_ptr<juce::Drawable> KronosAudioProcessorEditor::createNormalizedDrawable(juce::Drawable* source, float targetSize)
+{
+    if (source == nullptr) return nullptr;
+    
+    std::unique_ptr<juce::Drawable> drawable(source->createCopy());
+    auto bounds = drawable->getBounds();
+    
+    // Calculate scale to fit target size while maintaining aspect ratio
+    float scale = targetSize / juce::jmax(bounds.getWidth(), bounds.getHeight());
+    
+    auto transform = juce::AffineTransform::scale(scale, scale);
+    drawable->setTransform(transform);
+    
+    return drawable;
 }

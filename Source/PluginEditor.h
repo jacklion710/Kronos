@@ -94,5 +94,18 @@ private:
     bool isTransitioningButton = false;
     const int buttonTransitionDelay = 50; // milliseconds
 
+    std::unique_ptr<juce::Drawable> backgroundLightSvgCache;
+    std::unique_ptr<juce::Drawable> timeDisplayLightSvgCache;
+    std::unique_ptr<juce::Drawable> previousSessionsLightSvgCache;
+    std::unique_ptr<juce::Drawable> headerLightSvgCache;
+    std::unique_ptr<juce::Drawable> playLightSvgCache;
+    std::unique_ptr<juce::Drawable> playPressedLightSvgCache;
+    std::unique_ptr<juce::Drawable> pauseLightSvgCache;
+    std::unique_ptr<juce::Drawable> pausePressedLightSvgCache;
+
+    void updateButtonImages();
+
+    std::unique_ptr<juce::Drawable> createNormalizedDrawable(juce::Drawable* source, float targetSize);
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
