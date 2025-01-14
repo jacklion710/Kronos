@@ -732,7 +732,11 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
                 
                 // Draw actual bar
                 float barWidth = juce::jmax(2.0f, ratio * maxBarWidth);
-                g.setColour(juce::Colour(64, 64, 255));
+                if (audioProcessor.isDarkMode()) {
+                    g.setColour(juce::Colour(64, 64, 255));  // Blue for dark mode
+                } else {
+                    g.setColour(juce::Colour(255, 140, 0));  // Orange for light mode (#FF8C00)
+                }
                 g.fillRoundedRectangle(barX, y + (dateHeight - barHeight) / 2, 
                                      barWidth, barHeight, 3.0f);
 
