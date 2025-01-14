@@ -559,7 +559,7 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     if (gritImage.isValid())
     {
         juce::Image gritCopy = gritImage.createCopy();
-        gritCopy.multiplyAllAlphas(0.035f);
+        gritCopy.multiplyAllAlphas(audioProcessor.isDarkMode() ? 0.07f : 0.07f); // Grit texture opacity
         auto gritBounds = bounds.reduced(borderThickness + 1.0f);
         g.drawImage(gritCopy, gritBounds,
                    juce::RectanglePlacement::stretchToFit);
