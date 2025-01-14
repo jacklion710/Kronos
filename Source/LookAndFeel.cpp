@@ -324,3 +324,30 @@ void KronosLookAndFeel::drawButtonText(juce::Graphics& g, juce::TextButton& butt
     g.drawText(button.getButtonText(), bounds, juce::Justification::centred, true);
 }
 
+void KronosLookAndFeel::drawHyperlinkButton(juce::Graphics& g, juce::HyperlinkButton& button,
+                                           const juce::Colour& textColour)
+{
+    auto buttonText = button.getButtonText();
+    auto font = juce::Font("ASTERA", 16.0f, juce::Font::plain);
+    
+    auto textBounds = button.getLocalBounds();
+    
+    // Set color based on mouse state and theme
+    juce::Colour linkColour = darkModeEnabled ?
+        (button.isMouseOver() ? juce::Colour(150, 150, 255) : juce::Colour(100, 100, 255)) :  // Blue shades for dark mode
+        (button.isMouseOver() ? juce::Colour(255, 140, 0) : juce::Colour(200, 110, 0));       // Orange shades for light mode
+    
+    g.setColour(linkColour);
+    g.setFont(font);
+    g.drawText(buttonText, textBounds, juce::Justification::centred, true);
+    
+    // Draw underline
+    auto textWidth = font.getStringWidth(buttonText);
+    auto centreX = textBounds.getCentreX();
+    auto baseY = textBounds.getCentreY() + 5;  // Adjust this value to position the underline
+    
+    g.drawLine(centreX - textWidth/2, baseY,
+               centreX + textWidth/2, baseY,
+               1.0f);  // Line thickness
+}
+

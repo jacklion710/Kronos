@@ -247,12 +247,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                         "About Kronos",
                         "Kronos v1.0.0\n"
                         "A simple time tracking plugin for your DAW.\n"
-                        "Created by Jack Lion\n"
-                        "https://jacklion.com\n\n"
-                        "Plugins & more at:\n"
-                        "https://jacklion.gumroad.com\n\n"
+                        "Created by Jack Lion\n\n"
+                        "Plugins & more at:\n\n"
                         "Music:\n"
-                        "https://soundcloud.com/jack0lion\n\n"
+                        "\n\n"
                         "Graphics by Aznadel",
                         juce::MessageBoxIconType::InfoIcon);
                     
@@ -262,11 +260,34 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     closeButton->setColour(juce::TextButton::textColourOffId, 
                         audioProcessor.isDarkMode() ? 
                             juce::Colour(0xE6, 0xE6, 0xFF) :    // Light blue-white for dark mode
-                            juce::Colour(50, 40, 35));          // Dark warm grey for light mode
+                            juce::Colours::white);              // White for light mode
                     
-                    closeButton->setBounds(370, 5, 20, 20);  // Smaller size, moved to corner
+                    closeButton->setBounds(370, 5, 20, 20);
                     window->addChildComponent(closeButton);
                     closeButton->setVisible(true);
+                    
+                    // Add hyperlinks
+                    auto* gumroadLink = new juce::HyperlinkButton("jacklion.gumroad.com", 
+                                                                 juce::URL("https://jacklion.gumroad.com"));
+                    auto* soundcloudLink = new juce::HyperlinkButton("soundcloud.com/jack0lion", 
+                                                                    juce::URL("https://soundcloud.com/jack0lion"));
+                    
+                    // Position links next to their respective text
+                    int baseY = 95;  // Moved down to better align with "Plugins & more at:"
+                    int linkHeight = 20;
+                    int spacing = 26;  // Increased spacing to match text spacing
+                    
+                    gumroadLink->setBounds(125, baseY, 300, linkHeight);  // X position after "Plugins & more at:"
+                    soundcloudLink->setBounds(55, baseY + spacing, 300, linkHeight);  // X position after "Music:"
+                    
+                    gumroadLink->setJustificationType(juce::Justification::left);
+                    soundcloudLink->setJustificationType(juce::Justification::left);
+                    
+                    window->addChildComponent(gumroadLink);
+                    window->addChildComponent(soundcloudLink);
+                    
+                    gumroadLink->setVisible(true);
+                    soundcloudLink->setVisible(true);
                                         
                     closeButton->onClick = [window]() {
                         window->exitModalState(0);

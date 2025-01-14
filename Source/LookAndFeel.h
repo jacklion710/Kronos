@@ -77,6 +77,9 @@ public:
                        bool shouldDrawButtonAsHighlighted, 
                        bool shouldDrawButtonAsDown) override;
 
+    void drawHyperlinkButton(juce::Graphics& g, juce::HyperlinkButton& button,
+                            const juce::Colour& textColour);
+
 private:
     void setupDarkColorScheme();
     void setupLightColorScheme();
