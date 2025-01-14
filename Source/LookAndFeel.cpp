@@ -193,15 +193,23 @@ void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
     }
 }
 
-juce::Font KronosLookAndFeel::getTextButtonFont(juce::TextButton&, int buttonHeight)
+juce::Font KronosLookAndFeel::getTextButtonFont(juce::TextButton& button, int buttonHeight)
 {
+    // Special case for close button
+    if (button.getButtonText() == "x")
+        return juce::Font("ASTERA", 16.0f, juce::Font::plain);  // Smaller font size
+        
     return juce::Font(18.0f, juce::Font::bold);
 }
 
 void KronosLookAndFeel::drawPopupMenuBackground(juce::Graphics& g, int width, int height)
 {
-    auto background = juce::Colour(30, 30, 30);  // Dark background
-    auto highlight = juce::Colour(40, 40, 40);   // Slightly lighter for gradient
+    auto background = darkModeEnabled ? 
+        juce::Colour(30, 30, 30) :       // Dark background for dark mode
+        juce::Colour(200, 195, 190);     // Darker warm grey for light mode
+    auto highlight = darkModeEnabled ? 
+        juce::Colour(40, 40, 40) :       // Slightly lighter for dark mode
+        juce::Colour(210, 205, 200);     // Slightly lighter warm grey for light mode
     
     g.setGradientFill(juce::ColourGradient(background, 0.0f, 0.0f,
                                           highlight, 0.0f, (float)height,
@@ -209,7 +217,9 @@ void KronosLookAndFeel::drawPopupMenuBackground(juce::Graphics& g, int width, in
     g.fillAll();
     
     // Add subtle border
-    g.setColour(juce::Colour(60, 60, 60));
+    g.setColour(darkModeEnabled ? 
+        juce::Colour(60, 60, 60) :       // Dark mode border
+        juce::Colour(120, 100, 80));     // Light mode border - warm metallic
     g.drawRect(0, 0, width, height, 1);
 }
 
@@ -221,28 +231,34 @@ void KronosLookAndFeel::drawPopupMenuItem(juce::Graphics& g, const juce::Rectang
 {
     if (isHighlighted && isActive)
     {
-        // Create a gradient for the highlight
-        auto bounds = area.toFloat().reduced(2);  // Reduce slightly for padding
+        // Create a gradient for the highlight that matches our theme
+        auto bounds = area.toFloat().reduced(2);
         g.setGradientFill(juce::ColourGradient(
-            juce::Colour(64, 64, 255).withAlpha(0.2f),  // Lighter blue
+            darkModeEnabled ?
+                juce::Colour(64, 64, 255).withAlpha(0.2f) :     // Blue for dark mode
+                juce::Colour(160, 140, 120).withAlpha(0.2f),    // Warm metallic for light mode
             bounds.getTopLeft(),
-            juce::Colour(64, 64, 255).withAlpha(0.3f),  // Slightly darker blue
+            darkModeEnabled ?
+                juce::Colour(64, 64, 255).withAlpha(0.3f) :     // Darker blue for dark mode
+                juce::Colour(120, 100, 80).withAlpha(0.3f),     // Darker metallic for light mode
             bounds.getBottomRight(),
             false));
-        g.fillRoundedRectangle(bounds, 4.0f);  // Rounded corners
+        g.fillRoundedRectangle(bounds, 4.0f);
         
         // Add subtle glow border
-        g.setColour(juce::Colour(64, 64, 255).withAlpha(0.4f));
+        g.setColour(darkModeEnabled ?
+            juce::Colour(64, 64, 255).withAlpha(0.4f) :         // Blue glow for dark mode
+            juce::Colour(160, 140, 120).withAlpha(0.4f));       // Warm metallic glow for light mode
         g.drawRoundedRectangle(bounds, 4.0f, 1.0f);
     }
 
-    // Use ASTERA font for menu items
     auto font = juce::Font("ASTERA", 16.0f, juce::Font::plain);
-    auto textColor = juce::Colour(0xE6, 0xE6, 0xFF);  // Matching existing text color
+    auto textColor = darkModeEnabled ? 
+        juce::Colour(0xE6, 0xE6, 0xFF) :      // Light blue-white for dark mode
+        juce::Colour(50, 40, 35);             // Darker warm grey for light mode
     
     if (!isSeparator)
     {
-        // Draw text with subtle glow effect
         auto textArea = area.reduced(15, 0);
         
         // Draw glow
@@ -261,44 +277,50 @@ void KronosLookAndFeel::drawPopupMenuItem(juce::Graphics& g, const juce::Rectang
     }
 }
 
-void KronosLookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert,
-                                    const juce::Rectangle<int>& textArea, 
-                                    juce::TextLayout& textLayout)
+void KronosLookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert, 
+                                   const juce::Rectangle<int>& textArea, 
+                                   juce::TextLayout& textLayout)
 {
-    auto bounds = alert.getLocalBounds().toFloat();
-    float borderThickness = 4.0f;
+    auto bounds = alert.getLocalBounds().toFloat().reduced(1.0f);
     
-    // Draw background
-    g.setGradientFill(juce::ColourGradient(
-        juce::Colour(30, 30, 30),  // Dark background
-        bounds.getTopLeft(),
-        juce::Colour(40, 40, 40),  // Slightly lighter
-        bounds.getBottomRight(),
-        false));
-    g.fillRect(bounds.reduced(borderThickness));
+    // Fill background with a more muted, warmer grey
+    g.setColour(darkModeEnabled ? 
+        juce::Colour(0x1E, 0x1E, 0x1E) :      // Dark grey for dark mode
+        juce::Colour(100, 95, 90));            // Muted warm grey for light mode
+    g.fillRoundedRectangle(bounds, 10.0f);
     
-    // Create gradient for border with multiple points for sine-wave like effect
+    // Draw border with gradient
     juce::ColourGradient borderGradient(
-        juce::Colour(130, 130, 130),  // Light grey (bottom left)
+        darkModeEnabled ?
+            juce::Colour(130, 130, 130) :           // Dark mode highlight
+            juce::Colour(160, 140, 120),            // Light mode warm highlight
         bounds.getBottomLeft(),
-        juce::Colour(130, 130, 130),  // Light grey (top right)
+        darkModeEnabled ?
+            juce::Colour(40, 40, 40) :             // Dark mode shadow
+            juce::Colour(100, 85, 70),             // Light mode warm shadow
         bounds.getTopRight(),
         false
     );
     
-    // Add intermediate points for the sine-wave like effect
-    borderGradient.addColour(0.25, juce::Colour(40, 40, 40));    // Dark (first quarter)
-    borderGradient.addColour(0.5, juce::Colour(40, 40, 40));     // Dark (middle)
-    borderGradient.addColour(0.75, juce::Colour(130, 130, 130)); // Light (third quarter)
-    
-    // Draw border with gradient
     g.setGradientFill(borderGradient);
-    g.drawRect(bounds, borderThickness);
+    g.drawRoundedRectangle(bounds, 10.0f, 2.0f);
     
-    // Set text color
-    alert.setColour(juce::AlertWindow::textColourId, juce::Colour(0xE6, 0xE6, 0xFF));
-    
-    // Draw the text layout
+    // Draw the provided TextLayout
     textLayout.draw(g, textArea.toFloat());
+}
+
+// Add ASTERA font to alert window buttons
+void KronosLookAndFeel::drawButtonText(juce::Graphics& g, juce::TextButton& button,
+                                     bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    auto font = juce::Font("ASTERA", 16.0f, juce::Font::plain);
+    g.setFont(font);
+    
+    g.setColour(button.findColour(button.getToggleState() ? juce::TextButton::textColourOnId
+                                                         : juce::TextButton::textColourOffId)
+                       .withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.5f));
+
+    auto bounds = button.getLocalBounds();
+    g.drawText(button.getButtonText(), bounds, juce::Justification::centred, true);
 }
 

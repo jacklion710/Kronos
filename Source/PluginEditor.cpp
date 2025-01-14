@@ -246,18 +246,34 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     auto* window = new juce::AlertWindow(
                         "About Kronos",
                         "Kronos v1.0.0\n"
+                        "A simple time tracking plugin for your DAW.\n"
                         "Created by Jack Lion\n"
                         "https://jacklion.com\n\n"
+                        "Plugins & more at:\n"
                         "https://jacklion.gumroad.com\n\n"
-                        ""
-                        "A simple time tracking plugin for your DAW.",
+                        "Music:\n"
+                        "https://soundcloud.com/jack0lion\n\n"
+                        "Graphics by Aznadel",
                         juce::MessageBoxIconType::InfoIcon);
                     
-                    window->addButton("Close", 0);
-                    window->setLookAndFeel(&customLookAndFeel);
+                    // Create minimal close button
+                    auto* closeButton = new juce::TextButton("x");
+                    closeButton->setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
+                    closeButton->setColour(juce::TextButton::textColourOffId, 
+                        audioProcessor.isDarkMode() ? 
+                            juce::Colour(0xE6, 0xE6, 0xFF) :    // Light blue-white for dark mode
+                            juce::Colour(50, 40, 35));          // Dark warm grey for light mode
                     
-                    // Make the window larger with more padding
-                    window->setSize(400, 250);
+                    closeButton->setBounds(370, 5, 20, 20);  // Smaller size, moved to corner
+                    window->addChildComponent(closeButton);
+                    closeButton->setVisible(true);
+                                        
+                    closeButton->onClick = [window]() {
+                        window->exitModalState(0);
+                    };
+                    
+                    window->setLookAndFeel(&customLookAndFeel);
+                    window->setSize(400, 300);
                     
                     // Center on screen and make it modal
                     window->centreAroundComponent(this, window->getWidth(), window->getHeight());

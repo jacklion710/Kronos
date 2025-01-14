@@ -32,7 +32,7 @@ public:
 
     void drawLabel(juce::Graphics& g, juce::Label& label) override;
 
-    juce::Font getTextButtonFont(juce::TextButton&, int buttonHeight) override;
+    juce::Font getTextButtonFont(juce::TextButton& button, int buttonHeight) override;
 
     void drawPopupMenuItem(juce::Graphics&, const juce::Rectangle<int>& area,
                           bool isSeparator, bool isActive, bool isHighlighted,
@@ -72,6 +72,10 @@ public:
             juce::Colour(0xE6, 0xE6, 0xFF) :    // Light blue-white for dark mode
             juce::Colour(0xE6, 0xD5, 0xBF);     // Beige for light mode
     }
+
+    void drawButtonText(juce::Graphics& g, juce::TextButton& button,
+                       bool shouldDrawButtonAsHighlighted, 
+                       bool shouldDrawButtonAsDown) override;
 
 private:
     void setupDarkColorScheme();
