@@ -48,7 +48,7 @@ private:
     juce::Label dateLabels[3];  // Labels for recent dates
 
     juce::DrawableButton playPauseButton {"PlayPauseButton", juce::DrawableButton::ButtonStyle::ImageFitted};
-    juce::TextButton themeToggleButton;
+    juce::DrawableButton themeToggleButton {"ThemeToggleButton", juce::DrawableButton::ButtonStyle::ImageFitted};
 
     juce::Rectangle<int> timeDisplayBounds;
 
@@ -106,6 +106,15 @@ private:
     void updateButtonImages();
 
     std::unique_ptr<juce::Drawable> createNormalizedDrawable(juce::Drawable* source, float targetSize);
+
+    std::unique_ptr<juce::Drawable> darkModeSvgCache;
+    std::unique_ptr<juce::Drawable> darkModePressedSvgCache;
+    std::unique_ptr<juce::Drawable> lightModeSvgCache;
+    std::unique_ptr<juce::Drawable> lightModePressedSvgCache;
+
+    void updateThemeButtonImages();
+
+    const float targetButtonSize = 60.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
