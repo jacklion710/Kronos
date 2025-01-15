@@ -114,7 +114,7 @@ private:
 
     void updateThemeButtonImages();
 
-    const float targetButtonSize = 60.0f;
+    const float targetButtonSize = 25.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
