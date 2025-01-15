@@ -330,6 +330,16 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     auto* soundcloudLink = new juce::HyperlinkButton("soundcloud.com/jack0lion", 
                                                                     juce::URL("https://soundcloud.com/jack0lion"));
                     
+                    // Set custom colors for hyperlinks
+                    juce::Colour linkColor(0xFF, 0xA5, 0x00);     // Orange (#FFA500)
+
+                    gumroadLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
+                    soundcloudLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
+
+                    // Make the buttons underlined to indicate they're clickable
+                    gumroadLink->setTooltip("Visit Gumroad page");
+                    soundcloudLink->setTooltip("Visit SoundCloud page");
+                    
                     // Position links next to their respective text
                     int baseY = 95;  // Moved down to better align with "Plugins & more at:"
                     int linkHeight = 20;
