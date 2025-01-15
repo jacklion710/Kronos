@@ -330,8 +330,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     auto* soundcloudLink = new juce::HyperlinkButton("soundcloud.com/jack0lion", 
                                                                     juce::URL("https://soundcloud.com/jack0lion"));
                     
-                    // Set custom colors for hyperlinks
-                    juce::Colour linkColor(0xFF, 0xA5, 0x00);     // Orange (#FFA500)
+                    // Set custom colors for hyperlinks based on theme
+                    juce::Colour linkColor = audioProcessor.isDarkMode() ? 
+                        juce::Colour(0x64, 0x64, 0xFF) :  // Electric blue (#6464FF) for dark mode
+                        juce::Colour(0xFF, 0xA5, 0x00);   // Orange (#FFA500) for light mode
 
                     gumroadLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
                     soundcloudLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
