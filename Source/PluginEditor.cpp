@@ -882,13 +882,37 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
                 juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
                                                              (int)hours, (int)minutes, (int)seconds);
                 
-                // Draw time text centered over the bar with slight vertical offset
-                g.setColour(juce::Colour(0xE6, 0xE6, 0xFF));  // Light blue-white color
+                // Set up text style
                 g.setFont(juce::Font("ASTERA", 14.0f, juce::Font::plain));
-                float textY = y + (dateHeight - barHeight) / 2 + 2.0f; // Added 2.0f for slight downward adjustment
-                g.drawText(timeStr, barX, textY, 
-                          maxBarWidth, barHeight,
-                          juce::Justification::centred, true);
+                float textY = y + (dateHeight - barHeight) / 2 + 2.0f;
+                auto textBounds = juce::Rectangle<float>(barX, textY, maxBarWidth, barHeight);
+
+                // Draw stroke (shadow) effect
+                g.setColour(juce::Colours::black);
+                float strokeSize = 0.8f;
+                float positions[][2] = {
+                    {-strokeSize, -strokeSize},
+                    {-strokeSize, strokeSize},
+                    {strokeSize, -strokeSize},
+                    {strokeSize, strokeSize},
+                    {0, strokeSize},
+                    {0, -strokeSize},
+                    {strokeSize, 0},
+                    {-strokeSize, 0}
+                };
+
+                // Draw stroke positions
+                for (auto& pos : positions)
+                {
+                    auto offsetBounds = textBounds.translated(pos[0], pos[1]);
+                    g.drawText(timeStr, offsetBounds.toNearestInt(), 
+                               juce::Justification::centred, true);
+                }
+
+                // Draw main text
+                g.setColour(juce::Colour(0xE6, 0xE6, 0xFF));  // Light blue-white color
+                g.drawText(timeStr, textBounds.toNearestInt(), 
+                           juce::Justification::centred, true);
             }
             else
             {
