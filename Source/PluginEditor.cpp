@@ -441,14 +441,12 @@ void KronosAudioProcessorEditor::timerCallback()
     auto minutes = (totalSeconds % 3600) / 60;
     auto seconds = totalSeconds % 60;
     
-    hoursLabel.setText(juce::String::formatted("%02d", 
-                                         std::min((int)hours, 99)), 
+    // For the main display, show actual hours without capping
+    hoursLabel.setText(juce::String::formatted("%02d", (int)hours), 
                   juce::dontSendNotification);
-    minutesLabel.setText(juce::String::formatted("%02d", 
-                                           hours > 99 ? 59 : (int)minutes), 
+    minutesLabel.setText(juce::String::formatted("%02d", (int)minutes), 
                     juce::dontSendNotification);
-    secondsLabel.setText(juce::String::formatted("%02d", 
-                                           hours > 99 ? 59 : (int)seconds), 
+    secondsLabel.setText(juce::String::formatted("%02d", (int)seconds), 
                     juce::dontSendNotification);
     
     // Get the bounds of the Previous Sessions panel
