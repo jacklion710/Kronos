@@ -190,14 +190,15 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     DBG("Light mode SVG valid: " + juce::String(lightModeSvgCache != nullptr ? "true" : "false"));
 
     themeToggleButton.setImages(
-        isDark ? darkModeSvgCache.get() : lightModeSvgCache.get(),           // normal
-        nullptr,                                                              // over
-        isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down
-        nullptr,                                                              // disabled
-        isDark ? darkModeSvgCache.get() : lightModeSvgCache.get(),           // normal (on)
-        nullptr,                                                              // over (on)
-        isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down (on)
-        nullptr                                                               // disabled (on)
+        // Show opposite mode icon (light icon in dark mode, dark icon in light mode)
+        !isDark ? darkModeSvgCache.get() : lightModeSvgCache.get(),           // normal
+        nullptr,                                                               // over
+        !isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down
+        nullptr,                                                               // disabled
+        !isDark ? darkModeSvgCache.get() : lightModeSvgCache.get(),           // normal (on)
+        nullptr,                                                               // over (on)
+        !isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down (on)
+        nullptr                                                                // disabled (on)
     );
 
     DBG("Button images set");
@@ -366,6 +367,8 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
             });
     };
 
+    float targetButtonSize = 60.0f; // Match your button size
+
     // Normalize all button-related SVGs
     playSvgCache = createNormalizedDrawable(playSvgCache.get(), targetButtonSize);
     playPressedSvgCache = createNormalizedDrawable(playPressedSvgCache.get(), targetButtonSize * 0.95f);
@@ -376,6 +379,16 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     playPressedLightSvgCache = createNormalizedDrawable(playPressedLightSvgCache.get(), targetButtonSize * 0.95f);
     pauseLightSvgCache = createNormalizedDrawable(pauseLightSvgCache.get(), targetButtonSize);
     pausePressedLightSvgCache = createNormalizedDrawable(pausePressedLightSvgCache.get(), targetButtonSize * 0.95f);
+
+    // Normalize theme button SVGs
+    darkModeSvgCache = juce::Drawable::createFromImageData(BinaryData::Dark_Mode_Button_svg, 
+                                                        BinaryData::Dark_Mode_Button_svgSize);
+    darkModePressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Dark_Mode_Button_Pressed_svg, 
+                                                                 BinaryData::Dark_Mode_Button_Pressed_svgSize);
+    lightModeSvgCache = juce::Drawable::createFromImageData(BinaryData::Light_Mode_Button_svg, 
+                                                         BinaryData::Light_Mode_Button_svgSize);
+    lightModePressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Light_Mode_Button_Pressed_svg, 
+                                                                BinaryData::Light_Mode_Button_Pressed_svgSize);
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -975,7 +988,7 @@ void KronosAudioProcessorEditor::mouseDown(const juce::MouseEvent& event)
                                     currentPlayPressed.get(),       // normal (on)
                                     nullptr,                        // over (on)
                                     currentPlayPressed.get(),       // down (on)
-                                    nullptr);                        // disabled (on)
+                                    nullptr);                       // disabled (on)
         }
     }
 }
@@ -1057,13 +1070,14 @@ void KronosAudioProcessorEditor::updateThemeButtonImages()
     bool isDark = audioProcessor.isDarkMode();
     
     themeToggleButton.setImages(
-        isDark ? darkModeSvgCache.get() : lightModeSvgCache.get(),           // normal
-        nullptr,                                                              // over
-        isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down
-        nullptr,                                                              // disabled
-        isDark ? darkModeSvgCache.get() : lightModeSvgCache.get(),           // normal (on)
-        nullptr,                                                              // over (on)
-        isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down (on)
-        nullptr                                                               // disabled (on)
+        // Show opposite mode icon
+        !isDark ? darkModeSvgCache.get() : lightModeSvgCache.get(),           // normal
+        nullptr,                                                               // over
+        !isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down
+        nullptr,                                                               // disabled
+        !isDark ? darkModeSvgCache.get() : lightModeSvgCache.get(),           // normal (on)
+        nullptr,                                                               // over (on)
+        !isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down (on)
+        nullptr                                                                // disabled (on)
     );
 }
