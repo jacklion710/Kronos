@@ -436,17 +436,20 @@ void KronosAudioProcessorEditor::timerCallback()
     }
     
     // Handle regular timer updates
-    auto seconds = audioProcessor.getTotalTimeInSeconds();
-    auto hours = seconds / 3600;
-    auto minutes = (seconds % 3600) / 60;
-    seconds = seconds % 60;
+    auto totalSeconds = audioProcessor.getTotalTimeInSeconds();
+    auto hours = totalSeconds / 3600;
+    auto minutes = (totalSeconds % 3600) / 60;
+    auto seconds = totalSeconds % 60;
     
-    hoursLabel.setText(juce::String::formatted("%02d", (int)hours), 
-                      juce::dontSendNotification);
-    minutesLabel.setText(juce::String::formatted("%02d", (int)minutes), 
-                        juce::dontSendNotification);
-    secondsLabel.setText(juce::String::formatted("%02d", (int)seconds), 
-                        juce::dontSendNotification);
+    hoursLabel.setText(juce::String::formatted("%02d", 
+                                         std::min((int)hours, 99)), 
+                  juce::dontSendNotification);
+    minutesLabel.setText(juce::String::formatted("%02d", 
+                                           hours > 99 ? 59 : (int)minutes), 
+                    juce::dontSendNotification);
+    secondsLabel.setText(juce::String::formatted("%02d", 
+                                           hours > 99 ? 59 : (int)seconds), 
+                    juce::dontSendNotification);
     
     // Get the bounds of the Previous Sessions panel
     auto bounds = getLocalBounds();
@@ -876,11 +879,22 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
                                      barWidth, barHeight, 3.0f);
 
                 // Format and draw time text
-                auto hours = timeSpent / 3600;
-                auto minutes = (timeSpent % 3600) / 60;
-                auto seconds = timeSpent % 60;
-                juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
-                                                             (int)hours, (int)minutes, (int)seconds);
+                juce::String timeStr;
+                if (timeSpent >= 360000) // Over 99:59:59
+                {
+                    auto displayHours = timeSpent / 3600;
+                    timeStr = juce::String::formatted("%d:00:00", (int)displayHours);
+                }
+                else
+                {
+                    auto hours = timeSpent / 3600;
+                    auto minutes = (timeSpent % 3600) / 60;
+                    auto seconds = timeSpent % 60;
+                    timeStr = juce::String::formatted("%02d:%02d:%02d", 
+                                                    (int)hours, 
+                                                    (int)minutes, 
+                                                    (int)seconds);
+                }
                 
                 // Set up text style
                 g.setFont(juce::Font("ASTERA", 14.0f, juce::Font::plain));

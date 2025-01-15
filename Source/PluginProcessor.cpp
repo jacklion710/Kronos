@@ -494,7 +494,14 @@ void KronosAudioProcessor::addDummyDates()
     // Add 10 dummy dates with different times
     juce::Time baseDate = juce::Time::getCurrentTime();
     
-    for (int i = 0; i < 10; ++i)
+    // First add a date with a very large time value (over 100 hours)
+    juce::Time longDate = baseDate - juce::RelativeTime::days(10);
+    sessionDates.add(longDate);
+    juce::String longDateKey = longDate.formatted("%Y-%m-%d");
+    timePerDate.set(longDateKey, 400000);  // About 111 hours
+    
+    // Then add the regular test dates
+    for (int i = 0; i < 9; ++i)  // Reduced to 9 to keep total at 10 with long session
     {
         // Create dates going backwards from today
         juce::Time date = baseDate - juce::RelativeTime::days(i);
