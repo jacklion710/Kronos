@@ -27,7 +27,9 @@ KronosAudioProcessor::KronosAudioProcessor()
 {
     startTime = juce::Time::getCurrentTime();
     isTracking = true;
-    totalTimeInSeconds = 359970;  // This is 99:59:45 in seconds (99 * 3600 + 59 * 60 + 45)
+    totalTimeInSeconds = 0; // Initialize total time to 0 when plugin is loaded
+    // totalTimeInSeconds = UNCOMMENT FOR TESTING LARGE TIME ONLY
+    // 359970;  // This is 99:59:45 in seconds (99 * 3600 + 59 * 60 + 45)
     darkModeEnabled = true;  // Set default dark mode
     startTimer(1000);
 
