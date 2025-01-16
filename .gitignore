@@ -33,4 +33,7 @@ Thumbs.db
 *.tlog
 
 # Live Projects
+test project/
+
+# Assets
 Resources/
