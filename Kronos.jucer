@@ -7,6 +7,10 @@
               pluginCode="KRNS" cppLanguageStandard="20" pluginVST3Category="Tools">
   <MAINGROUP id="BaOmXI" name="Kronos">
     <GROUP id="{95DFCBFD-71F4-784F-99EE-B168B870A2CB}" name="Assets">
+      <FILE id="C7WOal" name="Up Arrow Dark.svg" compile="0" resource="1"
+            file="Resources/Up Arrow Dark.svg"/>
+      <FILE id="nTQft9" name="Down Arrow Dark.svg" compile="0" resource="1"
+            file="Resources/Down Arrow Dark.svg"/>
       <FILE id="ZBCR1v" name="ASTERA.ttf" compile="0" resource="1" file="Resources/ASTERA.ttf"/>
       <FILE id="ySu9Nl" name="Background Dark.svg" compile="0" resource="1"
             file="Resources/Background Dark.svg"/>
@@ -62,12 +66,8 @@
             file="Resources/Sort Time Light.svg"/>
       <FILE id="fxUlw5" name="Sort Time Pressed Dark.svg" compile="0" resource="1"
             file="Resources/Sort Time Pressed Dark.svg"/>
-      <FILE id="Pl37EH" name="Down Arrow Dark.svg" compile="0" resource="1"
-            file="Resources/Down Arrow Dark.svg"/>
       <FILE id="wgYKBW" name="Down Arrow Pressed Dark.svg" compile="0" resource="1"
             file="Resources/Down Arrow Pressed Dark.svg"/>
-      <FILE id="fJHNU4" name="Up Arrow Dark.svg" compile="0" resource="1"
-            file="Resources/Up Arrow Dark.svg"/>
       <FILE id="ZmAbjr" name="Up Arrow Pressed Dark.svg" compile="0" resource="1"
             file="Resources/Up Arrow Pressed Dark.svg"/>
       <FILE id="JdcVUn" name="Sort Time Pressed Light.svg" compile="0" resource="1"
