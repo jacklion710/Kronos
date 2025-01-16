@@ -228,8 +228,8 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     sortModeButton.setClickingTogglesState(true);
 
     // Make button background transparent
-    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::red);
-    sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::red);
+    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
 
     // Set initial images AFTER loading SVGs
     if (sortTimeDarkSvgCache != nullptr)
@@ -438,8 +438,8 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     sortModeButton.setClickingTogglesState(true);
 
     // Make button background transparent
-    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::red);
-    sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::red);
+    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
 
     // Set initial images AFTER loading SVGs
     if (sortTimeDarkSvgCache != nullptr)
@@ -521,9 +521,9 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     sortModeButton.setButtonText("");
     sortModeButton.setClickingTogglesState(true);
 
-    // Make button background temporarily visible for debugging
-    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::purple);
-    sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::purple);
+    // Make button background transparent (changed from red)
+    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
 
     // Verify all SVGs are properly loaded and normalized
     bool allSVGsLoaded = sortTimeDarkSvgCache != nullptr && 
@@ -615,10 +615,14 @@ void KronosAudioProcessorEditor::resized()
     auto bounds = getLocalBounds();
     auto buttonHeight = 60;
     auto margin = 10;
-    auto dateHeight = 25;  // Increased height remains
+    auto dateHeight = 25;
     auto titleHeight = 80;
     auto playPauseWidth = 60;
     auto previousSessionsHeight = 160;
+    auto sortButtonSize = 50;
+
+    // Store bottomSection for later use
+    auto originalBottomSection = bounds.removeFromBottom(previousSessionsHeight);
 
     // Title area
     bounds.removeFromTop(titleHeight);
@@ -626,6 +630,17 @@ void KronosAudioProcessorEditor::resized()
 
     // Time display area - store the bounds
     timeDisplayBounds = bounds.removeFromTop(buttonHeight * 2.5);
+
+    // Move to bottom section for Previous Sessions panel
+    auto bottomSection = bounds.removeFromBottom(previousSessionsHeight);
+    bottomSection.removeFromTop(margin * 5);
+    bottomSection.removeFromBottom(margin);
+
+    // Position date labels in the bottom section
+    for (int i = 0; i < 3; ++i)
+    {
+        dateLabels[i].setBounds(bottomSection.removeFromTop(dateHeight));
+    }
 
     // Calculate center positions
     auto centerX = getWidth() / 2;
@@ -678,36 +693,24 @@ void KronosAudioProcessorEditor::resized()
                              secondsLabel.getWidth(),
                              unitLabelHeight);
 
-    // Move dates section
-    auto bottomSection = bounds.removeFromBottom(previousSessionsHeight);
-    bottomSection.removeFromTop(margin * 5);  // Increased from 4 to move labels down
-    bottomSection.removeFromBottom(margin);
-    
-    // Position date labels in the bottom section
-    for (int i = 0; i < 3; ++i)
-    {
-        dateLabels[i].setBounds(bottomSection.removeFromTop(dateHeight));
-    }
-
     // Position theme toggle button
     auto buttonSize = 50;
     themeToggleButton.setBounds(getWidth() - buttonSize - margin,
                                getHeight() - buttonSize - margin,
                                buttonSize, buttonSize);
-
-    // Stack the buttons in the bottom left
-    auto stackedButtonWidth = 100;
-    auto stackedButtonHeight = 30;
-    auto stackedMargin = 10;
+        
+    // Position sort button to the left of Previous Sessions panel
+    sortModeButton.setBounds(
+        margin + 80,  // Adjust this value to move right
+        originalBottomSection.getCentreY() - (sortButtonSize / 2),  // Adjust this value to move up/down
+        sortButtonSize,
+        sortButtonSize
+    );
     
-    // Sort button on top
-    auto sortButtonSize = 50;  // or whatever size matches your SVG
-    sortModeButton.setBounds(stackedMargin, 
-                           getHeight() - previousSessionsHeight + stackedMargin,
-                           sortButtonSize, 
-                           sortButtonSize);
+    // Make sure it's visible
+    sortModeButton.setVisible(true);
 
-    // Add debug output
+    // Debug output
     DBG("Sort button bounds: x=" + juce::String(sortModeButton.getX()) + 
         ", y=" + juce::String(sortModeButton.getY()) + 
         ", width=" + juce::String(sortModeButton.getWidth()) + 
@@ -715,7 +718,7 @@ void KronosAudioProcessorEditor::resized()
     DBG("Sort button visible: " + juce::String(sortModeButton.isVisible() ? "yes" : "no"));
 
     // Temporarily set a background color to make it visible for debugging
-    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::red);
+    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::purple);
 
     // Adjust scroll button positions to match new label positions
     int scrollButtonSize = 25;
