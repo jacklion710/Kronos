@@ -44,6 +44,22 @@
             file="Resources/Previous Sessions Dark.svg"/>
       <FILE id="lZcttl" name="Previous Sessions Light.svg" compile="0" resource="1"
             file="Resources/Previous Sessions Light.svg"/>
+      <FILE id="xjLDxr" name="Sort Recency Dark.svg" compile="0" resource="1"
+            file="Resources/Sort Recency Dark.svg"/>
+      <FILE id="L6wwUi" name="Sort Recency Light.svg" compile="0" resource="1"
+            file="Resources/Sort Recency Light.svg"/>
+      <FILE id="GYBzuu" name="Sort Recency Pressed Dark.svg" compile="0"
+            resource="1" file="Resources/Sort Recency Pressed Dark.svg"/>
+      <FILE id="eLKB72" name="Sort Recency Pressed Light.svg" compile="0"
+            resource="1" file="Resources/Sort Recency Pressed Light.svg"/>
+      <FILE id="ysTMka" name="Sort Time Dark.svg" compile="0" resource="1"
+            file="Resources/Sort Time Dark.svg"/>
+      <FILE id="RuSy7r" name="Sort Time Light.svg" compile="0" resource="1"
+            file="Resources/Sort Time Light.svg"/>
+      <FILE id="fxUlw5" name="Sort Time Pressed Dark.svg" compile="0" resource="1"
+            file="Resources/Sort Time Pressed Dark.svg"/>
+      <FILE id="JdcVUn" name="Sort Time Pressed Light.svg" compile="0" resource="1"
+            file="Resources/Sort Time Pressed Light.svg"/>
       <FILE id="dDHw8S" name="Time Display Dark.svg" compile="0" resource="1"
             file="Resources/Time Display Dark.svg"/>
       <FILE id="XmwBNN" name="Time Display Light.svg" compile="0" resource="1"

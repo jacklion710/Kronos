@@ -198,7 +198,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         !isDark ? darkModeSvgCache.get() : lightModeSvgCache.get(),           // normal (on)
         nullptr,                                                               // over (on)
         !isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down (on)
-        nullptr                                                                // disabled (on)
+        nullptr                                                                // disabled (on) (use normal)
     );
 
     DBG("Button images set");
@@ -211,6 +211,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         updateThemeButtonImages();
         updateButtonImages();
         repaint();
+        updateSortButtonImages();
     };
 
     DBG("Theme button initialization complete");
@@ -222,10 +223,35 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     startTimerHz(1);
 
     addAndMakeVisible(sortModeButton);
-    sortModeButton.setButtonText("Sort by Time");
+    sortModeButton.setVisible(true);
+    sortModeButton.setButtonText("");
+    sortModeButton.setClickingTogglesState(true);
+
+    // Make button background transparent
+    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::red);
+    sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::red);
+
+    // Set initial images AFTER loading SVGs
+    if (sortTimeDarkSvgCache != nullptr)
+    {
+        DBG("Setting initial sort button images");
+        updateSortButtonImages();
+        DBG("Sort button images set");
+    }
+    else
+    {
+        DBG("Failed to load sort button SVGs");
+    }
+
+    // Add more debug output
+    DBG("Sort button initialized");
+    DBG("Sort button visible: " + juce::String(sortModeButton.isVisible() ? "yes" : "no"));
+    DBG("Sort button enabled: " + juce::String(sortModeButton.isEnabled() ? "yes" : "no"));
+
+    // Add the click handler
     sortModeButton.onClick = [this]() {
         audioProcessor.toggleDateSortMode();
-        updateSortButtonText();
+        updateSortButtonImages();
         updateDateLabels();
     };
 
@@ -305,7 +331,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                         "About Kronos",
                         "Kronos v1.0.0\n"
                         "A simple time tracking plugin for your DAW.\n"
-                        "Created by Jack Lion\n\n"
+                        "Created by Jacob Leone aka Jack.Lion\n\n"
                         "Plugins & more at:\n\n"
                         "Music:\n"
                         "\n\n"
@@ -379,8 +405,6 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
             });
     };
 
-    float targetButtonSize = 60.0f; // Match your button size
-
     // Normalize all button-related SVGs
     playSvgCache = createNormalizedDrawable(playSvgCache.get(), targetButtonSize);
     playPressedSvgCache = createNormalizedDrawable(playPressedSvgCache.get(), targetButtonSize * 0.95f);
@@ -401,6 +425,125 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                                                          BinaryData::Light_Mode_Button_svgSize);
     lightModePressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Light_Mode_Button_Pressed_svg, 
                                                                 BinaryData::Light_Mode_Button_Pressed_svgSize);
+
+    // Load Sort button SVGs
+    sortTimeDarkSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Time_Dark_svg, 
+                                                       BinaryData::Sort_Time_Dark_svgSize);
+    DBG("Sort Time Dark SVG loaded: " + juce::String(sortTimeDarkSvgCache != nullptr ? "true" : "false"));
+
+    // Initialize the button
+    addAndMakeVisible(sortModeButton);
+    sortModeButton.setVisible(true);
+    sortModeButton.setButtonText("");
+    sortModeButton.setClickingTogglesState(true);
+
+    // Make button background transparent
+    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::red);
+    sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::red);
+
+    // Set initial images AFTER loading SVGs
+    if (sortTimeDarkSvgCache != nullptr)
+    {
+        DBG("Setting initial sort button images");
+        updateSortButtonImages();
+        DBG("Sort button images set");
+    }
+    else
+    {
+        DBG("Failed to load sort button SVGs");
+    }
+
+    // Add more debug output
+    DBG("Sort button initialized");
+    DBG("Sort button visible: " + juce::String(sortModeButton.isVisible() ? "yes" : "no"));
+    DBG("Sort button enabled: " + juce::String(sortModeButton.isEnabled() ? "yes" : "no"));
+
+    // Load and normalize Sort button SVGs with debug output
+    DBG("Loading sort button SVGs...");
+
+    // Time Sort SVGs
+    sortTimeDarkSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Time_Dark_svg, 
+                                                         BinaryData::Sort_Time_Dark_svgSize);
+    DBG(juce::String("Sort Time Dark loaded: ") + (sortTimeDarkSvgCache != nullptr ? "true" : "false"));
+
+    sortTimeLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Time_Light_svg, 
+                                                          BinaryData::Sort_Time_Light_svgSize);
+    DBG(juce::String("Sort Time Light loaded: ") + (sortTimeLightSvgCache != nullptr ? "true" : "false"));
+
+    sortTimeDarkPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Time_Pressed_Dark_svg, 
+                                                               BinaryData::Sort_Time_Pressed_Dark_svgSize);
+    DBG(juce::String("Sort Time Dark Pressed loaded: ") + (sortTimeDarkPressedSvgCache != nullptr ? "true" : "false"));
+
+    sortTimeLightPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Time_Pressed_Light_svg, 
+                                                                BinaryData::Sort_Time_Pressed_Light_svgSize);
+    DBG(juce::String("Sort Time Light Pressed loaded: ") + (sortTimeLightPressedSvgCache != nullptr ? "true" : "false"));
+
+    // Recency Sort SVGs
+    sortRecencyDarkSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Recency_Dark_svg, 
+                                                           BinaryData::Sort_Recency_Dark_svgSize);
+    DBG(juce::String("Sort Recency Dark loaded: ") + (sortRecencyDarkSvgCache != nullptr ? "true" : "false"));
+
+    sortRecencyLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Recency_Light_svg, 
+                                                            BinaryData::Sort_Recency_Light_svgSize);
+    DBG(juce::String("Sort Recency Light loaded: ") + (sortRecencyLightSvgCache != nullptr ? "true" : "false"));
+
+    sortRecencyDarkPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Recency_Pressed_Dark_svg, 
+                                                                  BinaryData::Sort_Recency_Pressed_Dark_svgSize);
+    DBG(juce::String("Sort Recency Dark Pressed loaded: ") + (sortRecencyDarkPressedSvgCache != nullptr ? "true" : "false"));
+
+    sortRecencyLightPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Recency_Pressed_Light_svg, 
+                                                                   BinaryData::Sort_Recency_Pressed_Light_svgSize);
+    DBG(juce::String("Sort Recency Light Pressed loaded: ") + (sortRecencyLightPressedSvgCache != nullptr ? "true" : "false"));
+
+    // Normalize all loaded SVGs
+    if (sortTimeDarkSvgCache != nullptr)
+        sortTimeDarkSvgCache = createNormalizedDrawable(sortTimeDarkSvgCache.get(), targetButtonSize);
+    if (sortTimeLightSvgCache != nullptr)
+        sortTimeLightSvgCache = createNormalizedDrawable(sortTimeLightSvgCache.get(), targetButtonSize);
+    if (sortTimeDarkPressedSvgCache != nullptr)
+        sortTimeDarkPressedSvgCache = createNormalizedDrawable(sortTimeDarkPressedSvgCache.get(), targetButtonSize * 0.95f);
+    if (sortTimeLightPressedSvgCache != nullptr)
+        sortTimeLightPressedSvgCache = createNormalizedDrawable(sortTimeLightPressedSvgCache.get(), targetButtonSize * 0.95f);
+    if (sortRecencyDarkSvgCache != nullptr)
+        sortRecencyDarkSvgCache = createNormalizedDrawable(sortRecencyDarkSvgCache.get(), targetButtonSize);
+    if (sortRecencyLightSvgCache != nullptr)
+        sortRecencyLightSvgCache = createNormalizedDrawable(sortRecencyLightSvgCache.get(), targetButtonSize);
+    if (sortRecencyDarkPressedSvgCache != nullptr)
+        sortRecencyDarkPressedSvgCache = createNormalizedDrawable(sortRecencyDarkPressedSvgCache.get(), targetButtonSize * 0.95f);
+    if (sortRecencyLightPressedSvgCache != nullptr)
+        sortRecencyLightPressedSvgCache = createNormalizedDrawable(sortRecencyLightPressedSvgCache.get(), targetButtonSize * 0.95f);
+
+    DBG("SVG normalization complete");
+
+    // Initialize the button
+    addAndMakeVisible(sortModeButton);
+    sortModeButton.setVisible(true);
+    sortModeButton.setButtonText("");
+    sortModeButton.setClickingTogglesState(true);
+
+    // Make button background temporarily visible for debugging
+    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::purple);
+    sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::purple);
+
+    // Verify all SVGs are properly loaded and normalized
+    bool allSVGsLoaded = sortTimeDarkSvgCache != nullptr && 
+                     sortTimeLightSvgCache != nullptr &&
+                     sortTimeDarkPressedSvgCache != nullptr && 
+                     sortTimeLightPressedSvgCache != nullptr &&
+                     sortRecencyDarkSvgCache != nullptr && 
+                     sortRecencyLightSvgCache != nullptr &&
+                     sortRecencyDarkPressedSvgCache != nullptr && 
+                     sortRecencyLightPressedSvgCache != nullptr;
+
+    if (allSVGsLoaded)
+    {
+        DBG("All SVGs loaded successfully, updating button images");
+        updateSortButtonImages();
+    }
+    else
+    {
+        DBG("Failed to load one or more SVGs");
+    }
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -408,41 +551,8 @@ void KronosAudioProcessorEditor::timerCallback()
     if (isTransitioningButton)
     {
         DBG("Timer fired - Completing transition");
-        
-        bool isDark = audioProcessor.isDarkMode();
-        auto& currentPlay = isDark ? playSvgCache : playLightSvgCache;
-        auto& currentPlayPressed = isDark ? playPressedSvgCache : playPressedLightSvgCache;
-        auto& currentPause = isDark ? pauseSvgCache : pauseLightSvgCache;
-        auto& currentPausePressed = isDark ? pausePressedSvgCache : pausePressedLightSvgCache;
-        
-        // Show the opposite button (not pressed state)
-        if (audioProcessor.isTracking)
-        {
-            DBG("Switching to pause button");
-            playPauseButton.setImages(currentPause.get(),         // normal
-                                    nullptr,                      // over
-                                    currentPausePressed.get(),    // down
-                                    nullptr,                      // disabled
-                                    currentPause.get(),           // normal (on)
-                                    nullptr,                      // over (on)
-                                    currentPausePressed.get(),    // down (on)
-                                    nullptr);                     // disabled (on)
-        }
-        else
-        {
-            DBG("Switching to play button");
-            playPauseButton.setImages(currentPlay.get(),          // normal
-                                    nullptr,                      // over
-                                    currentPlayPressed.get(),     // down
-                                    nullptr,                      // disabled
-                                    currentPlay.get(),            // normal (on)
-                                    nullptr,                      // over (on)
-                                    currentPlayPressed.get(),     // down (on)
-                                    nullptr);                     // disabled (on)
-        }
-            
-        DBG("Restarting regular timer");
-        isTransitioningButton = false;  // Reset flag after transition is complete
+        updateButtonImages();  // Just call the update function directly
+        isTransitioningButton = false;
         startTimerHz(1);
         return;
     }
@@ -591,10 +701,21 @@ void KronosAudioProcessorEditor::resized()
     auto stackedMargin = 10;
     
     // Sort button on top
+    auto sortButtonSize = 50;  // or whatever size matches your SVG
     sortModeButton.setBounds(stackedMargin, 
-                           getHeight() - (stackedButtonHeight * 2) - (stackedMargin * 2),
-                           stackedButtonWidth, 
-                           stackedButtonHeight);
+                           getHeight() - previousSessionsHeight + stackedMargin,
+                           sortButtonSize, 
+                           sortButtonSize);
+
+    // Add debug output
+    DBG("Sort button bounds: x=" + juce::String(sortModeButton.getX()) + 
+        ", y=" + juce::String(sortModeButton.getY()) + 
+        ", width=" + juce::String(sortModeButton.getWidth()) + 
+        ", height=" + juce::String(sortModeButton.getHeight()));
+    DBG("Sort button visible: " + juce::String(sortModeButton.isVisible() ? "yes" : "no"));
+
+    // Temporarily set a background color to make it visible for debugging
+    sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::red);
 
     // Adjust scroll button positions to match new label positions
     int scrollButtonSize = 25;
@@ -1128,4 +1249,46 @@ void KronosAudioProcessorEditor::updateThemeButtonImages()
         !isDark ? darkModePressedSvgCache.get() : lightModePressedSvgCache.get(), // down (on)
         nullptr                                                                // disabled (on)
     );
+}
+
+void KronosAudioProcessorEditor::updateSortButtonImages()
+{
+    bool isDark = audioProcessor.isDarkMode();
+    bool isTimeSort = audioProcessor.getDateSortMode() == KronosAudioProcessor::DateSortMode::MostTime;
+    
+    // Debug output
+    DBG("Updating sort button images");
+    DBG("isDark: " + juce::String(isDark ? "true" : "false"));
+    DBG("isTimeSort: " + juce::String(isTimeSort ? "true" : "false"));
+    
+    std::unique_ptr<juce::Drawable>& normalImage = isDark ? 
+        (isTimeSort ? sortTimeDarkSvgCache : sortRecencyDarkSvgCache) :
+        (isTimeSort ? sortTimeLightSvgCache : sortRecencyLightSvgCache);
+    
+    std::unique_ptr<juce::Drawable>& pressedImage = isDark ? 
+        (isTimeSort ? sortTimeDarkPressedSvgCache : sortRecencyDarkPressedSvgCache) :
+        (isTimeSort ? sortTimeLightPressedSvgCache : sortRecencyLightPressedSvgCache);
+    
+    // Debug check if images are valid
+    DBG("Normal image valid: " + juce::String(normalImage != nullptr ? "true" : "false"));
+    DBG("Pressed image valid: " + juce::String(pressedImage != nullptr ? "true" : "false"));
+
+    if (normalImage != nullptr && pressedImage != nullptr)
+    {
+        sortModeButton.setImages(
+            normalImage.get(),          // normal
+            normalImage.get(),          // over (use normal)
+            pressedImage.get(),         // down
+            normalImage.get(),          // disabled (use normal)
+            normalImage.get(),          // normal (on)
+            normalImage.get(),          // over (on) (use normal)
+            pressedImage.get(),         // down (on)
+            normalImage.get()           // disabled (on) (use normal)
+        );
+        DBG("Images set on button");
+    }
+    else
+    {
+        DBG("Failed to set images - one or more images are null");
+    }
 }

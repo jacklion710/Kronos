@@ -52,7 +52,7 @@ private:
 
     juce::Rectangle<int> timeDisplayBounds;
 
-    juce::TextButton sortModeButton;
+    juce::DrawableButton sortModeButton{"SortButton", juce::DrawableButton::ButtonStyle::ImageFitted};
 
     float getTimeRatio(juce::int64 time, juce::int64 maxTime) const;
 
@@ -115,6 +115,17 @@ private:
     void updateThemeButtonImages();
 
     const float targetButtonSize = 25.0f;
+
+    std::unique_ptr<juce::Drawable> sortTimeDarkSvgCache;
+    std::unique_ptr<juce::Drawable> sortTimeDarkPressedSvgCache;
+    std::unique_ptr<juce::Drawable> sortTimeLightSvgCache;
+    std::unique_ptr<juce::Drawable> sortTimeLightPressedSvgCache;
+    std::unique_ptr<juce::Drawable> sortRecencyDarkSvgCache;
+    std::unique_ptr<juce::Drawable> sortRecencyDarkPressedSvgCache;
+    std::unique_ptr<juce::Drawable> sortRecencyLightSvgCache;
+    std::unique_ptr<juce::Drawable> sortRecencyLightPressedSvgCache;
+
+    void updateSortButtonImages();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
