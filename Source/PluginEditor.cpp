@@ -201,6 +201,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         updateButtonImages();
         repaint();
         updateSortButtonImages();
+        updateScrollButtonImages();
     };
 
     // Set a fixed size for our editor
@@ -231,11 +232,12 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     // Initialize scroll buttons with the smallest triangles
     addAndMakeVisible(scrollUpButton);
     addAndMakeVisible(scrollDownButton);
-    scrollUpButton.setButtonText(juce::CharPointer_UTF8("\xe2\x80\xb4"));    // SINGLE UP POINTING ANGLE QUOTATION MARK
-    scrollDownButton.setButtonText(juce::CharPointer_UTF8("\xe2\x80\xb7")); // SINGLE DOWN POINTING ANGLE QUOTATION MARK
-    
-    scrollUpButton.addListener(this);
-    scrollDownButton.addListener(this);
+
+    // Make button backgrounds transparent
+    scrollUpButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    scrollUpButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+    scrollDownButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    scrollDownButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
 
     // Add the unit labels
     addAndMakeVisible(hourUnitLabel);
@@ -464,14 +466,76 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
 
     // Verify all SVGs are properly loaded and normalized
-    bool allSVGsLoaded = sortTimeDarkSvgCache != nullptr && 
-                     sortTimeLightSvgCache != nullptr &&
-                     sortTimeDarkPressedSvgCache != nullptr && 
-                     sortTimeLightPressedSvgCache != nullptr &&
-                     sortRecencyDarkSvgCache != nullptr && 
-                     sortRecencyLightSvgCache != nullptr &&
-                     sortRecencyDarkPressedSvgCache != nullptr && 
-                     sortRecencyLightPressedSvgCache != nullptr;
+    // bool allSVGsLoaded = sortTimeDarkSvgCache != nullptr && 
+    //                  sortTimeLightSvgCache != nullptr &&
+    //                  sortTimeDarkPressedSvgCache != nullptr && 
+    //                  sortTimeLightPressedSvgCache != nullptr &&
+    //                  sortRecencyDarkSvgCache != nullptr && 
+    //                  sortRecencyLightSvgCache != nullptr &&
+    //                  sortRecencyDarkPressedSvgCache != nullptr && 
+    //                  sortRecencyLightPressedSvgCache != nullptr;
+
+    // Load arrow SVGs
+    upArrowDarkSvgCache = juce::Drawable::createFromImageData(BinaryData::Up_Arrow_Dark_svg, 
+                                                           BinaryData::Up_Arrow_Dark_svgSize);
+    upArrowDarkPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Up_Arrow_Pressed_Dark_svg, 
+                                                                  BinaryData::Up_Arrow_Pressed_Dark_svgSize);
+    upArrowLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Up_Arrow_Light_svg, 
+                                                            BinaryData::Up_Arrow_Light_svgSize);
+    upArrowLightPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Up_Arrow_Pressed_Light_svg, 
+                                                                     BinaryData::Up_Arrow_Pressed_Light_svgSize);
+    downArrowDarkSvgCache = juce::Drawable::createFromImageData(BinaryData::Down_Arrow_Dark_svg, 
+                                                             BinaryData::Down_Arrow_Dark_svgSize);
+    downArrowDarkPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Down_Arrow_Pressed_Dark_svg, 
+                                                                    BinaryData::Down_Arrow_Pressed_Dark_svgSize);
+    downArrowLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Down_Arrow_Light_svg, 
+                                                                BinaryData::Down_Arrow_Light_svgSize);
+    downArrowLightPressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Down_Arrow_Pressed_Light_svg, 
+                                                                       BinaryData::Down_Arrow_Pressed_Light_svgSize);
+
+    // Normalize arrow SVGs
+    if (upArrowDarkSvgCache != nullptr)
+        upArrowDarkSvgCache = createNormalizedDrawable(upArrowDarkSvgCache.get(), targetButtonSize);
+    if (upArrowDarkPressedSvgCache != nullptr)
+        upArrowDarkPressedSvgCache = createNormalizedDrawable(upArrowDarkPressedSvgCache.get(), targetButtonSize * 0.95f);
+    if (upArrowLightSvgCache != nullptr)
+        upArrowLightSvgCache = createNormalizedDrawable(upArrowLightSvgCache.get(), targetButtonSize);
+    if (upArrowLightPressedSvgCache != nullptr)
+        upArrowLightPressedSvgCache = createNormalizedDrawable(upArrowLightPressedSvgCache.get(), targetButtonSize * 0.95f);
+    if (downArrowDarkSvgCache != nullptr)
+        downArrowDarkSvgCache = createNormalizedDrawable(downArrowDarkSvgCache.get(), targetButtonSize);
+    if (downArrowDarkPressedSvgCache != nullptr)
+        downArrowDarkPressedSvgCache = createNormalizedDrawable(downArrowDarkPressedSvgCache.get(), targetButtonSize * 0.95f);
+    if (downArrowLightSvgCache != nullptr)
+        downArrowLightSvgCache = createNormalizedDrawable(downArrowLightSvgCache.get(), targetButtonSize);
+    if (downArrowLightPressedSvgCache != nullptr)
+        downArrowLightPressedSvgCache = createNormalizedDrawable(downArrowLightPressedSvgCache.get(), targetButtonSize * 0.95f);
+
+    addAndMakeVisible(scrollUpButton);
+    addAndMakeVisible(scrollDownButton);
+    scrollUpButton.setVisible(true);
+    scrollDownButton.setVisible(true);
+
+    // Update scroll button images initially
+    updateScrollButtonImages();
+
+    // After loading and normalizing the sort button SVGs in the constructor:
+    auto& normalImage = isDark ? sortTimeDarkSvgCache : sortTimeLightSvgCache;
+    auto& pressedImage = isDark ? sortTimeDarkPressedSvgCache : sortTimeLightPressedSvgCache;
+
+    if (normalImage != nullptr && pressedImage != nullptr)
+    {
+        sortModeButton.setImages(
+            normalImage.get(),          // normal
+            normalImage.get(),          // over
+            pressedImage.get(),         // down
+            normalImage.get(),          // disabled
+            normalImage.get(),          // normal (on)
+            normalImage.get(),          // over (on)
+            pressedImage.get(),         // down (on)
+            normalImage.get()           // disabled (on)
+        );
+    }
 }
 
 void KronosAudioProcessorEditor::timerCallback()
@@ -634,13 +698,10 @@ void KronosAudioProcessorEditor::resized()
         sortButtonSize
     );
     
-    // Make sure it's visible
-    sortModeButton.setVisible(true);
-
-    // Adjust scroll button positions to match new label positions
+    // Position scroll buttons
     int scrollButtonSize = 25;
     int buttonX = getWidth() - scrollButtonSize - (margin * 11);
-    int buttonsY = getHeight() - previousSessionsHeight + (margin * 6);  // Keep at 11
+    int buttonsY = getHeight() - previousSessionsHeight + (margin * 6);
     
     scrollUpButton.setBounds(buttonX, buttonsY, scrollButtonSize, scrollButtonSize);
     scrollDownButton.setBounds(buttonX, buttonsY + scrollButtonSize + 5, scrollButtonSize, scrollButtonSize);
@@ -1200,5 +1261,44 @@ void KronosAudioProcessorEditor::updateSortButtonImages()
     else
     {
         DBG("Failed to set images - one or more images are null");
+    }
+}
+
+void KronosAudioProcessorEditor::updateScrollButtonImages()
+{
+    bool isDark = audioProcessor.isDarkMode();
+    
+    // Get the correct themed assets
+    auto& currentUpArrow = isDark ? upArrowDarkSvgCache : upArrowLightSvgCache;
+    auto& currentUpArrowPressed = isDark ? upArrowDarkPressedSvgCache : upArrowLightPressedSvgCache;
+    auto& currentDownArrow = isDark ? downArrowDarkSvgCache : downArrowLightSvgCache;
+    auto& currentDownArrowPressed = isDark ? downArrowDarkPressedSvgCache : downArrowLightPressedSvgCache;
+    
+    if (currentUpArrow != nullptr && currentUpArrowPressed != nullptr)
+    {
+        scrollUpButton.setImages(
+            currentUpArrow.get(),          // normal
+            currentUpArrow.get(),          // over (use normal)
+            currentUpArrowPressed.get(),    // down
+            currentUpArrow.get(),          // disabled (use normal)
+            currentUpArrow.get(),          // normal (on)
+            currentUpArrow.get(),          // over (on) (use normal)
+            currentUpArrowPressed.get(),    // down (on)
+            currentUpArrow.get()           // disabled (on) (use normal)
+        );
+    }
+    
+    if (currentDownArrow != nullptr && currentDownArrowPressed != nullptr)
+    {
+        scrollDownButton.setImages(
+            currentDownArrow.get(),         // normal
+            currentDownArrow.get(),         // over (use normal)
+            currentDownArrowPressed.get(),   // down
+            currentDownArrow.get(),         // disabled (use normal)
+            currentDownArrow.get(),         // normal (on)
+            currentDownArrow.get(),         // over (on) (use normal)
+            currentDownArrowPressed.get(),   // down (on)
+            currentDownArrow.get()          // disabled (on) (use normal)
+        );
     }
 }

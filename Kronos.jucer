@@ -16,6 +16,10 @@
             file="Resources/Dark Mode Button Pressed.svg"/>
       <FILE id="CCLqMg" name="Dark Mode Button.svg" compile="0" resource="1"
             file="Resources/Dark Mode Button.svg"/>
+      <FILE id="PSfTJl" name="Down Arrow Light.svg" compile="0" resource="1"
+            file="Resources/Down Arrow Light.svg"/>
+      <FILE id="W2yxS4" name="Down Arrow Pressed Light.svg" compile="0" resource="1"
+            file="Resources/Down Arrow Pressed Light.svg"/>
       <FILE id="RptXpV" name="Grit.jpg" compile="0" resource="1" file="Resources/Grit.jpg"/>
       <FILE id="LMiLV7" name="Header Dark.svg" compile="0" resource="1" file="Resources/Header Dark.svg"/>
       <FILE id="FI7U1k" name="Header Light.svg" compile="0" resource="1"
@@ -58,12 +62,24 @@
             file="Resources/Sort Time Light.svg"/>
       <FILE id="fxUlw5" name="Sort Time Pressed Dark.svg" compile="0" resource="1"
             file="Resources/Sort Time Pressed Dark.svg"/>
+      <FILE id="Pl37EH" name="Down Arrow Dark.svg" compile="0" resource="1"
+            file="Resources/Down Arrow Dark.svg"/>
+      <FILE id="wgYKBW" name="Down Arrow Pressed Dark.svg" compile="0" resource="1"
+            file="Resources/Down Arrow Pressed Dark.svg"/>
+      <FILE id="fJHNU4" name="Up Arrow Dark.svg" compile="0" resource="1"
+            file="Resources/Up Arrow Dark.svg"/>
+      <FILE id="ZmAbjr" name="Up Arrow Pressed Dark.svg" compile="0" resource="1"
+            file="Resources/Up Arrow Pressed Dark.svg"/>
       <FILE id="JdcVUn" name="Sort Time Pressed Light.svg" compile="0" resource="1"
             file="Resources/Sort Time Pressed Light.svg"/>
       <FILE id="dDHw8S" name="Time Display Dark.svg" compile="0" resource="1"
             file="Resources/Time Display Dark.svg"/>
       <FILE id="XmwBNN" name="Time Display Light.svg" compile="0" resource="1"
             file="Resources/Time Display Light.svg"/>
+      <FILE id="LrOwTo" name="Up Arrow Light.svg" compile="0" resource="1"
+            file="Resources/Up Arrow Light.svg"/>
+      <FILE id="YU7WRV" name="Up Arrow Pressed Light.svg" compile="0" resource="1"
+            file="Resources/Up Arrow Pressed Light.svg"/>
     </GROUP>
     <GROUP id="{3F17D307-FD11-C3B5-9773-A8098DD394F4}" name="Source">
       <FILE id="D7CUVz" name="LookAndFeel.h" compile="0" resource="0" file="Source/LookAndFeel.h"/>

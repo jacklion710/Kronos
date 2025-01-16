@@ -66,8 +66,8 @@ private:
     
     void constrainScrollOffset();     // Helper to keep scrolling in bounds
 
-    juce::TextButton scrollUpButton;
-    juce::TextButton scrollDownButton;
+    juce::DrawableButton scrollUpButton{"Up", juce::DrawableButton::ImageFitted};
+    juce::DrawableButton scrollDownButton{"Down", juce::DrawableButton::ImageFitted};
 
     juce::Label hourUnitLabel;
     juce::Label minuteUnitLabel;
@@ -126,6 +126,17 @@ private:
     std::unique_ptr<juce::Drawable> sortRecencyLightPressedSvgCache;
 
     void updateSortButtonImages();
+
+    std::unique_ptr<juce::Drawable> upArrowDarkSvgCache;
+    std::unique_ptr<juce::Drawable> upArrowDarkPressedSvgCache;
+    std::unique_ptr<juce::Drawable> upArrowLightSvgCache;
+    std::unique_ptr<juce::Drawable> upArrowLightPressedSvgCache;
+    std::unique_ptr<juce::Drawable> downArrowDarkSvgCache;
+    std::unique_ptr<juce::Drawable> downArrowDarkPressedSvgCache;
+    std::unique_ptr<juce::Drawable> downArrowLightSvgCache;
+    std::unique_ptr<juce::Drawable> downArrowLightPressedSvgCache;
+
+    void updateScrollButtonImages();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
