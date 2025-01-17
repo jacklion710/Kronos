@@ -202,6 +202,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         repaint();
         updateSortButtonImages();
         updateScrollButtonImages();
+        updateScrollButtonStates();
     };
 
     // Set a fixed size for our editor
@@ -511,6 +512,14 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     if (downArrowLightPressedSvgCache != nullptr)
         downArrowLightPressedSvgCache = createNormalizedDrawable(downArrowLightPressedSvgCache.get(), targetButtonSize * 0.95f);
 
+    // In the constructor, after loading the arrow SVGs but before making buttons visible:
+    // Initialize scroll position and update button states
+    isAtTop = true;  // Explicitly set initial state
+    isAtBottom = false;
+    scrollOffset = 0.0f;
+    constrainScrollOffset();  // This will update the button states
+
+    // Initialize the buttons
     addAndMakeVisible(scrollUpButton);
     addAndMakeVisible(scrollDownButton);
     scrollUpButton.setVisible(true);
@@ -518,6 +527,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
 
     // Update scroll button images initially
     updateScrollButtonImages();
+    updateScrollButtonStates();
 
     // After loading and normalizing the sort button SVGs in the constructor:
     auto& normalImage = isDark ? sortTimeDarkSvgCache : sortTimeLightSvgCache;
@@ -539,15 +549,23 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
 
     // Add click handlers for scroll buttons
     scrollUpButton.onClick = [this]() {
-        scrollOffset = std::max(0.0f, scrollOffset - dateHeight);
-        repaint();
+        if (!isAtTop) {
+            scrollOffset = std::max(0.0f, scrollOffset - dateHeight);
+            constrainScrollOffset();
+            updateDateLabels();
+            repaint();
+        }
     };
 
     scrollDownButton.onClick = [this]() {
-        auto dates = audioProcessor.getSortedDates();
-        float maxScroll = std::max(0.0f, (dates.size() - visibleDates) * dateHeight);
-        scrollOffset = std::min(maxScroll, scrollOffset + dateHeight);
-        repaint();
+        if (!isAtBottom) {
+            auto dates = audioProcessor.getSortedDates();
+            float maxScroll = std::max(0.0f, (dates.size() - visibleDates) * dateHeight);
+            scrollOffset = std::min(maxScroll, scrollOffset + dateHeight);
+            constrainScrollOffset();
+            updateDateLabels();
+            repaint();
+        }
     };
 }
 
@@ -1065,32 +1083,40 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
     }
 }
 
-void KronosAudioProcessorEditor::mouseWheelMove(const juce::MouseEvent& event, 
-                                               const juce::MouseWheelDetails& wheel)
-{
-    DBG("Mouse wheel moved: deltaY = " << wheel.deltaY);  // Debug output
+// UNUSED FOR NOW -- KEEP FOR FUTURE REFERENCE
+// void KronosAudioProcessorEditor::mouseWheelMove(const juce::MouseEvent& event, 
+//                                                const juce::MouseWheelDetails& wheel)
+// {
+//     DBG("Mouse wheel moved: deltaY = " << wheel.deltaY);  // Debug output
     
-    // Get the bounds of the Previous Sessions panel
-    auto bounds = getLocalBounds();
-    auto bottomSection = bounds.removeFromBottom(140);
-    bottomSection.removeFromTop(margin * 6);
-    bottomSection.removeFromBottom(margin);
+//     // Get the bounds of the Previous Sessions panel
+//     auto bounds = getLocalBounds();
+//     auto bottomSection = bounds.removeFromBottom(140);
+//     bottomSection.removeFromTop(margin * 6);
+//     bottomSection.removeFromBottom(margin);
     
-    // Only handle scrolling if mouse is over the Previous Sessions area
-    if (bottomSection.contains(event.position.toInt()))
-    {
-        DBG("Mouse is in Previous Sessions area");  // Debug output
-        scrollOffset += wheel.deltaY * 20.0f;
-        constrainScrollOffset();
-        timerCallback();
-    }
-}
+//     // Only handle scrolling if mouse is over the Previous Sessions area
+//     if (bottomSection.contains(event.position.toInt()))
+//     {
+//         DBG("Mouse is in Previous Sessions area");  // Debug output
+//         scrollOffset += wheel.deltaY * 20.0f;
+//         constrainScrollOffset();
+//         timerCallback();
+//     }
+// }
 
 void KronosAudioProcessorEditor::constrainScrollOffset()
 {
     auto dates = audioProcessor.getSortedDates();
     float maxScroll = juce::jmax(0.0f, (dates.size() - visibleDates) * dateHeight);
     scrollOffset = juce::jlimit(0.0f, maxScroll, scrollOffset);
+    
+    // Update scroll position states
+    isAtTop = (scrollOffset <= 0.0f);
+    isAtBottom = (scrollOffset >= maxScroll && dates.size() > visibleDates);
+    
+    // Update button appearances
+    updateScrollButtonStates();
 }
 
 void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
@@ -1312,6 +1338,49 @@ void KronosAudioProcessorEditor::updateScrollButtonImages()
             currentDownArrow.get(),         // over (on) (use normal)
             currentDownArrowPressed.get(),   // down (on)
             currentDownArrow.get()          // disabled (on) (use normal)
+        );
+    }
+}
+
+void KronosAudioProcessorEditor::updateScrollButtonStates()
+{
+    bool isDark = audioProcessor.isDarkMode();
+    
+    // Up button
+    auto& upNormal = isDark ? upArrowDarkSvgCache : upArrowLightSvgCache;
+    auto& upPressed = isDark ? upArrowDarkPressedSvgCache : upArrowLightPressedSvgCache;
+    
+    if (upNormal != nullptr && upPressed != nullptr)
+    {
+        auto& currentImage = isAtTop ? upPressed : upNormal;
+        scrollUpButton.setImages(
+            currentImage.get(),          // normal
+            currentImage.get(),          // over
+            upPressed.get(),             // down
+            currentImage.get(),          // disabled
+            currentImage.get(),          // normal (on)
+            currentImage.get(),          // over (on)
+            upPressed.get(),             // down (on)
+            currentImage.get()           // disabled (on)
+        );
+    }
+    
+    // Down button
+    auto& downNormal = isDark ? downArrowDarkSvgCache : downArrowLightSvgCache;
+    auto& downPressed = isDark ? downArrowDarkPressedSvgCache : downArrowLightPressedSvgCache;
+    
+    if (downNormal != nullptr && downPressed != nullptr)
+    {
+        auto& currentImage = isAtBottom ? downPressed : downNormal;
+        scrollDownButton.setImages(
+            currentImage.get(),          // normal
+            currentImage.get(),          // over
+            downPressed.get(),           // down
+            currentImage.get(),          // disabled
+            currentImage.get(),          // normal (on)
+            currentImage.get(),          // over (on)
+            downPressed.get(),           // down (on)
+            currentImage.get()           // disabled (on)
         );
     }
 }

@@ -25,8 +25,10 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     void timerCallback() override;
-    void mouseWheelMove(const juce::MouseEvent& event, 
-                       const juce::MouseWheelDetails& wheel) override;
+
+    // UNUSED FOR NOW -- KEEP FOR FUTURE REFERENCE
+    // void mouseWheelMove(const juce::MouseEvent& event, 
+    //                    const juce::MouseWheelDetails& wheel) override;
     void buttonClicked(juce::Button* button) override;
 
     void drawTimeBars(juce::Graphics& g);
@@ -136,7 +138,11 @@ private:
     std::unique_ptr<juce::Drawable> downArrowLightSvgCache;
     std::unique_ptr<juce::Drawable> downArrowLightPressedSvgCache;
 
+    bool isAtTop = true;  // Start at top by default
+    bool isAtBottom = false;
+    
     void updateScrollButtonImages();
+    void updateScrollButtonStates();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
