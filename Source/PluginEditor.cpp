@@ -536,6 +536,19 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
             normalImage.get()           // disabled (on)
         );
     }
+
+    // Add click handlers for scroll buttons
+    scrollUpButton.onClick = [this]() {
+        scrollOffset = std::max(0.0f, scrollOffset - dateHeight);
+        repaint();
+    };
+
+    scrollDownButton.onClick = [this]() {
+        auto dates = audioProcessor.getSortedDates();
+        float maxScroll = std::max(0.0f, (dates.size() - visibleDates) * dateHeight);
+        scrollOffset = std::min(maxScroll, scrollOffset + dateHeight);
+        repaint();
+    };
 }
 
 void KronosAudioProcessorEditor::timerCallback()
