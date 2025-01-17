@@ -470,18 +470,34 @@ juce::Array<juce::Time> KronosAudioProcessor::getSortedDates() const
     
     if (currentSortMode == DateSortMode::MostTime)
     {
-        auto* rawData = sortedDates.getRawDataPointer();
-        std::sort(rawData, rawData + sortedDates.size(), 
-            [this](const juce::Time& first, const juce::Time& second)
+        struct TimeComparator
+        {
+            const KronosAudioProcessor* processor;
+            TimeComparator(const KronosAudioProcessor* p) : processor(p) {}
+            
+            int compareElements(juce::Time first, juce::Time second)
             {
-                juce::String dateKeyA = first.formatted("%Y-%m-%d");
-                juce::String dateKeyB = second.formatted("%Y-%m-%d");
-                
-                juce::int64 timeA = timePerDate[dateKeyA];
-                juce::int64 timeB = timePerDate[dateKeyB];
-                
-                return timeA > timeB;
-            });
+                auto timeA = processor->getTimeForDate(first);
+                auto timeB = processor->getTimeForDate(second);
+                return timeB < timeA ? -1 : (timeB > timeA ? 1 : 0);
+            }
+        };
+        
+        TimeComparator comparator(this);
+        sortedDates.sort(comparator);
+    }
+    else // DateSortMode::MostRecent
+    {
+        struct DateComparator
+        {
+            static int compareElements(juce::Time first, juce::Time second)
+            {
+                return second < first ? -1 : (second > first ? 1 : 0);
+            }
+        };
+        
+        DateComparator comparator;
+        sortedDates.sort(comparator);
     }
     
     return sortedDates;
