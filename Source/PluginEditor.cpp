@@ -750,7 +750,7 @@ void KronosAudioProcessorEditor::resized()
     float unitLabelHeight = 20 * scale;
     float unitLabelOffset = 0;
 
-    hourUnitLabel.setBounds(hoursLabel.getX() - 5 * scale,
+    hourUnitLabel.setBounds(hoursLabel.getX() - 2 * scale,
                            hoursLabel.getY() - unitLabelHeight - unitLabelOffset,
                            hoursLabel.getWidth(),
                            unitLabelHeight);
