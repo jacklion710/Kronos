@@ -312,7 +312,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                         "Plugins & more at:\n\n"
                         "Music:\n\n"
                         "Website:\n\n"
-                        "Graphics by Aznadel",
+                        "Graphics by Aznadel:",
                         juce::MessageBoxIconType::InfoIcon);
                     
                     // Create minimal close button
