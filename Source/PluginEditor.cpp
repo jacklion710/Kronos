@@ -1292,14 +1292,13 @@ void KronosAudioProcessorEditor::updateSortButtonImages()
     bool isTimeSort = audioProcessor.getDateSortMode() == KronosAudioProcessor::DateSortMode::MostTime;
     
     std::unique_ptr<juce::Drawable>& normalImage = isDark ? 
-        (isTimeSort ? sortTimeDarkSvgCache : sortRecencyDarkSvgCache) :
-        (isTimeSort ? sortTimeLightSvgCache : sortRecencyLightSvgCache);
+        (isTimeSort ? sortRecencyDarkSvgCache : sortTimeDarkSvgCache) :
+        (isTimeSort ? sortRecencyLightSvgCache : sortTimeLightSvgCache);
     
     std::unique_ptr<juce::Drawable>& pressedImage = isDark ? 
-        (isTimeSort ? sortTimeDarkPressedSvgCache : sortRecencyDarkPressedSvgCache) :
-        (isTimeSort ? sortTimeLightPressedSvgCache : sortRecencyLightPressedSvgCache);
+        (isTimeSort ? sortRecencyDarkPressedSvgCache : sortTimeDarkPressedSvgCache) :
+        (isTimeSort ? sortRecencyLightPressedSvgCache : sortTimeLightPressedSvgCache);
     
-
     if (normalImage != nullptr && pressedImage != nullptr)
     {
         sortModeButton.setImages(
