@@ -681,7 +681,7 @@ void KronosAudioProcessorEditor::resized()
     auto labelHeight = timeLabelHeight;
 
     // Position the labels within the time display
-    hoursLabel.setBounds(centerX - timeLabelWidth/2,
+    hoursLabel.setBounds(centerX - timeLabelWidth/2 - 2.5,
                         timeDisplayBounds.getCentreY() - (labelHeight / 2),
                         labelWidth,
                         labelHeight);
@@ -691,7 +691,7 @@ void KronosAudioProcessorEditor::resized()
                           labelWidth,
                           labelHeight);
 
-    secondsLabel.setBounds(centerX + timeLabelWidth/2 - labelWidth,
+    secondsLabel.setBounds(centerX + timeLabelWidth/2 - labelWidth + 2.5,
                           timeDisplayBounds.getCentreY() - (labelHeight / 2),
                           labelWidth,
                           labelHeight);
