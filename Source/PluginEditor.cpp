@@ -14,6 +14,10 @@
 KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
+    setResizable(true, true); // First true enables resizing, second true enables fixed aspect ratio
+    setResizeLimits(400, 300, 1200, 900); // Min and max sizes
+    getConstrainer()->setFixedAspectRatio(600.0f / 450.0f); // Maintain aspect ratio based on default size
+
     // Apply the custom look and feel and set initial theme
     setLookAndFeel(&customLookAndFeel);
     customLookAndFeel.setDarkMode(audioProcessor.isDarkMode());
@@ -651,53 +655,83 @@ void KronosAudioProcessorEditor::timerCallback()
 void KronosAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
-    auto buttonHeight = 60;
-    auto margin = 10;
-    auto dateHeight = 25;
-    auto titleHeight = 80;
-    auto playPauseWidth = 60;
-    auto previousSessionsHeight = 160;
-    auto sortButtonSize = 50;
-
-    // Store bottomSection for later use
-    auto originalBottomSection = bounds.removeFromBottom(previousSessionsHeight);
+    
+    // Calculate scale factors based on default size
+    float widthScale = getWidth() / 600.0f;
+    float heightScale = getHeight() / 450.0f;
+    scale = juce::jmin(widthScale, heightScale);  // Update the member variable
+    
+    // Scale margins and sizes
+    auto scaledMargin = margin * scale;
+    auto scaledButtonHeight = 60 * scale;
+    auto scaledDateHeight = 25 * scale;
+    auto scaledTitleHeight = 80 * scale;
+    auto scaledPlayPauseWidth = 60 * scale;
+    auto scaledPreviousSessionsHeight = 160 * scale;
+    auto scaledSortButtonSize = 50 * scale;
+    auto scaledTimeWidth = 400.0f * scale;
+    
+    // Store original bottomSection for later use
+    auto originalBottomSection = bounds.removeFromBottom(scaledPreviousSessionsHeight);
 
     // Title area
-    bounds.removeFromTop(titleHeight);
-    bounds.removeFromTop(margin * 3);
+    bounds.removeFromTop(scaledTitleHeight);
+    bounds.removeFromTop(scaledMargin * 3);
 
     // Time display area - store the bounds
-    timeDisplayBounds = bounds.removeFromTop(buttonHeight * 2.5);
+    timeDisplayBounds = bounds.removeFromTop(scaledButtonHeight * 2.5);
 
     // Move to bottom section for Previous Sessions panel
-    auto bottomSection = bounds.removeFromBottom(previousSessionsHeight);
-    bottomSection.removeFromTop(margin * 5);
-    bottomSection.removeFromBottom(margin);
+    auto bottomSection = bounds.removeFromBottom(scaledPreviousSessionsHeight);
+    bottomSection.removeFromTop(scaledMargin * 5);
+    bottomSection.removeFromBottom(scaledMargin);
 
     // Position date labels in the bottom section
     for (int i = 0; i < 3; ++i)
     {
-        dateLabels[i].setBounds(bottomSection.removeFromTop(dateHeight));
+        dateLabels[i].setBounds(bottomSection.removeFromTop(scaledDateHeight));
     }
 
     // Calculate center positions
     auto centerX = getWidth() / 2;
-    auto timeWidth = 400.0f;  // Increased time display width
     
     // Position play button halfway between window edge and time display
-    auto timeDisplayLeft = centerX - (timeWidth / 2);
-    auto playButtonX = timeDisplayLeft / 2 - (playPauseWidth / 2);  // Center in left space
-    auto playButtonY = timeDisplayBounds.getCentreY() - (buttonHeight / 3.3);
-    playPauseButton.setBounds(playButtonX, playButtonY, playPauseWidth, buttonHeight);
+    auto timeDisplayLeft = centerX - (scaledTimeWidth / 2);
+    auto playButtonX = timeDisplayLeft / 2 - (scaledPlayPauseWidth / 2);
+    auto playButtonY = timeDisplayBounds.getCentreY() - (scaledButtonHeight / 3.3);
+    playPauseButton.setBounds(playButtonX, playButtonY, scaledPlayPauseWidth, scaledButtonHeight);
 
-    // Center time label
-    auto timeLabelWidth = timeWidth - margin * 2;
-    auto timeLabelHeight = buttonHeight * 2;     // Taller for bigger display
-    auto labelWidth = timeLabelWidth / 3;  // Split into thirds
+    // Center time labels
+    auto timeLabelWidth = scaledTimeWidth - scaledMargin * 2;
+    auto timeLabelHeight = scaledButtonHeight * 2;
+    auto labelWidth = timeLabelWidth / 3;
     auto labelHeight = timeLabelHeight;
 
-    // Position the labels within the time display
-    hoursLabel.setBounds(centerX - timeLabelWidth/2 - 2.5,
+    // Scale fonts
+    float scaledLargeFont = 36.0f * scale;
+    float scaledSmallFont = 16.0f * scale;
+    float scaledUnitFont = 18.0f * scale;
+    
+    auto asteraFontLarge = juce::Font("ASTERA", scaledLargeFont, juce::Font::plain);
+    auto asteraFontSmall = juce::Font("ASTERA", scaledSmallFont, juce::Font::plain);
+    auto asteraFontUnit = juce::Font("ASTERA", scaledUnitFont, juce::Font::plain);
+    
+    // Update fonts for all labels
+    hoursLabel.setFont(asteraFontLarge);
+    minutesLabel.setFont(asteraFontLarge);
+    secondsLabel.setFont(asteraFontLarge);
+    
+    hourUnitLabel.setFont(asteraFontUnit);
+    minuteUnitLabel.setFont(asteraFontUnit);
+    secondUnitLabel.setFont(asteraFontUnit);
+    
+    for (auto& label : dateLabels)
+    {
+        label.setFont(asteraFontSmall);
+    }
+
+    // Position the time labels
+    hoursLabel.setBounds(centerX - timeLabelWidth/2 - 2.5 * scale,
                         timeDisplayBounds.getCentreY() - (labelHeight / 2),
                         labelWidth,
                         labelHeight);
@@ -707,16 +741,16 @@ void KronosAudioProcessorEditor::resized()
                           labelWidth,
                           labelHeight);
 
-    secondsLabel.setBounds(centerX + timeLabelWidth/2 - labelWidth + 2.5,
+    secondsLabel.setBounds(centerX + timeLabelWidth/2 - labelWidth + 2.5 * scale,
                           timeDisplayBounds.getCentreY() - (labelHeight / 2),
                           labelWidth,
                           labelHeight);
 
-    // Position the unit labels above the time labels
-    float unitLabelHeight = 20;
+    // Position unit labels
+    float unitLabelHeight = 20 * scale;
     float unitLabelOffset = 0;
 
-    hourUnitLabel.setBounds(hoursLabel.getX() - 5,  // Nudged 5 pixels to the left
+    hourUnitLabel.setBounds(hoursLabel.getX() - 5 * scale,
                            hoursLabel.getY() - unitLabelHeight - unitLabelOffset,
                            hoursLabel.getWidth(),
                            unitLabelHeight);
@@ -726,39 +760,40 @@ void KronosAudioProcessorEditor::resized()
                              minutesLabel.getWidth(),
                              unitLabelHeight);
 
-    secondUnitLabel.setBounds(secondsLabel.getX() + 2,
+    secondUnitLabel.setBounds(secondsLabel.getX() + 2 * scale,
                              secondsLabel.getY() - unitLabelHeight - unitLabelOffset,
                              secondsLabel.getWidth(),
                              unitLabelHeight);
 
     // Position theme toggle button
-    auto buttonSize = 50;
-    themeToggleButton.setBounds(getWidth() - buttonSize - margin,
-                               getHeight() - buttonSize - margin,
-                               buttonSize, buttonSize);
-        
-    // Position sort button to the left of Previous Sessions panel
-    sortModeButton.setBounds(
-        margin + 80,  // Adjust this value to move right
-        originalBottomSection.getCentreY() - (sortButtonSize / 2),  // Adjust this value to move up/down
-        sortButtonSize,
-        sortButtonSize
-    );
-    
-    // Position scroll buttons
-    int scrollButtonSize = 25;
-    int buttonX = getWidth() - scrollButtonSize - (margin * 11);
-    int buttonsY = getHeight() - previousSessionsHeight + (margin * 6);
-    
-    scrollUpButton.setBounds(buttonX, buttonsY, scrollButtonSize, scrollButtonSize);
-    scrollDownButton.setBounds(buttonX, buttonsY + scrollButtonSize + 5, scrollButtonSize, scrollButtonSize);
+    auto scaledThemeButtonSize = 50 * scale;
+    themeToggleButton.setBounds(getWidth() - scaledThemeButtonSize - scaledMargin,
+                               getHeight() - scaledThemeButtonSize - scaledMargin,
+                               scaledThemeButtonSize, scaledThemeButtonSize);
 
-    // Position menu button in top-right corner
-    auto menuButtonSize = 30;
-    menuButton.setBounds(getWidth() - menuButtonSize - 10,  // X position (10px from right)
-                        0.5,                                   // Y position (changed from 10 to 5)
-                        menuButtonSize, 
-                        menuButtonSize);
+    // Position sort button
+    sortModeButton.setBounds(
+        scaledMargin + 80 * scale,
+        originalBottomSection.getCentreY() - (scaledSortButtonSize / 2),
+        scaledSortButtonSize,
+        scaledSortButtonSize
+    );
+
+    // Position scroll buttons
+    int scaledScrollButtonSize = 25 * scale;
+    int buttonX = getWidth() - scaledScrollButtonSize - (scaledMargin * 11);
+    int buttonsY = getHeight() - scaledPreviousSessionsHeight + (scaledMargin * 6);
+    
+    scrollUpButton.setBounds(buttonX, buttonsY, scaledScrollButtonSize, scaledScrollButtonSize);
+    scrollDownButton.setBounds(buttonX, buttonsY + scaledScrollButtonSize + 5 * scale, 
+                             scaledScrollButtonSize, scaledScrollButtonSize);
+
+    // Position menu button
+    auto scaledMenuButtonSize = 30 * scale;
+    menuButton.setBounds(getWidth() - scaledMenuButtonSize - 10 * scale,
+                        0.5f * scale,
+                        scaledMenuButtonSize, 
+                        scaledMenuButtonSize);
 }
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
@@ -832,59 +867,12 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                    juce::RectanglePlacement::stretchToFit);
     }
 
-    // Use cached time display SVG
-    if (timeDisplaySvgCache != nullptr && timeDisplayLightSvgCache != nullptr)
-    {
-        float desiredWidth = 400.0f;
-        float desiredHeight = 200.0f;
-        float x = getWidth()/2 - desiredWidth/2;
-        float y = timeDisplayBounds.getCentreY() - desiredHeight/2;
-        
-        auto& currentCache = audioProcessor.isDarkMode() ? timeDisplaySvgCache : timeDisplayLightSvgCache;
-        currentCache->drawWithin(g, 
-                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
-                               juce::RectanglePlacement::centred | 
-                               juce::RectanglePlacement::stretchToFit,
-                               1.0f);
-    }
-
-    // Use cached Previous Sessions SVG
-    if (previousSessionsSvgCache != nullptr && previousSessionsLightSvgCache != nullptr)
-    {
-        float desiredWidth = 300.0f;
-        float desiredHeight = 140.0f;
-        float x = getWidth() / 2.0f - (desiredWidth / 2.0f);
-        float y = getHeight() - desiredHeight - 10.0f;
-        
-        auto& currentCache = audioProcessor.isDarkMode() ? previousSessionsSvgCache : previousSessionsLightSvgCache;
-        currentCache->drawWithin(g, 
-                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
-                               juce::RectanglePlacement::centred | 
-                               juce::RectanglePlacement::stretchToFit,
-                               1.0f);
-    }
-
-    // Use cached header SVG
-    if (headerSvgCache != nullptr && headerLightSvgCache != nullptr)
-    {
-        float originalWidth = 400.0f;
-        float originalHeight = 60.0f;
-        float x = (getWidth() - originalWidth) / 2.0f;
-        float y = 10.0f;
-        
-        auto& currentCache = audioProcessor.isDarkMode() ? headerSvgCache : headerLightSvgCache;
-        currentCache->drawWithin(g, 
-                               juce::Rectangle<float>(x, y, originalWidth, originalHeight),
-                               juce::RectanglePlacement::centred, 
-                               1.0f);
-    }
-
-    // Draw title text with glow effect
-    auto asteraFont = juce::Font(24.0f);
+    // Scale the title text
+    auto asteraFont = juce::Font(24.0f * scale);
     asteraFont.setTypefaceName("ASTERA");
     g.setFont(asteraFont);
     
-    auto titleBounds = juce::Rectangle<int>(0, 17, getWidth(), 50);
+    auto titleBounds = juce::Rectangle<int>(0, 17 * scale, getWidth(), 50 * scale);
     auto text = "KRONOS";
     
     // Draw stroke layers with theme-appropriate color
@@ -922,6 +910,54 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     // Draw main text with theme-appropriate color
     g.setColour(juce::Colours::white);  // Keep text white for both modes
     g.drawText(text, titleBounds, juce::Justification::centred, true);
+
+    // Use cached time display SVG with scaling
+    if (timeDisplaySvgCache != nullptr && timeDisplayLightSvgCache != nullptr)
+    {
+        float desiredWidth = 400.0f * scale;
+        float desiredHeight = 200.0f * scale;
+        float x = getWidth()/2 - desiredWidth/2;
+        float y = timeDisplayBounds.getCentreY() - desiredHeight/2;
+        
+        auto& currentCache = audioProcessor.isDarkMode() ? timeDisplaySvgCache : timeDisplayLightSvgCache;
+        currentCache->drawWithin(g, 
+                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
+                               juce::RectanglePlacement::centred | 
+                               juce::RectanglePlacement::stretchToFit,
+                               1.0f);
+    }
+
+    // Use cached Previous Sessions SVG with scaling
+    if (previousSessionsSvgCache != nullptr && previousSessionsLightSvgCache != nullptr)
+    {
+        float desiredWidth = 300.0f * scale;
+        float desiredHeight = 140.0f * scale;
+        float x = getWidth() / 2.0f - (desiredWidth / 2.0f);
+        float y = getHeight() - desiredHeight - (10.0f * scale);
+        
+        auto& currentCache = audioProcessor.isDarkMode() ? previousSessionsSvgCache : previousSessionsLightSvgCache;
+        currentCache->drawWithin(g, 
+                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
+                               juce::RectanglePlacement::centred | 
+                               juce::RectanglePlacement::stretchToFit,
+                               1.0f);
+    }
+
+    // Use cached header SVG with scaling
+    if (headerSvgCache != nullptr && headerLightSvgCache != nullptr)
+    {
+        float desiredWidth = 400.0f * scale;
+        float desiredHeight = 60.0f * scale;
+        float x = (getWidth() - desiredWidth) / 2.0f;
+        float y = 10.0f * scale;
+        
+        auto& currentCache = audioProcessor.isDarkMode() ? headerSvgCache : headerLightSvgCache;
+        currentCache->drawWithin(g, 
+                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
+                               juce::RectanglePlacement::centred | 
+                               juce::RectanglePlacement::stretchToFit,
+                               1.0f);
+    }
 
     // Draw time bars unconditionally
     drawTimeBars(g);
@@ -988,14 +1024,14 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
 
     // Get the bounds of the Previous Sessions panel
     auto bounds = getLocalBounds();
-    auto bottomSection = bounds.removeFromBottom(160);
-    bottomSection.removeFromTop(margin * 5);
-    bottomSection.removeFromBottom(margin);
+    auto bottomSection = bounds.removeFromBottom(160 * scale);
+    bottomSection.removeFromTop(margin * 5 * scale);
+    bottomSection.removeFromBottom(margin * scale);
 
     // Draw bars for visible dates
     for (int i = 0; i < 3; ++i)
     {
-        int dateIndex = i + (int)(scrollOffset / dateHeight);
+        int dateIndex = i + (int)(scrollOffset / (dateHeight * scale));
         
         if (dateIndex < dates.size())
         {
@@ -1003,20 +1039,20 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
             auto timeSpent = audioProcessor.getTimeForDate(date);
             float ratio = getTimeRatio(timeSpent, maxTime);
             
-            // Calculate positions
-            float barHeight = 16.0f;
-            float maxBarWidth = 100.0f;  // Increased from 70.0f
-            float dateWidth = 120.0f;
-            float dashWidth = 20.0f;
+            // Calculate positions with scaling
+            float barHeight = 16.0f * scale;
+            float maxBarWidth = 100.0f * scale;
+            float dateWidth = 120.0f * scale;
+            float dashWidth = 20.0f * scale;
             float totalWidth = dateWidth + dashWidth + maxBarWidth;
             float startX = (getWidth() - totalWidth) / 2.0f;
             
-            float y = bottomSection.getY() + (i * dateHeight);
+            float y = bottomSection.getY() + (i * dateHeight * scale);
             
             if (y >= bottomSection.getY() && y + barHeight <= bottomSection.getBottom())
             {
                 // Position date label
-                dateLabels[i].setBounds(startX, y, dateWidth + dashWidth, dateHeight);
+                dateLabels[i].setBounds(startX, y, dateWidth + dashWidth, dateHeight * scale);
                 dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
                                     juce::dontSendNotification);
                 dateLabels[i].setVisible(true);
@@ -1024,18 +1060,18 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
                 // Draw bar background
                 float barX = startX + dateWidth + dashWidth;
                 g.setColour(juce::Colour(40, 40, 40));
-                g.fillRoundedRectangle(barX, y + (dateHeight - barHeight) / 2, 
-                                     maxBarWidth, barHeight, 3.0f);
+                g.fillRoundedRectangle(barX, y + (dateHeight * scale - barHeight) / 2, 
+                                     maxBarWidth, barHeight, 3.0f * scale);
                 
                 // Draw actual bar
-                float barWidth = juce::jmax(2.0f, ratio * maxBarWidth);
+                float barWidth = juce::jmax(2.0f * scale, ratio * maxBarWidth);
                 if (audioProcessor.isDarkMode()) {
                     g.setColour(juce::Colour(64, 64, 255));  // Blue for dark mode
                 } else {
                     g.setColour(juce::Colour(255, 140, 0));  // Orange for light mode (#FF8C00)
                 }
-                g.fillRoundedRectangle(barX, y + (dateHeight - barHeight) / 2, 
-                                     barWidth, barHeight, 3.0f);
+                g.fillRoundedRectangle(barX, y + (dateHeight * scale - barHeight) / 2, 
+                                     barWidth, barHeight, 3.0f * scale);
 
                 // Format and draw time text
                 juce::String timeStr;
@@ -1055,14 +1091,14 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
                                                     (int)seconds);
                 }
                 
-                // Set up text style
-                g.setFont(juce::Font("ASTERA", 14.0f, juce::Font::plain));
-                float textY = y + (dateHeight - barHeight) / 2 + 2.0f;
+                // Set up text style with scaling
+                g.setFont(juce::Font("ASTERA", 14.0f * scale, juce::Font::plain));
+                float textY = y + (dateHeight * scale - barHeight) / 2 + (2.0f * scale);
                 auto textBounds = juce::Rectangle<float>(barX, textY, maxBarWidth, barHeight);
 
                 // Draw stroke (shadow) effect
                 g.setColour(juce::Colours::black);
-                float strokeSize = 0.8f;
+                float strokeSize = 0.8f * scale;
                 float positions[][2] = {
                     {-strokeSize, -strokeSize},
                     {-strokeSize, strokeSize},
@@ -1079,13 +1115,13 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
                 {
                     auto offsetBounds = textBounds.translated(pos[0], pos[1]);
                     g.drawText(timeStr, offsetBounds.toNearestInt(), 
-                               juce::Justification::centred, true);
+                             juce::Justification::centred, true);
                 }
 
                 // Draw main text
                 g.setColour(juce::Colour(0xE6, 0xE6, 0xFF));  // Light blue-white color
                 g.drawText(timeStr, textBounds.toNearestInt(), 
-                           juce::Justification::centred, true);
+                         juce::Justification::centred, true);
             }
             else
             {

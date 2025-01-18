@@ -144,5 +144,8 @@ private:
     void updateScrollButtonImages();
     void updateScrollButtonStates();
 
+    // Add scale factor
+    float scale = 1.0f;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };
