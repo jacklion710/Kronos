@@ -306,8 +306,8 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                         "A simple time tracking plugin for your DAW.\n"
                         "Created by Jacob Leone aka Jack.Lion\n\n"
                         "Plugins & more at:\n\n"
-                        "Music:\n"
-                        "\n\n"
+                        "Music:\n\n"
+                        "Website:\n\n"
                         "Graphics by Aznadel",
                         juce::MessageBoxIconType::InfoIcon);
                     
@@ -328,6 +328,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                                                                  juce::URL("https://jacklion.gumroad.com"));
                     auto* soundcloudLink = new juce::HyperlinkButton("soundcloud.com/jack0lion", 
                                                                     juce::URL("https://soundcloud.com/jack0lion"));
+                    auto* jlWebLink = new juce::HyperlinkButton("jacklion.xyz", 
+                                                               juce::URL("https://jacklion.xyz"));
+                    auto* aznadelLink = new juce::HyperlinkButton("aznadel.com", 
+                                                                 juce::URL("https://aznadel.com"));
                     
                     // Set custom colors for hyperlinks based on theme
                     juce::Colour linkColor = audioProcessor.isDarkMode() ? 
@@ -336,27 +340,39 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
 
                     gumroadLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
                     soundcloudLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
+                    jlWebLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
+                    aznadelLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
 
                     // Make the buttons underlined to indicate they're clickable
                     gumroadLink->setTooltip("Visit Gumroad page");
                     soundcloudLink->setTooltip("Visit SoundCloud page");
+                    jlWebLink->setTooltip("Visit Jack.Lion website");
+                    aznadelLink->setTooltip("Visit Aznadel website");
                     
                     // Position links next to their respective text
-                    int baseY = 95;  // Moved down to better align with "Plugins & more at:"
+                    int baseY = 95;  // Base Y position
                     int linkHeight = 20;
-                    int spacing = 26;  // Increased spacing to match text spacing
+                    int spacing = 26;  // Spacing between links
                     
-                    gumroadLink->setBounds(125, baseY, 300, linkHeight);  // X position after "Plugins & more at:"
-                    soundcloudLink->setBounds(55, baseY + spacing, 300, linkHeight);  // X position after "Music:"
+                    gumroadLink->setBounds(125, baseY, 300, linkHeight);                    // "Plugins & more at:"
+                    soundcloudLink->setBounds(55, baseY + spacing, 300, linkHeight);        // "Music:"
+                    jlWebLink->setBounds(65, baseY + spacing * 2, 300, linkHeight);         // "Website:"
+                    aznadelLink->setBounds(135, baseY + (spacing * 3) + 5, 300, linkHeight); // "Graphics by:" - moved more right and slightly up
                     
                     gumroadLink->setJustificationType(juce::Justification::left);
                     soundcloudLink->setJustificationType(juce::Justification::left);
+                    jlWebLink->setJustificationType(juce::Justification::left);
+                    aznadelLink->setJustificationType(juce::Justification::left);
                     
                     window->addChildComponent(gumroadLink);
                     window->addChildComponent(soundcloudLink);
+                    window->addChildComponent(jlWebLink);
+                    window->addChildComponent(aznadelLink);
                     
                     gumroadLink->setVisible(true);
                     soundcloudLink->setVisible(true);
+                    jlWebLink->setVisible(true);
+                    aznadelLink->setVisible(true);
                                         
                     closeButton->onClick = [window]() {
                         window->exitModalState(0);
