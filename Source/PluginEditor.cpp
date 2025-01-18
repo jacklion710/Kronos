@@ -330,8 +330,8 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                                                                     juce::URL("https://soundcloud.com/jack0lion"));
                     auto* jlWebLink = new juce::HyperlinkButton("jacklion.xyz", 
                                                                juce::URL("https://jacklion.xyz"));
-                    auto* aznadelLink = new juce::HyperlinkButton("aznadel.com", 
-                                                                 juce::URL("https://aznadel.com"));
+                    auto* aznadelLink = new juce::HyperlinkButton("linktr.ee/aznadel", 
+                                                                 juce::URL("https://linktr.ee/aznadel"));
                     
                     // Set custom colors for hyperlinks based on theme
                     juce::Colour linkColor = audioProcessor.isDarkMode() ? 
