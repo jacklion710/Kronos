@@ -7,78 +7,78 @@
               pluginCode="KRNS" cppLanguageStandard="20" pluginVST3Category="Tools">
   <MAINGROUP id="BaOmXI" name="Kronos">
     <GROUP id="{95DFCBFD-71F4-784F-99EE-B168B870A2CB}" name="Assets">
-      <FILE id="C7WOal" name="Up Arrow Dark.svg" compile="0" resource="1"
-            file="Resources/Up Arrow Dark.svg"/>
-      <FILE id="nTQft9" name="Down Arrow Dark.svg" compile="0" resource="1"
-            file="Resources/Down Arrow Dark.svg"/>
-      <FILE id="ZBCR1v" name="ASTERA.ttf" compile="0" resource="1" file="Resources/ASTERA.ttf"/>
-      <FILE id="ySu9Nl" name="Background Dark.svg" compile="0" resource="1"
+      <FILE id="gnINyQ" name="ASTERA.ttf" compile="0" resource="1" file="Resources/ASTERA.ttf"/>
+      <FILE id="jmMJih" name="Background Dark.svg" compile="0" resource="1"
             file="Resources/Background Dark.svg"/>
-      <FILE id="kXHvXi" name="Background Light.svg" compile="0" resource="1"
+      <FILE id="Amt6tg" name="Background Light.svg" compile="0" resource="1"
             file="Resources/Background Light.svg"/>
-      <FILE id="AcNc2p" name="Dark Mode Button Pressed.svg" compile="0" resource="1"
+      <FILE id="tJ7iJl" name="Dark Mode Button Pressed.svg" compile="0" resource="1"
             file="Resources/Dark Mode Button Pressed.svg"/>
-      <FILE id="CCLqMg" name="Dark Mode Button.svg" compile="0" resource="1"
+      <FILE id="mS6fQo" name="Dark Mode Button.svg" compile="0" resource="1"
             file="Resources/Dark Mode Button.svg"/>
-      <FILE id="PSfTJl" name="Down Arrow Light.svg" compile="0" resource="1"
+      <FILE id="mUjGiU" name="Down Arrow Dark.svg" compile="0" resource="1"
+            file="Resources/Down Arrow Dark.svg"/>
+      <FILE id="vi0WQm" name="Down Arrow Light.svg" compile="0" resource="1"
             file="Resources/Down Arrow Light.svg"/>
-      <FILE id="W2yxS4" name="Down Arrow Pressed Light.svg" compile="0" resource="1"
-            file="Resources/Down Arrow Pressed Light.svg"/>
-      <FILE id="RptXpV" name="Grit.jpg" compile="0" resource="1" file="Resources/Grit.jpg"/>
-      <FILE id="LMiLV7" name="Header Dark.svg" compile="0" resource="1" file="Resources/Header Dark.svg"/>
-      <FILE id="FI7U1k" name="Header Light.svg" compile="0" resource="1"
-            file="Resources/Header Light.svg"/>
-      <FILE id="lDN6oL" name="Light Mode Button Pressed.svg" compile="0"
-            resource="1" file="Resources/Light Mode Button Pressed.svg"/>
-      <FILE id="mCPDmv" name="Light Mode Button.svg" compile="0" resource="1"
-            file="Resources/Light Mode Button.svg"/>
-      <FILE id="miJq9r" name="Pause Button Dark.svg" compile="0" resource="1"
-            file="Resources/Pause Button Dark.svg"/>
-      <FILE id="j5RHiD" name="Pause Button Light.svg" compile="0" resource="1"
-            file="Resources/Pause Button Light.svg"/>
-      <FILE id="dcpCPL" name="Pause Button Pressed Dark.svg" compile="0"
-            resource="1" file="Resources/Pause Button Pressed Dark.svg"/>
-      <FILE id="FYqJng" name="Pause Button Pressed Light.svg" compile="0"
-            resource="1" file="Resources/Pause Button Pressed Light.svg"/>
-      <FILE id="e2YAXx" name="Play Button Dark.svg" compile="0" resource="1"
-            file="Resources/Play Button Dark.svg"/>
-      <FILE id="iuCsSP" name="Play Button Light.svg" compile="0" resource="1"
-            file="Resources/Play Button Light.svg"/>
-      <FILE id="FF38Oa" name="Play Button Pressed Dark.svg" compile="0" resource="1"
-            file="Resources/Play Button Pressed Dark.svg"/>
-      <FILE id="oNZjlG" name="Play Button Pressed Light.svg" compile="0"
-            resource="1" file="Resources/Play Button Pressed Light.svg"/>
-      <FILE id="Q3Gxgn" name="Previous Sessions Dark.svg" compile="0" resource="1"
-            file="Resources/Previous Sessions Dark.svg"/>
-      <FILE id="lZcttl" name="Previous Sessions Light.svg" compile="0" resource="1"
-            file="Resources/Previous Sessions Light.svg"/>
-      <FILE id="xjLDxr" name="Sort Recency Dark.svg" compile="0" resource="1"
-            file="Resources/Sort Recency Dark.svg"/>
-      <FILE id="L6wwUi" name="Sort Recency Light.svg" compile="0" resource="1"
-            file="Resources/Sort Recency Light.svg"/>
-      <FILE id="GYBzuu" name="Sort Recency Pressed Dark.svg" compile="0"
-            resource="1" file="Resources/Sort Recency Pressed Dark.svg"/>
-      <FILE id="eLKB72" name="Sort Recency Pressed Light.svg" compile="0"
-            resource="1" file="Resources/Sort Recency Pressed Light.svg"/>
-      <FILE id="ysTMka" name="Sort Time Dark.svg" compile="0" resource="1"
-            file="Resources/Sort Time Dark.svg"/>
-      <FILE id="RuSy7r" name="Sort Time Light.svg" compile="0" resource="1"
-            file="Resources/Sort Time Light.svg"/>
-      <FILE id="fxUlw5" name="Sort Time Pressed Dark.svg" compile="0" resource="1"
-            file="Resources/Sort Time Pressed Dark.svg"/>
-      <FILE id="wgYKBW" name="Down Arrow Pressed Dark.svg" compile="0" resource="1"
+      <FILE id="iQo0e4" name="Down Arrow Pressed Dark.svg" compile="0" resource="1"
             file="Resources/Down Arrow Pressed Dark.svg"/>
-      <FILE id="ZmAbjr" name="Up Arrow Pressed Dark.svg" compile="0" resource="1"
-            file="Resources/Up Arrow Pressed Dark.svg"/>
-      <FILE id="JdcVUn" name="Sort Time Pressed Light.svg" compile="0" resource="1"
+      <FILE id="V1xN2G" name="Down Arrow Pressed Light.svg" compile="0" resource="1"
+            file="Resources/Down Arrow Pressed Light.svg"/>
+      <FILE id="lHtq5d" name="Grit.jpg" compile="0" resource="1" file="Resources/Grit.jpg"/>
+      <FILE id="bmrpqq" name="Header Dark.svg" compile="0" resource="1" file="Resources/Header Dark.svg"/>
+      <FILE id="T5SIGu" name="Header Light.svg" compile="0" resource="1"
+            file="Resources/Header Light.svg"/>
+      <FILE id="jDSqYR" name="Light Mode Button Pressed.svg" compile="0"
+            resource="1" file="Resources/Light Mode Button Pressed.svg"/>
+      <FILE id="YADtHd" name="Light Mode Button.svg" compile="0" resource="1"
+            file="Resources/Light Mode Button.svg"/>
+      <FILE id="OVYw7B" name="Pause Button Dark.svg" compile="0" resource="1"
+            file="Resources/Pause Button Dark.svg"/>
+      <FILE id="a7tSyi" name="Pause Button Light.svg" compile="0" resource="1"
+            file="Resources/Pause Button Light.svg"/>
+      <FILE id="hLDQ4l" name="Pause Button Pressed Dark.svg" compile="0"
+            resource="1" file="Resources/Pause Button Pressed Dark.svg"/>
+      <FILE id="Amatam" name="Pause Button Pressed Light.svg" compile="0"
+            resource="1" file="Resources/Pause Button Pressed Light.svg"/>
+      <FILE id="ustegp" name="Play Button Dark.svg" compile="0" resource="1"
+            file="Resources/Play Button Dark.svg"/>
+      <FILE id="M5Ds8u" name="Play Button Light.svg" compile="0" resource="1"
+            file="Resources/Play Button Light.svg"/>
+      <FILE id="JEpS8C" name="Play Button Pressed Dark.svg" compile="0" resource="1"
+            file="Resources/Play Button Pressed Dark.svg"/>
+      <FILE id="Fj2g94" name="Play Button Pressed Light.svg" compile="0"
+            resource="1" file="Resources/Play Button Pressed Light.svg"/>
+      <FILE id="HxNbkB" name="Previous Sessions Dark.svg" compile="0" resource="1"
+            file="Resources/Previous Sessions Dark.svg"/>
+      <FILE id="tywHaL" name="Previous Sessions Light.svg" compile="0" resource="1"
+            file="Resources/Previous Sessions Light.svg"/>
+      <FILE id="TPAlko" name="Sort Recency Dark.svg" compile="0" resource="1"
+            file="Resources/Sort Recency Dark.svg"/>
+      <FILE id="MLdI5K" name="Sort Recency Light.svg" compile="0" resource="1"
+            file="Resources/Sort Recency Light.svg"/>
+      <FILE id="KZ5jBJ" name="Sort Recency Pressed Dark.svg" compile="0"
+            resource="1" file="Resources/Sort Recency Pressed Dark.svg"/>
+      <FILE id="X0uDF7" name="Sort Recency Pressed Light.svg" compile="0"
+            resource="1" file="Resources/Sort Recency Pressed Light.svg"/>
+      <FILE id="OlLKOj" name="Sort Time Dark.svg" compile="0" resource="1"
+            file="Resources/Sort Time Dark.svg"/>
+      <FILE id="Pqz5M8" name="Sort Time Light.svg" compile="0" resource="1"
+            file="Resources/Sort Time Light.svg"/>
+      <FILE id="Qb2WsP" name="Sort Time Pressed Dark.svg" compile="0" resource="1"
+            file="Resources/Sort Time Pressed Dark.svg"/>
+      <FILE id="TBRDJx" name="Sort Time Pressed Light.svg" compile="0" resource="1"
             file="Resources/Sort Time Pressed Light.svg"/>
-      <FILE id="dDHw8S" name="Time Display Dark.svg" compile="0" resource="1"
+      <FILE id="Yu9i44" name="Time Display Dark.svg" compile="0" resource="1"
             file="Resources/Time Display Dark.svg"/>
-      <FILE id="XmwBNN" name="Time Display Light.svg" compile="0" resource="1"
+      <FILE id="Vj79Xl" name="Time Display Light.svg" compile="0" resource="1"
             file="Resources/Time Display Light.svg"/>
-      <FILE id="LrOwTo" name="Up Arrow Light.svg" compile="0" resource="1"
+      <FILE id="bc25ZN" name="Up Arrow Dark.svg" compile="0" resource="1"
+            file="Resources/Up Arrow Dark.svg"/>
+      <FILE id="nd7Rqj" name="Up Arrow Light.svg" compile="0" resource="1"
             file="Resources/Up Arrow Light.svg"/>
-      <FILE id="YU7WRV" name="Up Arrow Pressed Light.svg" compile="0" resource="1"
+      <FILE id="PLhSfu" name="Up Arrow Pressed Dark.svg" compile="0" resource="1"
+            file="Resources/Up Arrow Pressed Dark.svg"/>
+      <FILE id="z3imON" name="Up Arrow Pressed Light.svg" compile="0" resource="1"
             file="Resources/Up Arrow Pressed Light.svg"/>
     </GROUP>
     <GROUP id="{3F17D307-FD11-C3B5-9773-A8098DD394F4}" name="Source">

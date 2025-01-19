@@ -9,6 +9,9 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include <JuceHeader.h>
+#if JUCE_WINDOWS
+    #include "BinaryData.h"
+#endif
 
 //==============================================================================
 KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
@@ -57,8 +60,16 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     // Cache ALL SVGs first - Dark Mode
     backgroundSvgCache = juce::Drawable::createFromImageData(BinaryData::Background_Dark_svg, 
                                                            BinaryData::Background_Dark_svgSize);
+    if (backgroundSvgCache == nullptr)
+    {
+        DBG("Failed to load Background_Dark.svg");
+    }
     timeDisplaySvgCache = juce::Drawable::createFromImageData(BinaryData::Time_Display_Dark_svg, 
                                                             BinaryData::Time_Display_Dark_svgSize);
+    if (timeDisplaySvgCache == nullptr)
+    {
+        DBG("Failed to load Time_Display_Dark.svg");
+    }
     previousSessionsSvgCache = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_Dark_svg, 
                                                                  BinaryData::Previous_Sessions_Dark_svgSize);
     headerSvgCache = juce::Drawable::createFromImageData(BinaryData::Header_Dark_svg,
@@ -822,8 +833,27 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
 
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)
 {
+    auto bounds = getLocalBounds();
+    
+    // Explicitly choose the correct background based on theme
+    if (audioProcessor.isDarkMode())
+    {
+        if (backgroundSvgCache != nullptr)
+        {
+            backgroundSvgCache->drawWithin(g, bounds.toFloat(), 
+                juce::RectanglePlacement::stretchToFit, 1.0f);
+        }
+    }
+    else
+    {
+        if (backgroundLightSvgCache != nullptr)
+        {
+            backgroundLightSvgCache->drawWithin(g, bounds.toFloat(), 
+                juce::RectanglePlacement::stretchToFit, 1.0f);
+        }
+    }
+
     // Draw custom metallic border
-    auto bounds = getLocalBounds().toFloat();
     float borderThickness = 4.0f;
     
     // Create gradient for border with multiple points for sine-wave like effect
@@ -831,11 +861,11 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
         audioProcessor.isDarkMode() ?
             juce::Colour(130, 130, 130) :           // Dark mode highlight
             juce::Colour(160, 140, 120),            // Light mode warm highlight
-        bounds.getBottomLeft(),
+        bounds.getBottomLeft().toFloat(),           // Convert to float
         audioProcessor.isDarkMode() ?
             juce::Colour(130, 130, 130) :           // Dark mode highlight
             juce::Colour(160, 140, 120),            // Light mode warm highlight
-        bounds.getTopRight(),
+        bounds.getTopRight().toFloat(),             // Convert to float
         false
     );
     
@@ -852,28 +882,45 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.setGradientFill(borderGradient);
     g.drawRect(bounds, borderThickness);
 
-    // Use cached background SVG
-    if (backgroundSvgCache != nullptr && backgroundLightSvgCache != nullptr)
-    {
-        float padding = borderThickness + 1.0f;
-        auto paddedBounds = bounds.reduced(padding);
-        auto& currentCache = audioProcessor.isDarkMode() ? backgroundSvgCache : backgroundLightSvgCache;
-        currentCache->drawWithin(g, paddedBounds, 
-                               juce::RectanglePlacement::centred | 
-                               juce::RectanglePlacement::stretchToFit, 
-                               1.0f);
-    }
-
-    // Draw grit texture overlay
+    // Draw grit texture overlay with platform-specific handling
     auto gritImage = juce::ImageCache::getFromMemory(BinaryData::Grit_jpg, 
                                                     BinaryData::Grit_jpgSize);
     if (gritImage.isValid())
     {
-        juce::Image gritCopy = gritImage.createCopy();
-        gritCopy.multiplyAllAlphas(audioProcessor.isDarkMode() ? 0.07f : 0.07f); // Grit texture opacity
-        auto gritBounds = bounds.reduced(borderThickness + 1.0f);
-        g.drawImage(gritCopy, gritBounds,
-                   juce::RectanglePlacement::stretchToFit);
+        #if JUCE_WINDOWS
+            // Windows-specific handling with ARGB conversion
+            juce::Image gritCopy = gritImage.convertedToFormat(juce::Image::ARGB);
+            if (gritCopy.isValid() && gritCopy.hasAlphaChannel())
+            {
+                gritCopy.multiplyAllAlphas(audioProcessor.isDarkMode() ? 0.07f : 0.07f);
+                
+                auto gritBounds = bounds.reduced(borderThickness + 1.0f);
+                g.drawImage(gritCopy,                           
+                           gritBounds.getX(),                   
+                           gritBounds.getY(),                   
+                           gritBounds.getWidth(),               
+                           gritBounds.getHeight(),              
+                           0,                                   
+                           0,                                   
+                           gritImage.getWidth(),                
+                           gritImage.getHeight());              
+            }
+        #else
+            // Original Mac handling
+            juce::Image gritCopy = gritImage.createCopy();
+            gritCopy.multiplyAllAlphas(audioProcessor.isDarkMode() ? 0.07f : 0.07f);
+            
+            auto gritBounds = bounds.reduced(borderThickness + 1.0f);
+            g.drawImage(gritCopy,                           
+                       gritBounds.getX(),                   
+                       gritBounds.getY(),                   
+                       gritBounds.getWidth(),               
+                       gritBounds.getHeight(),              
+                       0,                                   
+                       0,                                   
+                       gritImage.getWidth(),                
+                       gritImage.getHeight());              
+        #endif
     }
 
     // Scale the title text
