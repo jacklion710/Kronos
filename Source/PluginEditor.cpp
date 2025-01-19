@@ -311,6 +311,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                         "Created by Jacob Leone aka Jack.Lion\n\n"
                         "Plugins & more at:\n\n"
                         "Music:\n\n"
+                        "Instagram:\n\n"
                         "Website:\n\n"
                         "Graphics by Aznadel:",
                         juce::MessageBoxIconType::InfoIcon);
@@ -336,6 +337,8 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                                                                juce::URL("https://jacklion.xyz"));
                     auto* aznadelLink = new juce::HyperlinkButton("linktr.ee/aznadel", 
                                                                  juce::URL("https://linktr.ee/aznadel"));
+                    auto* jlInstaLink = new juce::HyperlinkButton("instagram.com/jack.lion", 
+                                                                 juce::URL("https://www.instagram.com/jack.lion"));
                     
                     // Set custom colors for hyperlinks based on theme
                     juce::Colour linkColor = audioProcessor.isDarkMode() ? 
@@ -345,12 +348,14 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     gumroadLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
                     soundcloudLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
                     jlWebLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
+                    jlInstaLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
                     aznadelLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
 
                     // Make the buttons underlined to indicate they're clickable
                     gumroadLink->setTooltip("Visit Gumroad page");
                     soundcloudLink->setTooltip("Visit SoundCloud page");
                     jlWebLink->setTooltip("Visit Jack.Lion website");
+                    jlInstaLink->setTooltip("Visit Jack.Lion Instagram");
                     aznadelLink->setTooltip("Visit Aznadel website");
                     
                     // Position links next to their respective text
@@ -360,21 +365,25 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     
                     gumroadLink->setBounds(125, baseY, 300, linkHeight);                    // "Plugins & more at:"
                     soundcloudLink->setBounds(55, baseY + spacing, 300, linkHeight);        // "Music:"
-                    jlWebLink->setBounds(65, baseY + spacing * 2, 300, linkHeight);         // "Website:"
-                    aznadelLink->setBounds(135, baseY + (spacing * 3) + 5, 300, linkHeight); // "Graphics by:" - moved more right and slightly up
+                    jlInstaLink->setBounds(85, baseY + spacing * 2.15, 300, linkHeight);       // "Instagram:"
+                    jlWebLink->setBounds(65, baseY + spacing * 3.15, 300, linkHeight);         // "Website:"
+                    aznadelLink->setBounds(135, baseY + spacing * 4.3, 300, linkHeight);      // "Graphics by:"
                     
                     gumroadLink->setJustificationType(juce::Justification::left);
                     soundcloudLink->setJustificationType(juce::Justification::left);
+                    jlInstaLink->setJustificationType(juce::Justification::left);
                     jlWebLink->setJustificationType(juce::Justification::left);
                     aznadelLink->setJustificationType(juce::Justification::left);
                     
                     window->addChildComponent(gumroadLink);
                     window->addChildComponent(soundcloudLink);
+                    window->addChildComponent(jlInstaLink);
                     window->addChildComponent(jlWebLink);
                     window->addChildComponent(aznadelLink);
                     
                     gumroadLink->setVisible(true);
                     soundcloudLink->setVisible(true);
+                    jlInstaLink->setVisible(true);
                     jlWebLink->setVisible(true);
                     aznadelLink->setVisible(true);
                                         
