@@ -324,6 +324,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                         "Music:\n\n"
                         "Instagram:\n\n"
                         "Website:\n\n"
+                        "Bug reports & feature requests:\n\n"
                         "Graphics by Aznadel:",
                         juce::MessageBoxIconType::InfoIcon);
                     
@@ -346,10 +347,12 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                                                                     juce::URL("https://soundcloud.com/jack0lion"));
                     auto* jlWebLink = new juce::HyperlinkButton("jacklion.xyz", 
                                                                juce::URL("https://jacklion.xyz"));
-                    auto* aznadelLink = new juce::HyperlinkButton("linktr.ee/aznadel", 
-                                                                 juce::URL("https://linktr.ee/aznadel"));
                     auto* jlInstaLink = new juce::HyperlinkButton("instagram.com/jack.lion", 
                                                                  juce::URL("https://www.instagram.com/jack.lion"));
+                    auto* discordLink = new juce::HyperlinkButton("discord.gg/EFQq7BX", 
+                                                                 juce::URL("https://discord.gg/EFQq7BX"));
+                    auto* aznadelLink = new juce::HyperlinkButton("linktr.ee/aznadel", 
+                                                                 juce::URL("https://linktr.ee/aznadel"));
                     
                     // Set custom colors for hyperlinks based on theme
                     juce::Colour linkColor = audioProcessor.isDarkMode() ? 
@@ -360,6 +363,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     soundcloudLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
                     jlWebLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
                     jlInstaLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
+                    discordLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
                     aznadelLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
 
                     // Make the buttons underlined to indicate they're clickable
@@ -367,6 +371,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     soundcloudLink->setTooltip("Visit SoundCloud page");
                     jlWebLink->setTooltip("Visit Jack.Lion website");
                     jlInstaLink->setTooltip("Visit Jack.Lion Instagram");
+                    discordLink->setTooltip("Visit Jack.Lion Discord");
                     aznadelLink->setTooltip("Visit Aznadel website");
                     
                     // Position links next to their respective text
@@ -374,28 +379,32 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     int linkHeight = 20;
                     int spacing = 26;  // Spacing between links
                     
-                    gumroadLink->setBounds(125, baseY, 300, linkHeight);                    // "Plugins & more at:"
-                    soundcloudLink->setBounds(55, baseY + spacing, 300, linkHeight);        // "Music:"
-                    jlInstaLink->setBounds(85, baseY + spacing * 2.15, 300, linkHeight);       // "Instagram:"
+                    gumroadLink->setBounds(120, baseY, 300, linkHeight);                    // "Plugins & more at:"
+                    soundcloudLink->setBounds(50, baseY + spacing, 300, linkHeight);        // "Music:"
+                    jlInstaLink->setBounds(75, baseY + spacing * 2.15, 300, linkHeight);       // "Instagram:"
                     jlWebLink->setBounds(65, baseY + spacing * 3.15, 300, linkHeight);         // "Website:"
-                    aznadelLink->setBounds(135, baseY + spacing * 4.3, 300, linkHeight);      // "Graphics by:"
+                    discordLink->setBounds(195, baseY + spacing * 4.3, 300, linkHeight);      // "Discord:"
+                    aznadelLink->setBounds(135, baseY + spacing * 5.4, 300, linkHeight);      // "Graphics by:"
                     
                     gumroadLink->setJustificationType(juce::Justification::left);
                     soundcloudLink->setJustificationType(juce::Justification::left);
                     jlInstaLink->setJustificationType(juce::Justification::left);
                     jlWebLink->setJustificationType(juce::Justification::left);
+                    discordLink->setJustificationType(juce::Justification::left);
                     aznadelLink->setJustificationType(juce::Justification::left);
                     
                     window->addChildComponent(gumroadLink);
                     window->addChildComponent(soundcloudLink);
                     window->addChildComponent(jlInstaLink);
                     window->addChildComponent(jlWebLink);
+                    window->addChildComponent(discordLink);
                     window->addChildComponent(aznadelLink);
                     
                     gumroadLink->setVisible(true);
                     soundcloudLink->setVisible(true);
                     jlInstaLink->setVisible(true);
                     jlWebLink->setVisible(true);
+                    discordLink->setVisible(true);
                     aznadelLink->setVisible(true);
                                         
                     closeButton->onClick = [window]() {
