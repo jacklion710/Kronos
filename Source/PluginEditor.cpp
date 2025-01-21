@@ -124,7 +124,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     // Set initial toggle state based on processor
     playPauseButton.setToggleState(audioProcessor.isTracking, juce::dontSendNotification);
 
-    // Replace the onClick handler with mouseDown and mouseUp handlers
+    // Add mouse listener
     playPauseButton.onStateChange = [this]()
     {
         // This ensures the button's visual state matches its toggle state
@@ -1166,44 +1166,6 @@ void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
         constrainScrollOffset();
         updateDateLabels();
         repaint();
-    }
-}
-
-void KronosAudioProcessorEditor::mouseDown(const juce::MouseEvent& event)
-{
-    if (event.eventComponent == &playPauseButton && !isTransitioningButton)
-    {
-        isTransitioningButton = true;
-        bool isDark = audioProcessor.isDarkMode();
-        
-        // Get the correct themed assets
-        auto& currentPlay = isDark ? playSvgCache : playLightSvgCache;
-        auto& currentPlayPressed = isDark ? playPressedSvgCache : playPressedLightSvgCache;
-        auto& currentPause = isDark ? pauseSvgCache : pauseLightSvgCache;
-        auto& currentPausePressed = isDark ? pausePressedSvgCache : pausePressedLightSvgCache;
-        
-        if (audioProcessor.isTracking)
-        {
-            playPauseButton.setImages(currentPausePressed.get(),    // normal
-                                    nullptr,                        // over
-                                    currentPausePressed.get(),      // down
-                                    nullptr,                        // disabled
-                                    currentPausePressed.get(),      // normal (on)
-                                    nullptr,                        // over (on)
-                                    currentPausePressed.get(),      // down (on)
-                                    nullptr);                       // disabled (on)
-        }
-        else
-        {
-            playPauseButton.setImages(currentPlayPressed.get(),     // normal
-                                    nullptr,                        // over
-                                    currentPlayPressed.get(),       // down
-                                    nullptr,                        // disabled
-                                    currentPlayPressed.get(),       // normal (on)
-                                    nullptr,                        // over (on)
-                                    currentPlayPressed.get(),       // down (on)
-                                    nullptr);                       // disabled (on)
-        }
     }
 }
 
