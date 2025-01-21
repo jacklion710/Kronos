@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    This file contains the basic framework code for a JUCE plugin processor.
+    My main plugin processor implementation.
 
   ==============================================================================
 */
@@ -155,8 +155,7 @@ double KronosAudioProcessor::getTailLengthSeconds() const
 
 int KronosAudioProcessor::getNumPrograms()
 {
-    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+    return 1;   // I need at least 1 program or some hosts might complain
 }
 
 int KronosAudioProcessor::getCurrentProgram()
@@ -180,8 +179,9 @@ void KronosAudioProcessor::changeProgramName (int index, const juce::String& new
 //==============================================================================
 void KronosAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    // Nothing to implement here since my plugin doesn't use any audio processing. 
+    // It's just a timer and a bunch of UI elements.
+    // Since JUCE wants to see this method, I'm just going to leave it empty.
 }
 
 void KronosAudioProcessor::releaseResources()
@@ -201,10 +201,10 @@ bool KronosAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
     juce::ignoreUnused (layouts);
     return true;
   #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
+    // I'm only supporting mono and stereo layouts here.
+    // Some hosts (like certain GarageBand versions) will only
     // load plugins that support stereo bus layouts.
+    // Not that it matters because this plugin doesn't use any audio processing.
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
      && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
