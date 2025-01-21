@@ -74,7 +74,7 @@ Graphics by Aznadel
 
 - Website: https://jacklion.com
 - Instagram: @jack.lion
-- Discord: [\[Join our community\]](https://discord.gg/EFQq7BX)
+- Discord: [\[Join my community\]](https://discord.gg/EFQq7BX)
 - Gumroad: [\[More plugins\]](https://jacklion.gumroad.com)
 
 ## License
