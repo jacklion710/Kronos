@@ -437,8 +437,6 @@ void KronosAudioProcessor::addSessionDate()
     if (!dateExists)
     {
         sessionDates.insert(0, today);  // Add to front of array
-        if (sessionDates.size() > 10)   // Keep only last 10 sessions
-            sessionDates.removeLast();
     }
 }
 
