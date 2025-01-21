@@ -44,76 +44,93 @@ AboutComponent::AboutComponent(KronosAudioProcessor& processor)
 
 void AboutComponent::paint(juce::Graphics& g)
 {
-    // Background color - dark charcoal gray
-    g.fillAll(juce::Colour(0xFF1A1A1A));  // Adjust this value if needed to match exactly
+    bool isDarkMode = audioProcessor.isDarkMode();
     
-    // Text color - white for all text
-    g.setColour(juce::Colours::white);
+    // Background color based on theme
+    g.fillAll(isDarkMode ? 
+        juce::Colour(0xFF1A1A1A) :           // Dark charcoal for dark mode
+        juce::Colour(0xFF8A8A8A));           // Concrete gray for light mode
+    
+    // Text color - white for dark mode, dark gray for light mode
+    g.setColour(isDarkMode ? juce::Colours::white : juce::Colours::white);
     
     auto asteraFont = juce::Font("ASTERA", 24.0f, juce::Font::plain);
-    auto bounds = getLocalBounds().reduced(20);
+    auto contentBounds = getLocalBounds().reduced(20);
     
     // Title - stick to top with minimal padding
     g.setFont(asteraFont);
-    g.drawText("KRONOS", bounds.removeFromTop(30), juce::Justification::centred, true);
+    g.drawText("KRONOS", contentBounds.removeFromTop(30), juce::Justification::centred, true);
     
     // Version - immediately below title
     g.setFont(asteraFont.withHeight(20.0f));
-    g.drawText("V1.0.0", bounds.removeFromTop(30), juce::Justification::centred, true);
+    g.drawText("V1.0.0", contentBounds.removeFromTop(30), juce::Justification::centred, true);
     
-    bounds.removeFromTop(20); // Reduced space before description (was 30)
+    contentBounds.removeFromTop(20); // Reduced space before description (was 30)
     
     // Description - using taller bounds for wrapping
     g.setFont(asteraFont.withHeight(16.0f));
-    auto descriptionBounds = bounds.removeFromTop(30);  // Increased height for two lines
+    auto descriptionBounds = contentBounds.removeFromTop(30);  // Increased height for two lines
     g.drawFittedText("A SIMPLE TIME TRACKING PLUGIN FOR YOUR DAW", 
                      descriptionBounds,
                      juce::Justification::centred, 
                      2);  // Allow up to 2 lines of text
     
     // Creator credit - also with wrapping
-    auto creditBounds = bounds.removeFromTop(30);  // Increased height for two lines
+    auto creditBounds = contentBounds.removeFromTop(30);  // Increased height for two lines
     g.drawFittedText("CREATED BY JACOB LEONE AKA JACK.LION", 
                      creditBounds,
                      juce::Justification::centred, 
                      2);  // Allow up to 2 lines of text
     
-    bounds.removeFromTop(40); // Reduced space after description
+    contentBounds.removeFromTop(40); // Reduced space after description
     
     // Draw all labels first, with less spacing between them and links
     g.drawText("PLUGINS and MORE AT:", 
-               bounds.removeFromTop(20), 
+               contentBounds.removeFromTop(20), 
                juce::Justification::centred, true);
     
-    bounds.removeFromTop(30);
+    contentBounds.removeFromTop(30);
     g.drawText("MUSIC", 
-               bounds.removeFromTop(30), 
+               contentBounds.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    bounds.removeFromTop(30);
+    contentBounds.removeFromTop(30);
     g.drawText("INSTAGRAM", 
-               bounds.removeFromTop(30), 
+               contentBounds.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    bounds.removeFromTop(30);
+    contentBounds.removeFromTop(30);
     g.drawText("WEBSITE", 
-               bounds.removeFromTop(30), 
+               contentBounds.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    bounds.removeFromTop(30);
+    contentBounds.removeFromTop(30);
     g.drawText("BUG REPORTS and FEATURE REQUESTS", 
-               bounds.removeFromTop(30), 
+               contentBounds.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    bounds.removeFromTop(30);
+    contentBounds.removeFromTop(30);
     g.drawText("GRAPHICS BY AZNADEL", 
-               bounds.removeFromTop(30), 
+               contentBounds.removeFromTop(30), 
                juce::Justification::centred, true);
 
-    // Border
+    // Draw custom metallic border
     float borderThickness = 2.0f;
+    
+    // Create gradient for border
+    juce::ColourGradient borderGradient(
+        isDarkMode ?
+            juce::Colour(180, 180, 180) :     // Lighter silver for dark mode start
+            juce::Colour(200, 180, 140),      // Warmer gold for light mode start
+        getLocalBounds().getTopLeft().toFloat(),
+        isDarkMode ?
+            juce::Colour(100, 100, 100) :     // Darker silver for dark mode end
+            juce::Colour(120, 100, 80),       // Darker gold for light mode end
+        getLocalBounds().getBottomRight().toFloat(),
+        false);
+    
     auto borderBounds = getLocalBounds().toFloat();
-    g.setColour(juce::Colours::white.withAlpha(0.3f));
+    g.setGradientFill(borderGradient);
     g.drawRect(borderBounds, borderThickness);
 }
 
@@ -150,8 +167,12 @@ void AboutComponent::positionLinks()
     
     aznadelLink.setBounds(centerX, currentY, linkWidth, linkHeight);
 
-    // Update link appearance
-    juce::Colour linkColor(0x64, 0x64, 0xFF); // Electric blue color
+    // Update link appearance based on theme
+    bool isDarkMode = audioProcessor.isDarkMode();
+    juce::Colour linkColor = isDarkMode ? 
+        juce::Colour(64, 64, 255) :      // Blue for dark mode
+        juce::Colour(255, 150, 50);      // Orange for light mode
+    
     auto asteraFont = juce::Font("ASTERA", 16.0f, juce::Font::plain);
     
     for (auto* link : {&gumroadLink, &soundcloudLink, &jlInstaLink, 
