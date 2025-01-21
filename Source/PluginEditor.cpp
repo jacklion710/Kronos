@@ -326,6 +326,8 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     window->setLookAndFeel(&customLookAndFeel);
                     window->centreAroundComponent(this, window->getWidth(), window->getHeight());
                     window->setAlwaysOnTop(true);
+                    window->setUsingNativeTitleBar(false);
+                    window->setTitleBarHeight(0);
                     
                     window->enterModalState(true, juce::ModalCallbackFunction::create(
                         [window](int) {
