@@ -9,6 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include <JuceHeader.h>
+#include "AboutComponent.h"
 #if JUCE_WINDOWS
     #include "BinaryData.h"
 #endif
@@ -313,108 +314,16 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         menu.showMenuAsync(juce::PopupMenu::Options()
             .withTargetComponent(&menuButton),
             [this](int result) {
-                if (result == 1) // About was selected
+                if (result == 1)
                 {
-                    auto* window = new juce::AlertWindow(
-                        "About Kronos",
-                        "Kronos v1.0.0\n"
-                        "A simple time tracking plugin for your DAW.\n"
-                        "Created by Jacob Leone aka Jack.Lion\n\n"
-                        "Plugins & more at:\n\n"
-                        "Music:\n\n"
-                        "Instagram:\n\n"
-                        "Website:\n\n"
-                        "Bug reports & feature requests:\n\n"
-                        "Graphics by Aznadel:",
-                        juce::MessageBoxIconType::InfoIcon);
+                    auto* window = new juce::DialogWindow("About", 
+                        juce::Colours::black, true, true);
                     
-                    // Create minimal close button
-                    auto* closeButton = new juce::TextButton("x");
-                    closeButton->setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
-                    closeButton->setColour(juce::TextButton::textColourOffId, 
-                        audioProcessor.isDarkMode() ? 
-                            juce::Colour(0xE6, 0xE6, 0xFF) :    // Light blue-white for dark mode
-                            juce::Colours::white);              // White for light mode
+                    auto content = std::make_unique<AboutComponent>(audioProcessor);
+                    content->closeButton.onClick = [window]() { window->exitModalState(0); };
                     
-                    closeButton->setBounds(370, 5, 20, 20);
-                    window->addChildComponent(closeButton);
-                    closeButton->setVisible(true);
-                    
-                    // Add hyperlinks
-                    auto* gumroadLink = new juce::HyperlinkButton("jacklion.gumroad.com", 
-                                                                 juce::URL("https://jacklion.gumroad.com"));
-                    auto* soundcloudLink = new juce::HyperlinkButton("soundcloud.com/jack0lion", 
-                                                                    juce::URL("https://soundcloud.com/jack0lion"));
-                    auto* jlWebLink = new juce::HyperlinkButton("jacklion.xyz", 
-                                                               juce::URL("https://jacklion.xyz"));
-                    auto* jlInstaLink = new juce::HyperlinkButton("instagram.com/jack.lion", 
-                                                                 juce::URL("https://www.instagram.com/jack.lion"));
-                    auto* discordLink = new juce::HyperlinkButton("discord.gg/EFQq7BX", 
-                                                                 juce::URL("https://discord.gg/EFQq7BX"));
-                    auto* aznadelLink = new juce::HyperlinkButton("linktr.ee/aznadel", 
-                                                                 juce::URL("https://linktr.ee/aznadel"));
-                    
-                    // Set custom colors for hyperlinks based on theme
-                    juce::Colour linkColor = audioProcessor.isDarkMode() ? 
-                        juce::Colour(0x64, 0x64, 0xFF) :  // Electric blue (#6464FF) for dark mode
-                        juce::Colour(0xFF, 0xA5, 0x00);   // Orange (#FFA500) for light mode
-
-                    gumroadLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
-                    soundcloudLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
-                    jlWebLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
-                    jlInstaLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
-                    discordLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
-                    aznadelLink->setColour(juce::HyperlinkButton::textColourId, linkColor);
-
-                    // Make the buttons underlined to indicate they're clickable
-                    gumroadLink->setTooltip("Visit Gumroad page");
-                    soundcloudLink->setTooltip("Visit SoundCloud page");
-                    jlWebLink->setTooltip("Visit Jack.Lion website");
-                    jlInstaLink->setTooltip("Visit Jack.Lion Instagram");
-                    discordLink->setTooltip("Visit Jack.Lion Discord");
-                    aznadelLink->setTooltip("Visit Aznadel website");
-                    
-                    // Position links next to their respective text
-                    int baseY = 95;  // Base Y position
-                    int linkHeight = 20;
-                    int spacing = 26;  // Spacing between links
-                    
-                    gumroadLink->setBounds(120, baseY, 300, linkHeight);                    // "Plugins & more at:"
-                    soundcloudLink->setBounds(50, baseY + spacing, 300, linkHeight);        // "Music:"
-                    jlInstaLink->setBounds(75, baseY + spacing * 2.15, 300, linkHeight);       // "Instagram:"
-                    jlWebLink->setBounds(65, baseY + spacing * 3.15, 300, linkHeight);         // "Website:"
-                    discordLink->setBounds(195, baseY + spacing * 4.3, 300, linkHeight);      // "Discord:"
-                    aznadelLink->setBounds(135, baseY + spacing * 5.4, 300, linkHeight);      // "Graphics by:"
-                    
-                    gumroadLink->setJustificationType(juce::Justification::left);
-                    soundcloudLink->setJustificationType(juce::Justification::left);
-                    jlInstaLink->setJustificationType(juce::Justification::left);
-                    jlWebLink->setJustificationType(juce::Justification::left);
-                    discordLink->setJustificationType(juce::Justification::left);
-                    aznadelLink->setJustificationType(juce::Justification::left);
-                    
-                    window->addChildComponent(gumroadLink);
-                    window->addChildComponent(soundcloudLink);
-                    window->addChildComponent(jlInstaLink);
-                    window->addChildComponent(jlWebLink);
-                    window->addChildComponent(discordLink);
-                    window->addChildComponent(aznadelLink);
-                    
-                    gumroadLink->setVisible(true);
-                    soundcloudLink->setVisible(true);
-                    jlInstaLink->setVisible(true);
-                    jlWebLink->setVisible(true);
-                    discordLink->setVisible(true);
-                    aznadelLink->setVisible(true);
-                                        
-                    closeButton->onClick = [window]() {
-                        window->exitModalState(0);
-                    };
-                    
+                    window->setContentOwned(content.release(), true);
                     window->setLookAndFeel(&customLookAndFeel);
-                    window->setSize(400, 300);
-                    
-                    // Center on screen and make it modal
                     window->centreAroundComponent(this, window->getWidth(), window->getHeight());
                     window->setAlwaysOnTop(true);
                     

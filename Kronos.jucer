@@ -7,6 +7,10 @@
               pluginCode="KRNS" cppLanguageStandard="20" pluginVST3Category="Tools">
   <MAINGROUP id="BaOmXI" name="Kronos">
     <GROUP id="{95DFCBFD-71F4-784F-99EE-B168B870A2CB}" name="Assets">
+      <FILE id="QrDnb8" name="AboutComponent.cpp" compile="1" resource="0"
+            file="Source/AboutComponent.cpp"/>
+      <FILE id="fG5Gxt" name="AboutComponent.h" compile="0" resource="0"
+            file="Source/AboutComponent.h"/>
       <FILE id="gnINyQ" name="ASTERA.ttf" compile="0" resource="1" file="Resources/ASTERA.ttf"/>
       <FILE id="jmMJih" name="Background Dark.svg" compile="0" resource="1"
             file="Resources/Background Dark.svg"/>
