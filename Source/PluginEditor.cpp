@@ -1149,20 +1149,16 @@ void KronosAudioProcessorEditor::constrainScrollOffset()
 
 void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
 {
-    // Handle play/pause button
-    if (button == &playPauseButton)
-    {
-        DBG("Button clicked - ignoring in favor of mouse events");
-    }
     // Handle scroll buttons
-    else if (button == &scrollUpButton)
+    if (button == &scrollUpButton)
     {
         scrollOffset = std::max(0.0f, scrollOffset - dateHeight);
         constrainScrollOffset();
         updateDateLabels();
         repaint();
     }
-    else if (button == &scrollDownButton)
+    
+    if (button == &scrollDownButton)
     {
         scrollOffset += dateHeight;
         constrainScrollOffset();
@@ -1175,6 +1171,8 @@ void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
 {
     if (event.eventComponent == &playPauseButton)
     {
+        auto startTime = juce::Time::getMillisecondCounterHiRes();
+        
         // Start the transition timer when mouse is released
         startTimer(buttonTransitionDelay);
         
@@ -1189,11 +1187,16 @@ void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
             audioProcessor.startTracking();
             playPauseButton.setToggleState(true, juce::dontSendNotification);
         }
+
+        auto endTime = juce::Time::getMillisecondCounterHiRes();
+        DBG("Button execution time: " << (endTime - startTime) << "ms");
     }
 }
 
 void KronosAudioProcessorEditor::updateButtonImages()
 {
+    auto startTime = juce::Time::getMillisecondCounterHiRes();
+    
     bool isDark = audioProcessor.isDarkMode();
     
     // Get the correct themed assets
@@ -1225,6 +1228,9 @@ void KronosAudioProcessorEditor::updateButtonImages()
                                 currentPlayPressed.get(),        // down on
                                 nullptr);                        // disabled on
     }
+
+    auto endTime = juce::Time::getMillisecondCounterHiRes();
+    DBG("Button image update time: " << (endTime - startTime) << "ms");
 }
 
 std::unique_ptr<juce::Drawable> KronosAudioProcessorEditor::createNormalizedDrawable(juce::Drawable* source, float targetSize)
