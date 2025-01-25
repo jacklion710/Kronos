@@ -63,7 +63,7 @@ void AboutComponent::paint(juce::Graphics& g)
     
     // Version - immediately below title
     g.setFont(asteraFont.withHeight(20.0f));
-    g.drawText("V1.0.0", contentBounds.removeFromTop(30), juce::Justification::centred, true);
+    g.drawText("V1.0.0-beta.2", contentBounds.removeFromTop(30), juce::Justification::centred, true);
     
     contentBounds.removeFromTop(20); // Reduced space before description (was 30)
     

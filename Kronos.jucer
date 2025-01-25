@@ -4,7 +4,8 @@
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="0" jucerFormatVersion="1"
               companyName="Jack.Lion" companyWebsite="https://jacklion.com"
               companyEmail="jack.lion710@gmail.com" pluginFormats="buildAU,buildStandalone,buildVST,buildVST3"
-              pluginCode="KRNS" cppLanguageStandard="20" pluginVST3Category="Tools">
+              pluginCode="KRNS" cppLanguageStandard="20" pluginVST3Category="Tools"
+              version="1.0.0-beta.2">
   <MAINGROUP id="BaOmXI" name="Kronos">
     <GROUP id="{95DFCBFD-71F4-784F-99EE-B168B870A2CB}" name="Assets">
       <FILE id="QrDnb8" name="AboutComponent.cpp" compile="1" resource="0"

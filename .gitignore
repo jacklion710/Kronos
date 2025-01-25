@@ -37,3 +37,4 @@ test project/
 
 # Obsidian
 .obsidian/
+.smart-env/

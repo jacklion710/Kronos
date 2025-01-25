@@ -103,9 +103,9 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                                                              BinaryData::Pause_Button_Pressed_Light_svgSize);
 
     // THEN initialize play/pause button
-    addAndMakeVisible(playPauseButton);
     playPauseButton.setButtonText("");
     playPauseButton.addListener(this);
+    addAndMakeVisible(playPauseButton);
 
     // Make button background transparent
     playPauseButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
@@ -145,16 +145,13 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         }
         
         updateButtonImages();
-        repaint();
     };
-    
-    playPauseButton.addMouseListener(this, false);
-    
+        
     // Initialize theme toggle button
-    addAndMakeVisible(themeToggleButton);
     themeToggleButton.setButtonText("");
     themeToggleButton.setClickingTogglesState(true);
     themeToggleButton.setToggleState(!audioProcessor.isDarkMode(), juce::dontSendNotification);
+    addAndMakeVisible(themeToggleButton);
 
     // Make button background transparent
     themeToggleButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
@@ -184,10 +181,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         lightModePressedSvgCache = createNormalizedDrawable(lightModePressedSvgCache.get(), targetButtonSize * 0.95f);
 
     // Initialize the button
-    addAndMakeVisible(themeToggleButton);
     themeToggleButton.setButtonText("");
     themeToggleButton.setClickingTogglesState(true);
     themeToggleButton.setToggleState(!audioProcessor.isDarkMode(), juce::dontSendNotification);
+    addAndMakeVisible(themeToggleButton);
 
     // Make button background transparent
     themeToggleButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
@@ -227,10 +224,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     // Start the timer for updates
     startTimerHz(1);
 
-    addAndMakeVisible(sortModeButton);
     sortModeButton.setVisible(true);
     sortModeButton.setButtonText("");
     sortModeButton.setClickingTogglesState(true);
+    addAndMakeVisible(sortModeButton);
 
     // Make button background transparent
     sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
@@ -417,24 +414,14 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         sortRecencyLightPressedSvgCache = createNormalizedDrawable(sortRecencyLightPressedSvgCache.get(), targetButtonSize * 0.95f);
 
     // Initialize the button
-    addAndMakeVisible(sortModeButton);
     sortModeButton.setVisible(true);
     sortModeButton.setButtonText("");
     sortModeButton.setClickingTogglesState(true);
+    addAndMakeVisible(sortModeButton);
 
     // Make button background transparent (changed from red)
     sortModeButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
     sortModeButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
-
-    // Verify all SVGs are properly loaded and normalized
-    // bool allSVGsLoaded = sortTimeDarkSvgCache != nullptr && 
-    //                  sortTimeLightSvgCache != nullptr &&
-    //                  sortTimeDarkPressedSvgCache != nullptr && 
-    //                  sortTimeLightPressedSvgCache != nullptr &&
-    //                  sortRecencyDarkSvgCache != nullptr && 
-    //                  sortRecencyLightSvgCache != nullptr &&
-    //                  sortRecencyDarkPressedSvgCache != nullptr && 
-    //                  sortRecencyLightPressedSvgCache != nullptr;
 
     // Load arrow SVGs
     upArrowDarkSvgCache = juce::Drawable::createFromImageData(BinaryData::Up_Arrow_Dark_svg, 
@@ -1111,28 +1098,6 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
     }
 }
 
-// UNUSED FOR NOW -- KEEP FOR FUTURE REFERENCE
-// void KronosAudioProcessorEditor::mouseWheelMove(const juce::MouseEvent& event, 
-//                                                const juce::MouseWheelDetails& wheel)
-// {
-//     DBG("Mouse wheel moved: deltaY = " << wheel.deltaY);  // Debug output
-    
-//     // Get the bounds of the Previous Sessions panel
-//     auto bounds = getLocalBounds();
-//     auto bottomSection = bounds.removeFromBottom(140);
-//     bottomSection.removeFromTop(margin * 6);
-//     bottomSection.removeFromBottom(margin);
-    
-//     // Only handle scrolling if mouse is over the Previous Sessions area
-//     if (bottomSection.contains(event.position.toInt()))
-//     {
-//         DBG("Mouse is in Previous Sessions area");  // Debug output
-//         scrollOffset += wheel.deltaY * 20.0f;
-//         constrainScrollOffset();
-//         timerCallback();
-//     }
-// }
-
 void KronosAudioProcessorEditor::constrainScrollOffset()
 {
     auto dates = audioProcessor.getSortedDates();
@@ -1149,48 +1114,45 @@ void KronosAudioProcessorEditor::constrainScrollOffset()
 
 void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
 {
-    // Handle scroll buttons
-    if (button == &scrollUpButton)
-    {
-        scrollOffset = std::max(0.0f, scrollOffset - dateHeight);
-        constrainScrollOffset();
-        updateDateLabels();
-        repaint();
-    }
+    DBG("Button clicked: " << button->getName());
+
+    // if (button == &scrollUpButton)
+    // {
+    //     scrollOffset = std::max(0.0f, scrollOffset - dateHeight);
+    //     constrainScrollOffset();
+    //     updateDateLabels();
+    //     repaint();
+    // }
     
-    if (button == &scrollDownButton)
-    {
-        scrollOffset += dateHeight;
-        constrainScrollOffset();
-        updateDateLabels();
-        repaint();
-    }
+    // if (button == &scrollDownButton)
+    // {
+    //     scrollOffset += dateHeight;
+    //     constrainScrollOffset();
+    //     updateDateLabels();
+    //     repaint();
+    // }
 }
 
 void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
 {
-    if (event.eventComponent == &playPauseButton)
-    {
-        auto startTime = juce::Time::getMillisecondCounterHiRes();
+    DBG("Mouse up event: " << event.eventComponent->getName());
+    
+    // if (event.eventComponent == &playPauseButton)
+    // {
+    //     isTransitioningButton = true;
+    //     startTimer(buttonTransitionDelay);
         
-        // Start the transition timer when mouse is released
-        startTimer(buttonTransitionDelay);
-        
-        // Toggle tracking state
-        if (audioProcessor.isTracking)
-        {
-            audioProcessor.stopTracking();
-            playPauseButton.setToggleState(false, juce::dontSendNotification);
-        }
-        else
-        {
-            audioProcessor.startTracking();
-            playPauseButton.setToggleState(true, juce::dontSendNotification);
-        }
-
-        auto endTime = juce::Time::getMillisecondCounterHiRes();
-        DBG("Button execution time: " << (endTime - startTime) << "ms");
-    }
+    //     if (audioProcessor.isTracking)
+    //     {
+    //         audioProcessor.stopTracking();
+    //         playPauseButton.setToggleState(false, juce::dontSendNotification);
+    //     }
+    //     else
+    //     {
+    //         audioProcessor.startTracking();
+    //         playPauseButton.setToggleState(true, juce::dontSendNotification);
+    //     }
+    // }
 }
 
 void KronosAudioProcessorEditor::updateButtonImages()

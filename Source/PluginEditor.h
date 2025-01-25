@@ -26,9 +26,6 @@ public:
     void resized() override;
     void timerCallback() override;
 
-    // UNUSED FOR NOW -- KEEP FOR FUTURE REFERENCE
-    // void mouseWheelMove(const juce::MouseEvent& event, 
-    //                    const juce::MouseWheelDetails& wheel) override;
     void buttonClicked(juce::Button* button) override;
 
     void drawTimeBars(juce::Graphics& g);
