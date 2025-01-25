@@ -104,12 +104,22 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
 
     // THEN initialize play/pause button
     playPauseButton.setButtonText("");
-    playPauseButton.addListener(this);
     addAndMakeVisible(playPauseButton);
+    playPauseButton.setClickingTogglesState(true);  // Enable toggling
 
     // Make button background transparent
     playPauseButton.setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
     playPauseButton.setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+
+    // Add click handler for play/pause button
+    playPauseButton.onClick = [this]() {
+        if (audioProcessor.isTracking()) {
+            audioProcessor.stopTracking();
+        } else {
+            audioProcessor.startTracking();
+        }
+        updateButtonImages();
+    };
 
     // Use cached SVGs for play/pause button AFTER they're initialized
     playPauseButton.setImages(playSvgCache.get(),          // normal
@@ -122,28 +132,8 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                              nullptr);                      // disabled (on) (use normal)
 
     // Set initial toggle state based on processor
-    playPauseButton.setToggleState(audioProcessor.isTracking, juce::dontSendNotification);
+    playPauseButton.setToggleState(audioProcessor.isTracking(), juce::dontSendNotification);
 
-    // Add mouse listener
-    playPauseButton.onStateChange = [this]()
-    {
-        // This ensures the button's visual state matches its toggle state
-        repaint();
-    };
-
-    playPauseButton.onClick = [this]() {
-        if (audioProcessor.isTracking)
-        {
-            audioProcessor.stopTracking();
-        }
-        else
-        {
-            audioProcessor.startTracking();
-        }
-        
-        updateButtonImages();
-    };
-        
     // Initialize theme toggle button
     themeToggleButton.setButtonText("");
     themeToggleButton.setClickingTogglesState(true);
@@ -203,16 +193,14 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     );
 
     themeToggleButton.onClick = [this]() {
-        bool isDark = !themeToggleButton.getToggleState();
-        customLookAndFeel.setDarkMode(isDark);
-        audioProcessor.setDarkMode(isDark);
-        
+        bool newState = !audioProcessor.isDarkMode();
+        audioProcessor.setDarkMode(newState);
         updateThemeButtonImages();
         updateButtonImages();
-        repaint();
         updateSortButtonImages();
         updateScrollButtonImages();
         updateScrollButtonStates();
+        repaint();
     };
 
     // Set a fixed size for our editor
@@ -232,13 +220,14 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
 
     // Add the click handler
     sortModeButton.onClick = [this]() {
-        audioProcessor.toggleDateSortMode();
+        auto currentMode = audioProcessor.getDateSortMode();
+        auto newMode = (currentMode == KronosAudioProcessor::DateSortMode::MostRecent) ?
+            KronosAudioProcessor::DateSortMode::MostTime :
+            KronosAudioProcessor::DateSortMode::MostRecent;
+        audioProcessor.setDateSortMode(newMode);
         updateSortButtonImages();
         updateDateLabels();
     };
-
-    // Add mouse listener
-    addMouseListener(this, true);
 
     // Initialize scroll buttons with the smallest triangles
     addAndMakeVisible(scrollUpButton);
@@ -511,18 +500,15 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
             repaint();
         }
     };
+
+    // Add parameter listeners
+    audioProcessor.parameters->addParameterListener("tracking", this);
+    audioProcessor.parameters->addParameterListener("darkMode", this);
+    audioProcessor.parameters->addParameterListener("dateSortMode", this);
 }
 
 void KronosAudioProcessorEditor::timerCallback()
 {
-    if (isTransitioningButton)
-    {
-        updateButtonImages();  // Just call the update function directly
-        isTransitioningButton = false;
-        startTimerHz(1);
-        return;
-    }
-    
     // Handle regular timer updates
     auto totalSeconds = audioProcessor.getTotalTimeInSeconds();
     auto hours = totalSeconds / 3600;
@@ -722,7 +708,6 @@ void KronosAudioProcessorEditor::resized()
 
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
 {
-    removeMouseListener(this);
     setLookAndFeel(nullptr);
     stopTimer();
     playPauseButton.onClick = nullptr;
@@ -733,6 +718,11 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
     minuteUnitLabel.setLookAndFeel(nullptr);
     secondUnitLabel.setLookAndFeel(nullptr);
     menuButton.setLookAndFeel(nullptr);
+
+    // Remove parameter listeners
+    audioProcessor.parameters->removeParameterListener("tracking", this);
+    audioProcessor.parameters->removeParameterListener("darkMode", this);
+    audioProcessor.parameters->removeParameterListener("dateSortMode", this);
 }
 
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)
@@ -966,6 +956,8 @@ void KronosAudioProcessorEditor::updateDateLabels()
 float KronosAudioProcessorEditor::getTimeRatio(juce::int64 time, juce::int64 maxTime) const
 {
     if (maxTime == 0) return 0.0f;
+    // Add debug output
+    DBG("Time: " << time << ", MaxTime: " << maxTime << ", Ratio: " << (static_cast<float>(time) / static_cast<float>(maxTime)));
     return static_cast<float>(time) / static_cast<float>(maxTime);
 }
 
@@ -974,13 +966,16 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
     auto dates = audioProcessor.getSortedDates();
     if (dates.isEmpty()) return;
 
-    // Find maximum time
+    // Find maximum time and debug output
     juce::int64 maxTime = 0;
+    DBG("=== Time Values ===");
     for (const auto& date : dates)
     {
         auto timeSpent = audioProcessor.getTimeForDate(date);
+        DBG("Date: " << date.formatted("%m-%d-%Y") << ", Time: " << timeSpent);
         maxTime = juce::jmax(maxTime, timeSpent);
     }
+    DBG("Max Time: " << maxTime);
 
     // Get the bounds of the Previous Sessions panel
     auto bounds = getLocalBounds();
@@ -1011,29 +1006,37 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
             
             if (y >= bottomSection.getY() && y + barHeight <= bottomSection.getBottom())
             {
-                // Position date label
+                // Position date label and set text (just the date)
                 dateLabels[i].setBounds(startX, y, dateWidth + dashWidth, dateHeight * scale);
-                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
-                                    juce::dontSendNotification);
+                dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", juce::dontSendNotification);
                 dateLabels[i].setVisible(true);
                 
                 // Draw bar background
                 float barX = startX + dateWidth + dashWidth;
-                g.setColour(juce::Colour(40, 40, 40));
-                g.fillRoundedRectangle(barX, y + (dateHeight * scale - barHeight) / 2, 
-                                     maxBarWidth, barHeight, 3.0f * scale);
+                float barY = y + (dateHeight * scale - barHeight) / 2;
                 
-                // Draw actual bar
-                float barWidth = juce::jmax(2.0f * scale, ratio * maxBarWidth);
+                // Draw background bar (dark grey)
+                g.setColour(juce::Colour(40, 40, 40));
+                g.fillRoundedRectangle(barX, barY, maxBarWidth, barHeight, 3.0f * scale);
+                
+                // Calculate filled width and ensure it's properly scaled
+                float filledWidth = maxBarWidth * ratio;
+                
+                // Only apply minimum width if there's actual time
+                if (timeSpent > 0) {
+                    filledWidth = juce::jmax(2.0f * scale, filledWidth);
+                }
+                
+                // Draw the filled portion
                 if (audioProcessor.isDarkMode()) {
                     g.setColour(juce::Colour(64, 64, 255));  // Blue for dark mode
                 } else {
-                    g.setColour(juce::Colour(255, 140, 0));  // Orange for light mode (#FF8C00)
+                    g.setColour(juce::Colour(255, 140, 0));  // Orange for light mode
                 }
-                g.fillRoundedRectangle(barX, y + (dateHeight * scale - barHeight) / 2, 
-                                     barWidth, barHeight, 3.0f * scale);
+                
+                g.fillRoundedRectangle(barX, barY, filledWidth, barHeight, 3.0f * scale);
 
-                // Format and draw time text
+                // Format time text for the bar
                 juce::String timeStr;
                 if (timeSpent >= 360000) // Over 99:59:59
                 {
@@ -1070,7 +1073,6 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
                     {-strokeSize, 0}
                 };
 
-                // Draw stroke positions
                 for (auto& pos : positions)
                 {
                     auto offsetBounds = textBounds.translated(pos[0], pos[1]);
@@ -1140,7 +1142,7 @@ void KronosAudioProcessorEditor::updateButtonImages()
     auto& currentPausePressed = isDark ? pausePressedSvgCache : pausePressedLightSvgCache;
     
     // Set the button images based on tracking state
-    if (audioProcessor.isTracking)
+    if (audioProcessor.isTracking())
     {
         playPauseButton.setImages(currentPause.get(),            // normal
                                 nullptr,                         // over
@@ -1311,5 +1313,29 @@ void KronosAudioProcessorEditor::updateScrollButtonStates()
             downPressed.get(),           // down (on)
             currentImage.get()           // disabled (on)
         );
+    }
+}
+
+void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    if (parameterID == "tracking")
+    {
+        playPauseButton.setToggleState(newValue >= 0.5f, juce::dontSendNotification);
+        updateButtonImages();
+    }
+    else if (parameterID == "darkMode")
+    {
+        customLookAndFeel.setDarkMode(newValue >= 0.5f);
+        updateThemeButtonImages();
+        updateButtonImages();
+        updateSortButtonImages();
+        updateScrollButtonImages();
+        updateScrollButtonStates();
+        repaint();
+    }
+    else if (parameterID == "dateSortMode")
+    {
+        updateSortButtonImages();
+        updateDateLabels();
     }
 }

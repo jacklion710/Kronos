@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 
 // Add near the top of the file, before the class declaration
 #define USE_DUMMY_DATES 0  // Set to 1 to use dummy dates, 0 for real dates
@@ -61,15 +62,15 @@ public:
     void stopTracking();
 
     juce::int64 getTotalTimeInSeconds() const;
-    bool isTracking = true;  // Start tracking by default
+    bool isTracking() const;
 
     void suspendProcessing(bool shouldSuspend);
     void timerCallback() override;
 
     const juce::Array<juce::Time>& getSessionDates() const { return sessionDates; }
 
-    void setDarkMode(bool isDark);
-    bool isDarkMode() const { return darkModeEnabled; }
+    bool isDarkMode() const;
+    void setDarkMode(bool shouldBeDark);
 
     // Add the callback
     std::function<void()> onStateLoaded;
@@ -87,32 +88,37 @@ public:
         MostTime
     };
     
-    void toggleDateSortMode();
-    DateSortMode getDateSortMode() const { return currentSortMode; }
-    juce::Array<juce::Time> getSortedDates() const;
+    DateSortMode getDateSortMode() const;
+    void setDateSortMode(DateSortMode mode);
 
     bool isShowBarsEnabled() const { return showBarsEnabled; }
     void setShowBarsEnabled(bool enabled) { showBarsEnabled = enabled; }
+
+    // Add parameter state
+    std::unique_ptr<juce::AudioProcessorValueTreeState> parameters;
+
+    void setTracking(bool shouldTrack);
+    juce::Array<juce::Time> getSortedDates() const;
+
+    // Add this declaration
+    void addDummyDates();
 
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KronosAudioProcessor)
     juce::Time startTime;
     juce::int64 totalTimeInSeconds = 0;
-    juce::AudioProcessorValueTreeState parameters;
     
     // Array to store session dates
     juce::Array<juce::Time> sessionDates;
     void addSessionDate();  // Helper function to add today's date
 
-    bool darkModeEnabled = true;  // Default to dark mode
-
     juce::Time lastSaveTime;
     const int minimumSaveIntervalMs = 100; // Minimum time between saves
 
-    DateSortMode currentSortMode = DateSortMode::MostRecent;
-
-    void addDummyDates();
-
     bool showBarsEnabled = false;
+
+    // Add or update these member variables
+    bool trackingState = false;  
+    DateSortMode currentSortMode = DateSortMode::MostRecent;
 };

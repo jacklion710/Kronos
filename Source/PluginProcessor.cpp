@@ -21,17 +21,45 @@ KronosAudioProcessor::KronosAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ),
-       parameters(*this, nullptr, "Parameters", {})
+                       )
 #endif
 {
+    // Create the parameter layout first
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    
+    // Add parameters with version hints for AU compatibility
+    auto trackingParam = std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID("tracking", 1),  // ID and version hint
+        "Tracking",
+        false
+    );
+    
+    auto darkModeParam = std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID("darkMode", 1),  // ID and version hint
+        "Dark Mode",
+        true
+    );
+    
+    auto dateSortModeParam = std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID("dateSortMode", 1),  // ID and version hint
+        "Date Sort Mode",
+        juce::StringArray {"Most Recent", "Most Time"},
+        0
+    );
+
+    layout.add(std::move(trackingParam));
+    layout.add(std::move(darkModeParam));
+    layout.add(std::move(dateSortModeParam));
+
+    // Then create the parameters with the layout
+    parameters = std::make_unique<juce::AudioProcessorValueTreeState>(*this, nullptr, "Parameters", std::move(layout));
+
     startTime = juce::Time::getCurrentTime();
-    isTracking = true;
-    totalTimeInSeconds = 0; // Initialize total time to 0 when plugin is loaded
-    // totalTimeInSeconds = UNCOMMENT FOR TESTING LARGE TIME ONLY
-    // 359970;  // This is 99:59:45 in seconds (99 * 3600 + 59 * 60 + 45)
-    darkModeEnabled = true;  // Set default dark mode
+    totalTimeInSeconds = 0;
     startTimer(1000);
+
+    // Start tracking automatically upon instantiation
+    startTracking();
 
 #if USE_DUMMY_DATES
     addDummyDates();
@@ -47,7 +75,7 @@ KronosAudioProcessor::~KronosAudioProcessor()
 
 void KronosAudioProcessor::startTracking()
 {
-    if (!isTracking)
+    if (!isTracking())  // Use the accessor method
     {
         // Get current date
         auto today = juce::Time::getCurrentTime();
@@ -62,15 +90,13 @@ void KronosAudioProcessor::startTracking()
         }
         else
         {
-            // Start fresh for a new day in timePerDate only
-            timePerDate.set(dateKey, 0);  // Initialize new date at 0
-            // Keep existing totalTimeInSeconds
+            timePerDate.set(dateKey, 0);
             DBG("Starting fresh tracking for new date: " + dateKey + " with 0 seconds");
         }
         
         startTime = juce::Time::getCurrentTime();
-        isTracking = true;
-        startTimer(1000);  // Start the timer for updates
+        setTracking(true);  // Use the parameter system
+        startTimer(1000);
         
         DBG("Tracking started with initial time: " + juce::String(totalTimeInSeconds));
     }
@@ -78,7 +104,7 @@ void KronosAudioProcessor::startTracking()
 
 void KronosAudioProcessor::stopTracking()
 {
-    if (isTracking)
+    if (isTracking())  // Use the accessor method
     {
         // Get final time including any partial seconds
         auto currentTime = juce::Time::getCurrentTime();
@@ -93,19 +119,19 @@ void KronosAudioProcessor::stopTracking()
         auto existingTime = timePerDate[dateKey];
         timePerDate.set(dateKey, existingTime + elapsedSeconds);
         
-        stopTimer();  // Stop the timer
+        stopTimer();
+        setTracking(false);  // Use the parameter system
         
         DBG("Tracking stopped. Total time for " + dateKey + ": " + 
             juce::String(timePerDate[dateKey]) + " seconds");
         
-        isTracking = false;
-        startTime = juce::Time::getCurrentTime();  // Reset start time
+        startTime = juce::Time::getCurrentTime();
     }
 }
 
 juce::int64 KronosAudioProcessor::getTotalTimeInSeconds() const
 {
-    if (isTracking)
+    if (isTracking())
     {
         // Return real-time value including partial seconds
         auto currentTime = juce::Time::getCurrentTime();
@@ -187,7 +213,7 @@ void KronosAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 void KronosAudioProcessor::releaseResources()
 {
     // When the plugin is released (project closed/plugin removed)
-    if (isTracking)
+    if (isTracking())
     {
         juce::MemoryBlock state;
         getStateInformation(state);
@@ -255,122 +281,16 @@ void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
     }
     lastSaveTime = now;
 
-    juce::ValueTree state("KronosState");
-    
-    state.setProperty("isTracking", isTracking, nullptr);
-    state.setProperty("totalTimeInSeconds", totalTimeInSeconds, nullptr);
-    state.setProperty("darkMode", darkModeEnabled, nullptr);
-    
-    // Add new state properties
-    state.setProperty("sortMode", (int)currentSortMode, nullptr);
-    state.setProperty("showBars", showBarsEnabled, nullptr);
-    
-    // Save session dates
-    juce::StringArray dateStrings;
-    for (auto& date : sessionDates)
-    {
-        dateStrings.add(date.toISO8601(true));
-    }
-    state.setProperty("sessionDates", dateStrings.joinIntoString(";"), nullptr);
-    
-    // Save time per date
-    juce::String timePerDateString;
-    for (juce::HashMap<juce::String, juce::int64>::Iterator i(timePerDate); i.next();)
-    {
-        timePerDateString += i.getKey() + "=" + juce::String(i.getValue()) + ";";
-    }
-    state.setProperty("timePerDate", timePerDateString, nullptr);
-    
+    auto state = parameters->copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
 
 void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
-    std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
-    
-    if (xml.get() != nullptr)
-    {
-        juce::ValueTree state = juce::ValueTree::fromXml(*xml);
-        
-        // Stop any current timing operations
-        stopTimer();
-        
-        // Load time per date first
-        if (state.hasProperty("timePerDate"))
-        {
-            juce::String timePerDateString = state.getProperty("timePerDate");
-            juce::StringArray pairs;
-            pairs.addTokens(timePerDateString, ";", "");
-            
-            for (const auto& pair : pairs)
-            {
-                if (pair.isNotEmpty())
-                {
-                    auto parts = juce::StringArray::fromTokens(pair, "=", "");
-                    if (parts.size() == 2)
-                    {
-                        timePerDate.set(parts[0], parts[1].getLargeIntValue());
-                    }
-                }
-            }
-        }
-        
-        // Get current date's time if it exists
-        auto today = juce::Time::getCurrentTime();
-        juce::String dateKey = today.formatted("%Y-%m-%d");
-        if (timePerDate.contains(dateKey))
-        {
-            totalTimeInSeconds = timePerDate[dateKey];
-            DBG("Loaded existing time for today: " + juce::String(totalTimeInSeconds));
-        }
-        
-        // Load play/pause state
-        bool newTrackingState = state.getProperty("isTracking", false);
-        isTracking = newTrackingState;
-        
-        if (isTracking && !isSuspended())
-        {
-            startTime = juce::Time::getCurrentTime();
-            startTimer(1000);
-        }
-        
-        // Load session dates
-        sessionDates.clear();
-        if (state.hasProperty("sessionDates"))
-        {
-            juce::String datesString = state.getProperty("sessionDates");
-            juce::StringArray dateStrings;
-            dateStrings.addTokens(datesString, ";", "");
-            
-            for (const auto& dateStr : dateStrings)
-            {
-                juce::Time date = juce::Time::fromISO8601(dateStr);
-                if (date != juce::Time())  // Valid date
-                {
-                    sessionDates.add(date);
-                }
-            }
-        }
-        
-        // Load dark mode state
-        darkModeEnabled = state.getProperty("darkMode", true);
-        
-        // Always add today's date when loading
-        addSessionDate();
-        
-        // Load sort mode and bars mode
-        if (state.hasProperty("sortMode"))
-            currentSortMode = (DateSortMode)(int)state.getProperty("sortMode");
-        
-        if (state.hasProperty("showBars"))
-            showBarsEnabled = state.getProperty("showBars");
-        
-        if (onStateLoaded)
-        {
-            onStateLoaded();
-        }
-    }
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+    if (xmlState.get() != nullptr)
+        parameters->replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
 //==============================================================================
@@ -391,7 +311,7 @@ void KronosAudioProcessor::suspendProcessing(bool shouldSuspend)
 
 void KronosAudioProcessor::timerCallback()
 {
-    if (isTracking)
+    if (isTracking())  // Use the accessor method
     {
         // Increment main display time
         totalTimeInSeconds++;
@@ -442,7 +362,9 @@ void KronosAudioProcessor::addSessionDate()
 
 void KronosAudioProcessor::setDarkMode(bool isDark)
 {
-    darkModeEnabled = isDark;
+    auto* param = parameters->getParameter("darkMode");
+    if (param != nullptr)
+        param->setValueNotifyingHost(isDark ? 1.0f : 0.0f);
 }
 
 bool KronosAudioProcessor::isSuspended() const
@@ -456,17 +378,70 @@ juce::int64 KronosAudioProcessor::getTimeForDate(const juce::Time& date) const
     return timePerDate[dateKey];
 }
 
-void KronosAudioProcessor::toggleDateSortMode()
+void KronosAudioProcessor::setDateSortMode(KronosAudioProcessor::DateSortMode mode)
 {
-    currentSortMode = (currentSortMode == DateSortMode::MostRecent) ? 
-                      DateSortMode::MostTime : DateSortMode::MostRecent;
+    auto* param = parameters->getParameter("dateSortMode");
+    if (param != nullptr)
+        param->setValueNotifyingHost(static_cast<float>(mode));
+}
+
+void KronosAudioProcessor::addDummyDates()
+{
+    // Clear existing dates for testing
+    sessionDates.clear();
+    timePerDate.clear();
+
+    // Add 10 dummy dates with different times
+    juce::Time baseDate = juce::Time::getCurrentTime();
+    
+    // First add a date with a very large time value (over 100 hours)
+    juce::Time longDate = baseDate - juce::RelativeTime::days(10);
+    sessionDates.add(longDate);
+    juce::String longDateKey = longDate.formatted("%Y-%m-%d");
+    // timePerDate.set(longDateKey, 400000);  // About 111 hours
+    
+    // Then add the regular test dates
+    for (int i = 0; i < 9; ++i)  // Reduced to 9 to keep total at 10 with long session
+    {
+        // Create dates going backwards from today
+        juce::Time date = baseDate - juce::RelativeTime::days(i);
+        sessionDates.add(date);
+        
+        // Add varying times (increasing pattern for testing)
+        juce::String dateKey = date.formatted("%Y-%m-%d");
+        timePerDate.set(dateKey, (i + 1) * 300);  // Varying seconds (5 min increments)
+    }
+}
+
+// Implement the accessor methods
+void KronosAudioProcessor::setTracking(bool shouldTrack)
+{
+    auto* param = parameters->getParameter("tracking");
+    if (param != nullptr)
+        param->setValueNotifyingHost(shouldTrack ? 1.0f : 0.0f);
+}
+
+bool KronosAudioProcessor::isTracking() const
+{
+    return parameters->getRawParameterValue("tracking")->load() >= 0.5f;
+}
+
+bool KronosAudioProcessor::isDarkMode() const
+{
+    return parameters->getRawParameterValue("darkMode")->load() >= 0.5f;
+}
+
+KronosAudioProcessor::DateSortMode KronosAudioProcessor::getDateSortMode() const
+{
+    return static_cast<KronosAudioProcessor::DateSortMode>(
+        parameters->getRawParameterValue("dateSortMode")->load());
 }
 
 juce::Array<juce::Time> KronosAudioProcessor::getSortedDates() const
 {
     juce::Array<juce::Time> sortedDates = sessionDates;
     
-    if (currentSortMode == DateSortMode::MostTime)
+    if (getDateSortMode() == DateSortMode::MostTime)
     {
         struct TimeComparator
         {
@@ -499,32 +474,4 @@ juce::Array<juce::Time> KronosAudioProcessor::getSortedDates() const
     }
     
     return sortedDates;
-}
-
-void KronosAudioProcessor::addDummyDates()
-{
-    // Clear existing dates for testing
-    sessionDates.clear();
-    timePerDate.clear();
-
-    // Add 10 dummy dates with different times
-    juce::Time baseDate = juce::Time::getCurrentTime();
-    
-    // First add a date with a very large time value (over 100 hours)
-    juce::Time longDate = baseDate - juce::RelativeTime::days(10);
-    sessionDates.add(longDate);
-    juce::String longDateKey = longDate.formatted("%Y-%m-%d");
-    timePerDate.set(longDateKey, 400000);  // About 111 hours
-    
-    // Then add the regular test dates
-    for (int i = 0; i < 9; ++i)  // Reduced to 9 to keep total at 10 with long session
-    {
-        // Create dates going backwards from today
-        juce::Time date = baseDate - juce::RelativeTime::days(i);
-        sessionDates.add(date);
-        
-        // Add varying times (increasing pattern for testing)
-        juce::String dateKey = date.formatted("%Y-%m-%d");
-        timePerDate.set(dateKey, (i + 1) * 300);  // Varying seconds (5 min increments)
-    }
 }

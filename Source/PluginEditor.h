@@ -15,7 +15,7 @@
 //==============================================================================
 /**
 */
-class KronosAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Timer, public juce::Button::Listener
+class KronosAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Timer, public juce::Button::Listener, private juce::AudioProcessorValueTreeState::Listener
 {
 public:
     KronosAudioProcessorEditor (KronosAudioProcessor&);
@@ -31,6 +31,9 @@ public:
     void drawTimeBars(juce::Graphics& g);
 
     void mouseUp(const juce::MouseEvent& event) override;
+
+    // Add parameter callback
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
 private:
     // This reference is provided as a quick way for your editor to
