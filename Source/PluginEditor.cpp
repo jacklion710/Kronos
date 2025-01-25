@@ -132,9 +132,6 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     };
 
     playPauseButton.onClick = [this]() {
-        isTransitioningButton = true;
-        startTimer(buttonTransitionDelay);
-        
         if (audioProcessor.isTracking)
         {
             audioProcessor.stopTracking();
@@ -1114,45 +1111,20 @@ void KronosAudioProcessorEditor::constrainScrollOffset()
 
 void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
 {
-    DBG("Button clicked: " << button->getName());
-
-    // if (button == &scrollUpButton)
-    // {
-    //     scrollOffset = std::max(0.0f, scrollOffset - dateHeight);
-    //     constrainScrollOffset();
-    //     updateDateLabels();
-    //     repaint();
-    // }
-    
-    // if (button == &scrollDownButton)
-    // {
-    //     scrollOffset += dateHeight;
-    //     constrainScrollOffset();
-    //     updateDateLabels();
-    //     repaint();
-    // }
+    // This override is required as part of JUCE's Button::Listener interface.
+    // However, we prefer to use button-specific callbacks (button.onClick) 
+    // for clearer, more maintainable code and better encapsulation.
+    // This also avoids the need to check which button was clicked.
+    // DBG("Button clicked: " << button->getName());
 }
 
 void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
 {
-    DBG("Mouse up event: " << event.eventComponent->getName());
-    
-    // if (event.eventComponent == &playPauseButton)
-    // {
-    //     isTransitioningButton = true;
-    //     startTimer(buttonTransitionDelay);
-        
-    //     if (audioProcessor.isTracking)
-    //     {
-    //         audioProcessor.stopTracking();
-    //         playPauseButton.setToggleState(false, juce::dontSendNotification);
-    //     }
-    //     else
-    //     {
-    //         audioProcessor.startTracking();
-    //         playPauseButton.setToggleState(true, juce::dontSendNotification);
-    //     }
-    // }
+    // This override is required as part of JUCE's MouseListener interface.
+    // We prefer to use component-specific callbacks for better encapsulation
+    // and clearer event handling. Mouse events are primarily handled through
+    // individual component callbacks.
+    // DBG("Mouse up event: " << event.eventComponent->getName());
 }
 
 void KronosAudioProcessorEditor::updateButtonImages()
