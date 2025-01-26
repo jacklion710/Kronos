@@ -11,7 +11,6 @@
 #include <JuceHeader.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 
-// Add near the top of the file, before the class declaration
 #define USE_DUMMY_DATES 0  // Set to 1 to use dummy dates, 0 for real dates
 
 //==============================================================================
@@ -72,10 +71,8 @@ public:
     bool isDarkMode() const;
     void setDarkMode(bool shouldBeDark);
 
-    // Add the callback
     std::function<void()> onStateLoaded;
 
-    // Fix isSuspended by removing the implementation from header
     bool isSuspended() const;
 
     // Map to store time spent per date
@@ -94,13 +91,12 @@ public:
     bool isShowBarsEnabled() const { return showBarsEnabled; }
     void setShowBarsEnabled(bool enabled) { showBarsEnabled = enabled; }
 
-    // Add parameter state
+    // Parameter state
     std::unique_ptr<juce::AudioProcessorValueTreeState> parameters;
 
     void setTracking(bool shouldTrack);
     juce::Array<juce::Time> getSortedDates() const;
 
-    // Add this declaration
     void addDummyDates();
 
 private:
@@ -118,7 +114,6 @@ private:
 
     bool showBarsEnabled = false;
 
-    // Add or update these member variables
     bool trackingState = false;  
     DateSortMode currentSortMode = DateSortMode::MostRecent;
 };

@@ -429,7 +429,6 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     if (downArrowLightPressedSvgCache != nullptr)
         downArrowLightPressedSvgCache = createNormalizedDrawable(downArrowLightPressedSvgCache.get(), targetButtonSize * 0.95f);
 
-    // In the constructor, after loading the arrow SVGs but before making buttons visible:
     // Initialize scroll position and update button states
     isAtTop = true;  // Explicitly set initial state
     isAtBottom = false;
@@ -527,7 +526,7 @@ void KronosAudioProcessorEditor::timerCallback()
     // Get the bounds of the Previous Sessions panel
     auto bounds = getLocalBounds();
     auto bottomSection = bounds.removeFromBottom(160);
-    bottomSection.removeFromTop(margin * 5);  // Match new top margin
+    bottomSection.removeFromTop(margin * 5); 
     bottomSection.removeFromBottom(margin);
     
     // Update date labels with scrolling

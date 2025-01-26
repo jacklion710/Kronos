@@ -65,7 +65,7 @@ void AboutComponent::paint(juce::Graphics& g)
     g.setFont(asteraFont.withHeight(20.0f));
     g.drawText("V1.0.0-beta.2", contentBounds.removeFromTop(30), juce::Justification::centred, true);
     
-    contentBounds.removeFromTop(20); // Reduced space before description (was 30)
+    contentBounds.removeFromTop(20); // Space before description
     
     // Description - using taller bounds for wrapping
     g.setFont(asteraFont.withHeight(16.0f));
@@ -84,7 +84,7 @@ void AboutComponent::paint(juce::Graphics& g)
     
     contentBounds.removeFromTop(40); // Space after description
     
-    // Draw all labels first, with less spacing between them and links
+    // Draw all labels first
     g.drawText("PLUGINS and MORE AT:", 
                contentBounds.removeFromTop(20), 
                juce::Justification::centred, true);
@@ -149,7 +149,7 @@ void AboutComponent::positionLinks()
     // Starting Y position after the initial text
     int currentY = 215;
     
-    // Position each link with consistent spacing
+    // Position each link with reduced spacing
     gumroadLink.setBounds(centerX, currentY, linkWidth, linkHeight);
     currentY += 55; // Space to next link
     

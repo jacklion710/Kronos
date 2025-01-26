@@ -88,8 +88,8 @@ void KronosLookAndFeel::GlowingLabelLookAndFeel::drawLabel(juce::Graphics& g, ju
         juce::Colour(64, 64, 255).withAlpha(0.3f) :     // Brighter blue glow for dark mode
         juce::Colour(160, 140, 120).withAlpha(0.3f);    // Brighter warm grey for light mode
 
-    // Increased number of glow passes for more pronounced effect
-    for (float i = 8; i > 0; --i)  // Increased from 6 to 8 passes
+    // Number of glow passes for more pronounced effect
+    for (float i = 8; i > 0; --i) 
     {
         float alpha = glowColor.getFloatAlpha() / (i * 0.7f);  // Adjusted alpha falloff
         g.setColour(glowColor.withAlpha(alpha));
@@ -98,11 +98,11 @@ void KronosLookAndFeel::GlowingLabelLookAndFeel::drawLabel(juce::Graphics& g, ju
 
     // Enhanced stroke effect
     auto strokeColor = darkModeEnabled ?
-        juce::Colour(30, 50, 150).brighter(0.2f) :      // Brighter stroke for dark mode
-        juce::Colour(120, 100, 80).brighter(0.2f);      // Brighter stroke for light mode
+        juce::Colour(30, 50, 150).brighter(0.2f) :      // Stroke for dark mode
+        juce::Colour(120, 100, 80).brighter(0.2f);      // Stroke for light mode
 
-    // Thicker stroke
-    float strokeWidth = 2.5f;
+    // Thick stroke
+    float strokeWidth = 2.3f;
     g.setColour(strokeColor);
     
     for (float x = -strokeWidth; x <= strokeWidth; x += strokeWidth)
@@ -121,7 +121,7 @@ void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
     {
         // Let the glowing label look handle all title drawing
         glowingLabelLookAndFeel.drawLabel(g, label);
-        return;  // Add return to prevent default drawing
+        return; 
     }
     else if (label.getName().contains("PreviousSessions"))
     {
@@ -179,7 +179,7 @@ void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
         
         // First draw black stroke
         g.setColour(juce::Colours::black);
-        float blackStrokeSize = 1.5f;  // Increased stroke size for better visibility
+        float blackStrokeSize = 1.5f; 
         for (float x = -blackStrokeSize; x <= blackStrokeSize; x += blackStrokeSize)
             for (float y = -blackStrokeSize; y <= blackStrokeSize; y += blackStrokeSize)
                 if (x != 0 || y != 0)
@@ -286,7 +286,7 @@ void KronosLookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert
 {
     auto bounds = alert.getLocalBounds().toFloat().reduced(1.0f);
     
-    // Fill background with a more muted, warmer grey
+    // Fill background with a muted, warm grey
     g.setColour(darkModeEnabled ? 
         juce::Colour(0x1E, 0x1E, 0x1E) :      // Dark grey for dark mode
         juce::Colour(100, 95, 90));            // Muted warm grey for light mode
