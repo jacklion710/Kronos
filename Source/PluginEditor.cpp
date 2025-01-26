@@ -688,7 +688,7 @@ void KronosAudioProcessorEditor::resized()
 
     // Position sort button
     sortModeButton.setBounds(
-        scaledMargin + 100 * scale, 
+        scaledMargin + 90 * scale, 
         originalBottomSection.getCentreY() - (scaledSortButtonSize / 2),
         scaledSortButtonSize,
         scaledSortButtonSize
@@ -696,7 +696,7 @@ void KronosAudioProcessorEditor::resized()
 
     // Position scroll buttons
     int scaledScrollButtonSize = 25 * scale;
-    int buttonX = getWidth() - scaledScrollButtonSize - (scaledMargin * 13.5);  
+    int buttonX = getWidth() - scaledScrollButtonSize - (scaledMargin * 12.5);  
     int buttonsY = getHeight() - scaledPreviousSessionsHeight + (scaledMargin * 6);
     
     scrollUpButton.setBounds(buttonX, buttonsY, scaledScrollButtonSize, scaledScrollButtonSize);

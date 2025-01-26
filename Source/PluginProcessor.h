@@ -12,7 +12,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 // Add near the top of the file, before the class declaration
-#define USE_DUMMY_DATES 1  // Set to 1 to use dummy dates, 0 for real dates
+#define USE_DUMMY_DATES 0  // Set to 1 to use dummy dates, 0 for real dates
 
 //==============================================================================
 /**
