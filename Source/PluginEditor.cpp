@@ -102,6 +102,17 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     pausePressedLightSvgCache = juce::Drawable::createFromImageData(BinaryData::Pause_Button_Pressed_Light_svg, 
                                                              BinaryData::Pause_Button_Pressed_Light_svgSize);
 
+    // Normalize all button-related SVGs before initializing buttons
+    playSvgCache = createNormalizedDrawable(playSvgCache.get(), targetButtonSize);
+    playPressedSvgCache = createNormalizedDrawable(playPressedSvgCache.get(), targetButtonSize * 0.95f);
+    pauseSvgCache = createNormalizedDrawable(pauseSvgCache.get(), targetButtonSize);
+    pausePressedSvgCache = createNormalizedDrawable(pausePressedSvgCache.get(), targetButtonSize * 0.95f);
+
+    playLightSvgCache = createNormalizedDrawable(playLightSvgCache.get(), targetButtonSize);
+    playPressedLightSvgCache = createNormalizedDrawable(playPressedLightSvgCache.get(), targetButtonSize * 0.95f);
+    pauseLightSvgCache = createNormalizedDrawable(pauseLightSvgCache.get(), targetButtonSize);
+    pausePressedLightSvgCache = createNormalizedDrawable(pausePressedLightSvgCache.get(), targetButtonSize * 0.95f);
+
     // THEN initialize play/pause button
     playPauseButton.setButtonText("");
     addAndMakeVisible(playPauseButton);
@@ -121,19 +132,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         updateButtonImages();
     };
 
-    // Use cached SVGs for play/pause button AFTER they're initialized
-    playPauseButton.setImages(playSvgCache.get(),          // normal
-                             nullptr,                       // over (use normal)
-                             playPressedSvgCache.get(),     // down
-                             nullptr,                       // disabled (use normal)
-                             pauseSvgCache.get(),          // normal (on)
-                             nullptr,                       // over (on) (use normal)
-                             pausePressedSvgCache.get(),    // down (on)
-                             nullptr);                      // disabled (on) (use normal)
-
-    // Set initial toggle state based on processor
+    // Set initial toggle state and images
     playPauseButton.setToggleState(audioProcessor.isTracking(), juce::dontSendNotification);
-
+    updateButtonImages();
+    
     // Initialize theme toggle button
     themeToggleButton.setButtonText("");
     themeToggleButton.setClickingTogglesState(true);
@@ -320,27 +322,6 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                 }
             });
     };
-
-    // Normalize all button-related SVGs
-    playSvgCache = createNormalizedDrawable(playSvgCache.get(), targetButtonSize);
-    playPressedSvgCache = createNormalizedDrawable(playPressedSvgCache.get(), targetButtonSize * 0.95f);
-    pauseSvgCache = createNormalizedDrawable(pauseSvgCache.get(), targetButtonSize);
-    pausePressedSvgCache = createNormalizedDrawable(pausePressedSvgCache.get(), targetButtonSize * 0.95f);
-
-    playLightSvgCache = createNormalizedDrawable(playLightSvgCache.get(), targetButtonSize);
-    playPressedLightSvgCache = createNormalizedDrawable(playPressedLightSvgCache.get(), targetButtonSize * 0.95f);
-    pauseLightSvgCache = createNormalizedDrawable(pauseLightSvgCache.get(), targetButtonSize);
-    pausePressedLightSvgCache = createNormalizedDrawable(pausePressedLightSvgCache.get(), targetButtonSize * 0.95f);
-
-    // Normalize theme button SVGs
-    darkModeSvgCache = juce::Drawable::createFromImageData(BinaryData::Dark_Mode_Button_svg, 
-                                                        BinaryData::Dark_Mode_Button_svgSize);
-    darkModePressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Dark_Mode_Button_Pressed_svg, 
-                                                                 BinaryData::Dark_Mode_Button_Pressed_svgSize);
-    lightModeSvgCache = juce::Drawable::createFromImageData(BinaryData::Light_Mode_Button_svg, 
-                                                         BinaryData::Light_Mode_Button_svgSize);
-    lightModePressedSvgCache = juce::Drawable::createFromImageData(BinaryData::Light_Mode_Button_Pressed_svg, 
-                                                                BinaryData::Light_Mode_Button_Pressed_svgSize);
 
     // Load Sort button SVGs
     sortTimeDarkSvgCache = juce::Drawable::createFromImageData(BinaryData::Sort_Time_Dark_svg, 
