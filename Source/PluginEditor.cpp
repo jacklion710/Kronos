@@ -64,16 +64,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     // Cache ALL SVGs first - Dark Mode
     backgroundSvgCache = juce::Drawable::createFromImageData(BinaryData::Background_Dark_svg, 
                                                            BinaryData::Background_Dark_svgSize);
-    if (backgroundSvgCache == nullptr)
-    {
-        DBG("Failed to load Background_Dark.svg");
-    }
+
     timeDisplaySvgCache = juce::Drawable::createFromImageData(BinaryData::Time_Display_Dark_svg, 
                                                             BinaryData::Time_Display_Dark_svgSize);
-    if (timeDisplaySvgCache == nullptr)
-    {
-        DBG("Failed to load Time_Display_Dark.svg");
-    }
+
     previousSessionsSvgCache = juce::Drawable::createFromImageData(BinaryData::Previous_Sessions_Dark_svg, 
                                                                  BinaryData::Previous_Sessions_Dark_svgSize);
     headerSvgCache = juce::Drawable::createFromImageData(BinaryData::Header_Dark_svg,
@@ -892,8 +886,6 @@ void KronosAudioProcessorEditor::updateDateLabels()
 float KronosAudioProcessorEditor::getTimeRatio(juce::int64 time, juce::int64 maxTime) const
 {
     if (maxTime == 0) return 0.0f;
-    // Add debug output
-    DBG("Time: " << time << ", MaxTime: " << maxTime << ", Ratio: " << (static_cast<float>(time) / static_cast<float>(maxTime)));
     return static_cast<float>(time) / static_cast<float>(maxTime);
 }
 
@@ -908,14 +900,11 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
 
     // Find maximum time and debug output
     juce::int64 maxTime = 0;
-    DBG("=== Time Values ===");
     for (const auto& date : dates)
     {
         auto timeSpent = audioProcessor.getTimeForDate(date);
-        DBG("Date: " << date.formatted("%m-%d-%Y") << ", Time: " << timeSpent);
         maxTime = juce::jmax(maxTime, timeSpent);
     }
-    DBG("Max Time: " << maxTime);
 
     // Get the bounds of the Previous Sessions panel
     auto bounds = getLocalBounds();

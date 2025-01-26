@@ -86,19 +86,15 @@ void KronosAudioProcessor::startTracking()
         {
             // Start from the existing time for today
             totalTimeInSeconds = timePerDate[dateKey];
-            DBG("Resuming tracking from existing time: " + juce::String(totalTimeInSeconds) + " seconds");
         }
         else
         {
             timePerDate.set(dateKey, 0);
-            DBG("Starting fresh tracking for new date: " + dateKey + " with 0 seconds");
         }
         
         startTime = juce::Time::getCurrentTime();
         setTracking(true);  // Use the parameter system
-        startTimer(1000);
-        
-        DBG("Tracking started with initial time: " + juce::String(totalTimeInSeconds));
+        startTimer(1000);        
     }
 }
 
@@ -121,10 +117,7 @@ void KronosAudioProcessor::stopTracking()
         
         stopTimer();
         setTracking(false);  // Use the parameter system
-        
-        DBG("Tracking stopped. Total time for " + dateKey + ": " + 
-            juce::String(timePerDate[dateKey]) + " seconds");
-        
+                
         startTime = juce::Time::getCurrentTime();
     }
 }
