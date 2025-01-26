@@ -61,23 +61,6 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="5" x="0.70625" y="0.2730769230769231" useARA="0" uiLastX_Normal="485"
-          uiLastY_Normal="304" uiopen_Normal="1">
-    <PLUGIN name="Kronos" format="VST3" category="Fx|Tools" manufacturer="Jack.Lion"
-            version="1.0.0" file="/Users/jacobleone/Library/Audio/Plug-Ins/VST3/Kronos.vst3"
-            uniqueId="f886c008" isInstrument="0" fileTime="193c767f05f" infoUpdateTime="19480bea527"
-            numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
-            uid="acf7765d"/>
-    <STATE>1048.VMjLg7.A...O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9bCLx3hUMoFSmoVat3hKt7zJlcUXxEDZisVRxH1a3vVX3fjTLQmKogjYTwVXogiQY8FMwjENHIUUTkEUKMCR38TNtHzSKkjLgQGNwH1TQcEV5UkQH8VSGUEdEECVwsFag0FLogzcHIDR5giQic1cFU0avXUVIQSLTsVSwDFcQEiX3fDZLkGRBgjZEwlXwAidgoVUV8DZDkFRlwjLggWTWMUcQYUV3fjPLglK3Ila3DyXBUDahkGLogzcHIDR4UULhk2ZwDFcQQEV5UULhgCRnwjcHMUSy4xTLMGQS4DUEkWS0.0TMUCS40DcDMES2omPLAiaCwjcxkFS1gzTMMmKSwzbDMESTkzPLUiKSwTMPkWSzgzPLkmdBwDLtMDS1IWZLYGRS0zbtLESyQzPLQURCwTMtLES0.UdMQGRCwTd5IDSv31PLYmbowjcHMUSy4xTLMmKS4DUIMDS03xTLUCT40DcHMDS4omPLAiaCwjcxkFS1gzTMMmKSwzbtLjSTkzPLUiKSwTMPkWSzgzPLkmdBwDLtMDS1IWZLYGRS0zbtLESy4RdMQURCwTMtLES0.UdMQGRCwTd5IDSv31PLYmbowjcHMUSy4xTLMmKo0DUIMDS03xTLUCT40DcHMDS4omPLAiaCwjcxkFS1gzTMMmKSwzbtLUSTkzPLUiKSwTMPkWSzgzPLkmdBwDLtMDS1IWZLYGRS0zbtLESy4xPMQURCwTMtLES0.UdMQGRCwTd5IDSv31PLYmbowjcHMUSy4xTLMmK4wDUIMDS03xTLUCT40DcHMDS4omPLAiaCwjcHIDR5slUgsVPUkEdQQEV5UkUOgFRCwDdTM0R1QzTKcmKS8TLtLDS1fzPLgGUSsjcDM0R2QzTOkGUSwzcxkFS1gzTMMmKSwzbDMkS3fTdLYCRCwDdTM0R1QzTKYGRS8TdtLDS1IWZLYGRS0zbtLESy4RdLgCR40jctjmS34RZLAidBwzc5IDS5oWZLomKCwjMHMDS3Q0TKYGQSsjcTM0S3QzPLYmbowjcHMUSy4xTLMmKo0DNDMjS14RdNgmKowDL5IDS2omPLIidSwDLtLDS1fzPLgGUSsjcDM0R1Y1TOcGRCwjcxkFS1gzTMMmKSwzbtLkS3n1PLYmbogTcyLjKt3hKt3hKt3hKtXlTU0DUQAURWoULEYzXqEEUXoWQF4RPDYFTzDzUXkWSG4RPDYmKtnWPt3hKt3hKt3hKJUELPUTPqI1aYcEV5UkQQcVTWgEOujzPu0Fbu4VYtQmO77hUSQ0LPwVcmklaSQWXzUlO..</STATE>
-    <LAYOUT>
-      <INPUTS>
-        <BUS index="0" layout="L R"/>
-      </INPUTS>
-      <OUTPUTS>
-        <BUS index="0" layout="L R"/>
-      </OUTPUTS>
-    </LAYOUT>
-  </FILTER>
   <FILTER uid="6" x="0.42" y="0.3084677419354839" useARA="0">
     <PLUGIN name="Sine Wave Synth" format="Internal" category="Synth" manufacturer="JUCE"
             version="1.0.0" file="Sine Wave Synth" uniqueId="16fd76a8" isInstrument="1"
@@ -86,6 +69,23 @@
     <STATE>0.</STATE>
     <LAYOUT>
       <INPUTS/>
+      <OUTPUTS>
+        <BUS index="0" layout="L R"/>
+      </OUTPUTS>
+    </LAYOUT>
+  </FILTER>
+  <FILTER uid="7" x="0.66375" y="0.2" useARA="0" uiLastX_Normal="409" uiLastY_Normal="171"
+          uiopen_Normal="1">
+    <PLUGIN name="Kronos" format="VST3" category="Fx|Tools" manufacturer="Jack.Lion"
+            version="1.0.0-beta.2" file="/Users/jacobleone/Library/Audio/Plug-Ins/VST3/Kronos.vst3"
+            uniqueId="f886c008" isInstrument="0" fileTime="193c767f05f" infoUpdateTime="194a0e0128f"
+            numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
+            uid="acf7765d"/>
+    <STATE>431.VMjLgXZ....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9HyL43hUMoFSm4lRt3hKt7zJlcUXxEDZisVRxH1a3vVX3fjTLQmKogjYTwVXogiQY8FMwjENHIUUTkEUKMCR38TNtHzSPUDahcFLVkkdUwlX4QyPOAUQpQUPvPDRuEkUOgFTVgEdyY0T0EkUYglKnM1Y2Y0XqASZHc2LBwDZ2f1S23RUPIUQTMkYpYTV3fjPYcVTWk0T3vlX5AidgoVUrgjYXcEVxU0UYgCRBwDctjFR0MyPOAUQpQUPvPDRuEkUOgFTsI1YMEiVuQSLYglKnM1Y2Y0XqASZHc2LBwDZ2f1S2biPTcVRWg0bUYzXqkjLhkiKt3hKt3hKt3hKt3haTU0PUQDU3sFaicVTWkEQEYzXmEDTtDDRTQlcEEiX4EDTtDDSt3xXt3hKt3hKt3hKlIUUMQUTPkzUZESQFM1ZQQEV5UjQ77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
+    <LAYOUT>
+      <INPUTS>
+        <BUS index="0" layout="L R"/>
+      </INPUTS>
       <OUTPUTS>
         <BUS index="0" layout="L R"/>
       </OUTPUTS>
