@@ -789,29 +789,6 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.setGradientFill(borderGradient);
     g.drawRoundedRectangle(bounds.reduced(borderThickness * 0.5f), 2.0f, borderThickness);
 
-    // Fixed time display scaling with solid background
-    if (auto* timeDisplay = isDarkMode ? timeDisplaySvgCache.get() : timeDisplayLightSvgCache.get())
-    {
-        // Save current graphics state
-        juce::Graphics::ScopedSaveState state(g);
-        
-        // Calculate the desired bounds for the time display
-        const float desiredWidth = 400.0f * scale;
-        const float desiredHeight = 200.0f * scale;  // Increased from 150.0f for more vertical stretch
-        const auto timeDisplayArea = juce::Rectangle<float>(
-            (getWidth() - desiredWidth) / 2.0f,
-            timeDisplayBounds.getCentreY() - desiredHeight/2,
-            desiredWidth,
-            desiredHeight
-        );
-        
-        
-        // Then draw the time display SVG on top
-        g.setOpacity(1.0f);
-        timeDisplay->drawWithin(g, timeDisplayArea, 
-            juce::RectanglePlacement::stretchToFit, 
-            1.0f);  // Force full opacity
-    }
 
     // Draw grit texture
     if (gritTexture.isValid()) 
@@ -828,6 +805,26 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
         g.setOpacity(1.0f);
     }
 
+    // Fixed time display scaling with solid background
+    if (auto* timeDisplay = isDarkMode ? timeDisplaySvgCache.get() : timeDisplayLightSvgCache.get())
+    {
+        // Calculate the desired bounds for the time display
+        const float desiredWidth = 400.0f * scale;
+        const float desiredHeight = 200.0f * scale;
+        const auto timeDisplayArea = juce::Rectangle<float>(
+            (getWidth() - desiredWidth) / 2.0f,
+            timeDisplayBounds.getCentreY() - desiredHeight/2,
+            desiredWidth,
+            desiredHeight
+        );
+
+        // Ensure solid opacity
+        timeDisplay->drawWithin(g, timeDisplayArea, 
+            juce::RectanglePlacement::stretchToFit, 
+            1.0f);
+        g.setOpacity(1.0f);
+    }
+    
     // Cached SVG drawing - fix theme handling
     if (auto* previousSessions = audioProcessor.isDarkMode() ? 
         previousSessionsSvgCache.get() : previousSessionsLightSvgCache.get())
