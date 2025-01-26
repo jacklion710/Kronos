@@ -1241,6 +1241,8 @@ void KronosAudioProcessorEditor::updateScrollButtonImages()
 void KronosAudioProcessorEditor::updateScrollButtonStates()
 {
     bool isDark = audioProcessor.isDarkMode();
+    auto dates = audioProcessor.getSortedDates();
+    bool hasEnoughDates = dates.size() >= 4;
     
     // Up button
     auto& upNormal = isDark ? upArrowDarkSvgCache : upArrowLightSvgCache;
@@ -1248,7 +1250,8 @@ void KronosAudioProcessorEditor::updateScrollButtonStates()
     
     if (upNormal != nullptr && upPressed != nullptr)
     {
-        auto& currentImage = isAtTop ? upPressed : upNormal;
+        // Use pressed state if at top OR not enough dates
+        auto& currentImage = (isAtTop || !hasEnoughDates) ? upPressed : upNormal;
         scrollUpButton.setImages(
             currentImage.get(),          // normal
             currentImage.get(),          // over
@@ -1267,7 +1270,8 @@ void KronosAudioProcessorEditor::updateScrollButtonStates()
     
     if (downNormal != nullptr && downPressed != nullptr)
     {
-        auto& currentImage = isAtBottom ? downPressed : downNormal;
+        // Use pressed state if at bottom OR not enough dates
+        auto& currentImage = (isAtBottom || !hasEnoughDates) ? downPressed : downNormal;
         scrollDownButton.setImages(
             currentImage.get(),          // normal
             currentImage.get(),          // over
