@@ -941,7 +941,7 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
             float dateWidth = 120.0f * scale;
             float dashWidth = 20.0f * scale;
             float totalWidth = dateWidth + dashWidth + maxBarWidth;
-            float startX = (getWidth() - totalWidth) / 2.0f;
+            float startX = (getWidth() - totalWidth) / 2.0f - (7.0f * scale);
             
             float y = bottomSection.getY() + (i * dateHeight * scale);
             
