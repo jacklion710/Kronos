@@ -66,6 +66,8 @@ KronosAudioProcessor::KronosAudioProcessor()
 #else
     addSessionDate();
 #endif
+
+    parameters->addParameterListener("dateSortMode", dynamic_cast<juce::AudioProcessorValueTreeState::Listener*>(this));
 }
 
 KronosAudioProcessor::~KronosAudioProcessor()
@@ -306,6 +308,9 @@ void KronosAudioProcessor::timerCallback()
 {
     if (isTracking())  // Use the accessor method
     {
+        // Timer callback duration enter
+        auto timerCallbackStart = juce::Time::getMillisecondCounterHiRes();
+
         // Increment main display time
         totalTimeInSeconds++;
         
@@ -326,6 +331,20 @@ void KronosAudioProcessor::timerCallback()
         
         // Update start time to maintain accuracy
         startTime = currentTime;
+
+        // Check for midnight crossing
+        static juce::String lastDateKey = juce::Time::getCurrentTime().formatted("%Y-%m-%d");
+        juce::String currentDateKey = juce::Time::getCurrentTime().formatted("%Y-%m-%d");
+        
+        if (lastDateKey != currentDateKey)
+        {
+            addSessionDate();
+            sortedDatesNeedsRefresh = true;
+            lastDateKey = currentDateKey;
+        }
+
+        // Timer callback duration exit
+        DBG("Timer callback duration: " << (juce::Time::getMillisecondCounterHiRes() - timerCallbackStart) << " ms");
     }
 }
 
@@ -432,6 +451,13 @@ KronosAudioProcessor::DateSortMode KronosAudioProcessor::getDateSortMode() const
 
 juce::Array<juce::Time> KronosAudioProcessor::getSortedDates() const
 {
+    // Only sort if something has changed
+    if (!sortedDatesNeedsRefresh)
+        return cachedSortedDates;
+
+    // Sorting duration enter
+    auto sortStart = juce::Time::getMillisecondCounterHiRes();
+
     juce::Array<juce::Time> sortedDates = sessionDates;
     
     if (getDateSortMode() == DateSortMode::MostTime)
@@ -466,5 +492,20 @@ juce::Array<juce::Time> KronosAudioProcessor::getSortedDates() const
         sortedDates.sort(comparator);
     }
     
-    return sortedDates;
+    // Update cache and reset flag
+    cachedSortedDates = sortedDates;
+    sortedDatesNeedsRefresh = false;
+    
+    // Sorting duration exit
+    DBG("Date sorting took: " << (juce::Time::getMillisecondCounterHiRes() - sortStart) << " ms");
+    
+    return cachedSortedDates;
+}
+
+void KronosAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    if (parameterID == "dateSortMode")
+    {
+        sortedDatesNeedsRefresh = true;
+    }
 }

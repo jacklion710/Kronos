@@ -16,7 +16,9 @@
 //==============================================================================
 /**
 */
-class KronosAudioProcessor  : public juce::AudioProcessor, public juce::Timer
+class KronosAudioProcessor  : public juce::AudioProcessor,
+                             public juce::AudioProcessorValueTreeState::Listener,
+                             public juce::Timer
 {
 public:
     //==============================================================================
@@ -116,4 +118,9 @@ private:
 
     bool trackingState = false;  
     DateSortMode currentSortMode = DateSortMode::MostRecent;
+
+    mutable juce::Array<juce::Time> cachedSortedDates;
+    mutable bool sortedDatesNeedsRefresh = true;
+
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
 };

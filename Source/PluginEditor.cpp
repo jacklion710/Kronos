@@ -754,6 +754,9 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
 // Note: Try to optimize to O(log n)
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)
 {
+    // Paint duration enter
+    auto paintStart = juce::Time::getMillisecondCounterHiRes();
+
     // Pre-calculate frequently used values
     const auto& processor = audioProcessor;
     const bool isDarkMode = processor.isDarkMode();
@@ -835,6 +838,9 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
 
     // Optimized time bars using batch rendering
     drawTimeBars(g);
+
+    // paint duration exit
+    DBG("Paint duration: " << (juce::Time::getMillisecondCounterHiRes() - paintStart) << " ms");
 }
 
 // Performance: O(1) - Simple text update
@@ -1277,6 +1283,9 @@ void KronosAudioProcessorEditor::updateScrollButtonStates()
 // CPU: Low - Conditional checks and UI updates
 void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
 {
+    // Parameter change duration enter
+    auto paramChangeStart = juce::Time::getMillisecondCounterHiRes();
+    
     if (parameterID == "tracking")
     {
         playPauseButton.setToggleState(newValue >= 0.5f, juce::dontSendNotification);
@@ -1318,4 +1327,7 @@ void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterI
         updateSortButtonImages();
         updateDateLabels();
     }
+
+    // Parameter change duration exit
+    DBG("Parameter change handling took: " << (juce::Time::getMillisecondCounterHiRes() - paramChangeStart) << " ms");
 }
