@@ -3,8 +3,8 @@
 AboutComponent::AboutComponent(KronosAudioProcessor& processor)
     : audioProcessor(processor)
 {
-    // Increase window size to fit all content
-    setSize(400, 650); // Increased height to prevent cutoff
+    // Window size
+    setSize(400, 550);
 
     // Close button setup
     closeButton.setButtonText("x");
@@ -69,20 +69,20 @@ void AboutComponent::paint(juce::Graphics& g)
     
     // Description - using taller bounds for wrapping
     g.setFont(asteraFont.withHeight(16.0f));
-    auto descriptionBounds = contentBounds.removeFromTop(30);  // Increased height for two lines
+    auto descriptionBounds = contentBounds.removeFromTop(30);  
     g.drawFittedText("A SIMPLE TIME TRACKING PLUGIN FOR YOUR DAW", 
                      descriptionBounds,
                      juce::Justification::centred, 
                      2);  // Allow up to 2 lines of text
     
     // Creator credit - also with wrapping
-    auto creditBounds = contentBounds.removeFromTop(30);  // Increased height for two lines
+    auto creditBounds = contentBounds.removeFromTop(30);  
     g.drawFittedText("CREATED BY JACOB LEONE AKA JACK.LION", 
                      creditBounds,
                      juce::Justification::centred, 
                      2);  // Allow up to 2 lines of text
     
-    contentBounds.removeFromTop(40); // Reduced space after description
+    contentBounds.removeFromTop(40); // Space after description
     
     // Draw all labels first, with less spacing between them and links
     g.drawText("PLUGINS and MORE AT:", 
