@@ -85,7 +85,9 @@ private:
     std::unique_ptr<juce::Drawable> pauseSvgCache;
     std::unique_ptr<juce::Drawable> pausePressedSvgCache;
 
-    juce::Image gritTextureCache;
+    juce::Image gritTexture; // Pre-processed texture
+    juce::Rectangle<float> previousSessionsBounds;
+    juce::Rectangle<float> headerBounds;
 
     juce::ColourGradient borderGradientCache;
 
@@ -145,6 +147,8 @@ private:
 
     // Add scale factor
     float scale = 1.0f;
+
+    juce::Label titleLabel;  // Add title label declaration
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };

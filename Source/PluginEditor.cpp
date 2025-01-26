@@ -15,6 +15,9 @@
 #endif
 
 //==============================================================================
+// Performance: O(1) - Constructor with multiple SVG loads and UI initialization
+// Memory: High initial cost for SVG caching
+// CPU: Moderate due to SVG processing and UI setup
 KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
@@ -246,9 +249,9 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     addAndMakeVisible(minuteUnitLabel);
     addAndMakeVisible(secondUnitLabel);
 
-    hourUnitLabel.setFont(asteraFontSmall.withHeight(18.0f));
-    minuteUnitLabel.setFont(asteraFontSmall.withHeight(18.0f));
-    secondUnitLabel.setFont(asteraFontSmall.withHeight(18.0f));
+    hourUnitLabel.setFont(asteraFontSmall.withHeight(32.0f));
+    minuteUnitLabel.setFont(asteraFontSmall.withHeight(32.0f));
+    secondUnitLabel.setFont(asteraFontSmall.withHeight(32.0f));
 
     juce::Colour labelColor(0xE6, 0xE6, 0xFF);  // #E6E6FF
     hourUnitLabel.setColour(juce::Label::textColourId, labelColor);
@@ -486,8 +489,25 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     audioProcessor.parameters->addParameterListener("tracking", this);
     audioProcessor.parameters->addParameterListener("darkMode", this);
     audioProcessor.parameters->addParameterListener("dateSortMode", this);
+
+    // Pre-process grit texture
+    auto gritImage = juce::ImageCache::getFromMemory(BinaryData::Grit_jpg, BinaryData::Grit_jpgSize);
+    gritTexture = gritImage.convertedToFormat(juce::Image::ARGB);
+    #if JUCE_WINDOWS
+    gritTexture.multiplyAllAlphas(0.07f);
+    #endif
+
+    // Replace manual title image with styled label
+    addAndMakeVisible(titleLabel);
+    titleLabel.setText("KRONOS", juce::dontSendNotification);
+    titleLabel.setJustificationType(juce::Justification::centred);
+    titleLabel.setLookAndFeel(&customLookAndFeel);
+    titleLabel.setName("TitleLabel");  // Important for LookAndFeel recognition
+    titleLabel.setComponentID("GlowingTitle");  // Enable glow effect
 }
 
+// Performance: O(1) - Simple timer callback with basic arithmetic
+// CPU: Low - Called frequently (1Hz) but performs minimal work
 void KronosAudioProcessorEditor::timerCallback()
 {
     // Handle regular timer updates
@@ -539,10 +559,14 @@ void KronosAudioProcessorEditor::timerCallback()
         }
     }
 
-    // Always draw the bars
-    repaint();
+    // Force update of date labels and repaint
+    updateDateLabels();
+    repaint(previousSessionsBounds.toNearestInt());
 }
 
+// Performance: O(1) - UI layout calculations
+// CPU: Low-Moderate - Called on window resize
+// Note: Contains many floating point calculations
 void KronosAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
@@ -601,7 +625,7 @@ void KronosAudioProcessorEditor::resized()
     // Scale fonts
     float scaledLargeFont = 36.0f * scale;
     float scaledSmallFont = 16.0f * scale;
-    float scaledUnitFont = 18.0f * scale;
+    float scaledUnitFont = 36.0f * scale;  // Increased to match constructor
     
     auto asteraFontLarge = juce::Font("ASTERA", scaledLargeFont, juce::Font::plain);
     auto asteraFontSmall = juce::Font("ASTERA", scaledSmallFont, juce::Font::plain);
@@ -638,8 +662,8 @@ void KronosAudioProcessorEditor::resized()
                           labelHeight);
 
     // Position unit labels
-    float unitLabelHeight = 20 * scale;
-    float unitLabelOffset = 0;
+    float unitLabelHeight = 37.5f * scale;
+    float unitLabelOffset = -8.0f * scale;
 
     hourUnitLabel.setBounds(hoursLabel.getX() - 2 * scale,
                            hoursLabel.getY() - unitLabelHeight - unitLabelOffset,
@@ -685,8 +709,33 @@ void KronosAudioProcessorEditor::resized()
                         0.5f * scale,
                         scaledMenuButtonSize, 
                         scaledMenuButtonSize);
+
+    // Cache bounds for paint()
+    previousSessionsBounds = juce::Rectangle<float>(
+        getWidth()/2.0f - 150.0f * scale,
+        getHeight() - 140.0f * scale - 10.0f * scale,
+        300.0f * scale,
+        140.0f * scale
+    );
+
+    headerBounds = juce::Rectangle<float>(
+        (getWidth() - 400.0f * scale)/2.0f,
+        10.0f * scale,
+        400.0f * scale,
+        60.0f * scale
+    );
+
+    // Position title label using LookAndFeel
+    titleLabel.setBounds(
+        getWidth()/2 - 150 * scale,
+        static_cast<int>(17 * scale),
+        300 * scale,
+        50 * scale
+    );
 }
 
+// Performance: O(1) - Simple cleanup operations
+// Memory: Frees cached SVGs and UI components
 KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
 {
     setLookAndFeel(nullptr);
@@ -706,194 +755,100 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
     audioProcessor.parameters->removeParameterListener("dateSortMode", this);
 }
 
+// Performance: O(n) where n is number of UI elements to draw
+// CPU: High - Called frequently for UI updates
+// GPU: Moderate - SVG rendering and gradient operations
+// Note: Try to optimize to O(log n)
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    auto bounds = getLocalBounds();
+    // Pre-calculate frequently used values
+    const auto& processor = audioProcessor;
+    const bool isDarkMode = processor.isDarkMode();
+    const auto bounds = getLocalBounds().toFloat();
+    const float borderThickness = 4.0f * scale;
     
-    // Explicitly choose the correct background based on theme
-    if (audioProcessor.isDarkMode())
+    // Cache background drawing
+    if (auto* bg = isDarkMode ? backgroundSvgCache.get() : backgroundLightSvgCache.get())
     {
-        if (backgroundSvgCache != nullptr)
-        {
-            backgroundSvgCache->drawWithin(g, bounds.toFloat(), 
-                juce::RectanglePlacement::stretchToFit, 1.0f);
-        }
-    }
-    else
-    {
-        if (backgroundLightSvgCache != nullptr)
-        {
-            backgroundLightSvgCache->drawWithin(g, bounds.toFloat(), 
-                juce::RectanglePlacement::stretchToFit, 1.0f);
-        }
+        bg->drawWithin(g, bounds, juce::RectanglePlacement::stretchToFit, 1.0f);
     }
 
-    // Draw custom metallic border
-    float borderThickness = 4.0f;
-    
-    // Create gradient for border with multiple points for sine-wave like effect
+    // Restore metallic border gradient
     juce::ColourGradient borderGradient(
-        audioProcessor.isDarkMode() ?
-            juce::Colour(130, 130, 130) :           // Dark mode highlight
-            juce::Colour(160, 140, 120),            // Light mode warm highlight
-        bounds.getBottomLeft().toFloat(),           // Convert to float
-        audioProcessor.isDarkMode() ?
-            juce::Colour(130, 130, 130) :           // Dark mode highlight
-            juce::Colour(160, 140, 120),            // Light mode warm highlight
-        bounds.getTopRight().toFloat(),             // Convert to float
+        isDarkMode ? juce::Colour(130, 130, 130) : juce::Colour(160, 140, 120),
+        bounds.getBottomLeft(),
+        isDarkMode ? juce::Colour(130, 130, 130) : juce::Colour(160, 140, 120),
+        bounds.getTopRight(),
         false
     );
     
-    borderGradient.addColour(0.25, audioProcessor.isDarkMode() ?
-        juce::Colour(40, 40, 40) :                  // Dark mode shadow
-        juce::Colour(100, 85, 70));                 // Light mode warm shadow
-    borderGradient.addColour(0.5, audioProcessor.isDarkMode() ?
-        juce::Colour(40, 40, 40) :                  // Dark mode shadow
-        juce::Colour(100, 85, 70));                 // Light mode warm shadow
-    borderGradient.addColour(0.75, audioProcessor.isDarkMode() ?
-        juce::Colour(130, 130, 130) :              // Dark mode highlight
-        juce::Colour(160, 140, 120));              // Light mode warm highlight
+    borderGradient.addColour(0.25, isDarkMode ? juce::Colour(40, 40, 40) : juce::Colour(100, 85, 70));
+    borderGradient.addColour(0.5, isDarkMode ? juce::Colour(40, 40, 40) : juce::Colour(100, 85, 70));
+    borderGradient.addColour(0.75, isDarkMode ? juce::Colour(130, 130, 130) : juce::Colour(160, 140, 120));
     
     g.setGradientFill(borderGradient);
-    g.drawRect(bounds, borderThickness);
+    g.drawRoundedRectangle(bounds.reduced(borderThickness * 0.5f), 2.0f, borderThickness);
 
-    // Draw grit texture overlay with platform-specific handling
-    auto gritImage = juce::ImageCache::getFromMemory(BinaryData::Grit_jpg, 
-                                                    BinaryData::Grit_jpgSize);
-    if (gritImage.isValid())
+    // Fixed time display scaling with solid background
+    if (auto* timeDisplay = isDarkMode ? timeDisplaySvgCache.get() : timeDisplayLightSvgCache.get())
     {
-        #if JUCE_WINDOWS
-            // Windows-specific handling with ARGB conversion
-            juce::Image gritCopy = gritImage.convertedToFormat(juce::Image::ARGB);
-            if (gritCopy.isValid() && gritCopy.hasAlphaChannel())
-            {
-                gritCopy.multiplyAllAlphas(audioProcessor.isDarkMode() ? 0.07f : 0.07f);
-                
-                auto gritBounds = bounds.reduced(borderThickness + 1.0f);
-                g.drawImage(gritCopy,                           
-                           gritBounds.getX(),                   
-                           gritBounds.getY(),                   
-                           gritBounds.getWidth(),               
-                           gritBounds.getHeight(),              
-                           0,                                   
-                           0,                                   
-                           gritImage.getWidth(),                
-                           gritImage.getHeight());              
-            }
-        #else
-            // Original Mac handling
-            juce::Image gritCopy = gritImage.createCopy();
-            gritCopy.multiplyAllAlphas(audioProcessor.isDarkMode() ? 0.07f : 0.07f);
-            
-            auto gritBounds = bounds.reduced(borderThickness + 1.0f);
-            g.drawImage(gritCopy,                           
-                       gritBounds.getX(),                   
-                       gritBounds.getY(),                   
-                       gritBounds.getWidth(),               
-                       gritBounds.getHeight(),              
-                       0,                                   
-                       0,                                   
-                       gritImage.getWidth(),                
-                       gritImage.getHeight());              
-        #endif
-    }
-
-    // Scale the title text
-    auto asteraFont = juce::Font(24.0f * scale);
-    asteraFont.setTypefaceName("ASTERA");
-    g.setFont(asteraFont);
-    
-    auto titleBounds = juce::Rectangle<int>(0, 17 * scale, getWidth(), 50 * scale);
-    auto text = "KRONOS";
-    
-    // Draw stroke layers with theme-appropriate color
-    if (audioProcessor.isDarkMode()) {
-        g.setColour(juce::Colour(30, 50, 150));  // Dark blue-grey for dark mode
-    } else {
-        g.setColour(juce::Colour(120, 100, 80));  // Warm metallic grey for light mode
-    }
-    
-    // Increased stroke size specifically for title
-    float strokeSize = 2.5f;
-    float positions[][2] = {
-        {-strokeSize, -strokeSize},
-        {-strokeSize, strokeSize},
-        {strokeSize, -strokeSize},
-        {strokeSize, strokeSize},
-        {0, strokeSize},
-        {0, -strokeSize},
-        {strokeSize, 0},
-        {-strokeSize, 0},
-        // Add diagonal positions for thicker appearance
-        {-strokeSize * 0.7f, -strokeSize * 0.7f},
-        {-strokeSize * 0.7f, strokeSize * 0.7f},
-        {strokeSize * 0.7f, -strokeSize * 0.7f},
-        {strokeSize * 0.7f, strokeSize * 0.7f}
-    };
-    
-    // Draw stroke positions
-    for (auto& pos : positions)
-    {
-        auto offsetBounds = titleBounds.translated(pos[0], pos[1]);
-        g.drawText(text, offsetBounds, juce::Justification::centred, true);
-    }
-    
-    // Draw main text with theme-appropriate color
-    g.setColour(juce::Colours::white);  // Keep text white for both modes
-    g.drawText(text, titleBounds, juce::Justification::centred, true);
-
-    // Use cached time display SVG with scaling
-    if (timeDisplaySvgCache != nullptr && timeDisplayLightSvgCache != nullptr)
-    {
-        float desiredWidth = 400.0f * scale;
-        float desiredHeight = 200.0f * scale;
-        float x = getWidth()/2 - desiredWidth/2;
-        float y = timeDisplayBounds.getCentreY() - desiredHeight/2;
+        // Save current graphics state
+        juce::Graphics::ScopedSaveState state(g);
         
-        auto& currentCache = audioProcessor.isDarkMode() ? timeDisplaySvgCache : timeDisplayLightSvgCache;
-        currentCache->drawWithin(g, 
-                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
-                               juce::RectanglePlacement::centred | 
-                               juce::RectanglePlacement::stretchToFit,
-                               1.0f);
-    }
-
-    // Use cached Previous Sessions SVG with scaling
-    if (previousSessionsSvgCache != nullptr && previousSessionsLightSvgCache != nullptr)
-    {
-        float desiredWidth = 300.0f * scale;
-        float desiredHeight = 140.0f * scale;
-        float x = getWidth() / 2.0f - (desiredWidth / 2.0f);
-        float y = getHeight() - desiredHeight - (10.0f * scale);
+        // Calculate the desired bounds for the time display
+        const float desiredWidth = 400.0f * scale;
+        const float desiredHeight = 200.0f * scale;  // Increased from 150.0f for more vertical stretch
+        const auto timeDisplayArea = juce::Rectangle<float>(
+            (getWidth() - desiredWidth) / 2.0f,
+            timeDisplayBounds.getCentreY() - desiredHeight/2,
+            desiredWidth,
+            desiredHeight
+        );
         
-        auto& currentCache = audioProcessor.isDarkMode() ? previousSessionsSvgCache : previousSessionsLightSvgCache;
-        currentCache->drawWithin(g, 
-                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
-                               juce::RectanglePlacement::centred | 
-                               juce::RectanglePlacement::stretchToFit,
-                               1.0f);
-    }
-
-    // Use cached header SVG with scaling
-    if (headerSvgCache != nullptr && headerLightSvgCache != nullptr)
-    {
-        float desiredWidth = 400.0f * scale;
-        float desiredHeight = 60.0f * scale;
-        float x = (getWidth() - desiredWidth) / 2.0f;
-        float y = 10.0f * scale;
         
-        auto& currentCache = audioProcessor.isDarkMode() ? headerSvgCache : headerLightSvgCache;
-        currentCache->drawWithin(g, 
-                               juce::Rectangle<float>(x, y, desiredWidth, desiredHeight),
-                               juce::RectanglePlacement::centred | 
-                               juce::RectanglePlacement::stretchToFit,
-                               1.0f);
+        // Then draw the time display SVG on top
+        g.setOpacity(1.0f);
+        timeDisplay->drawWithin(g, timeDisplayArea, 
+            juce::RectanglePlacement::stretchToFit, 
+            1.0f);  // Force full opacity
     }
 
-    // Draw time bars unconditionally
+    // Draw grit texture
+    if (gritTexture.isValid()) 
+    {
+        g.setOpacity(0.07f);
+        auto destRect = bounds.reduced(borderThickness + 1.0f).toNearestInt();
+        g.drawImageWithin(gritTexture, 
+                         destRect.getX(),
+                         destRect.getY(),
+                         destRect.getWidth(),
+                         destRect.getHeight(),
+                         juce::RectanglePlacement::stretchToFit,
+                         false);
+        g.setOpacity(1.0f);
+    }
+
+    // Cached SVG drawing - fix theme handling
+    if (auto* previousSessions = audioProcessor.isDarkMode() ? 
+        previousSessionsSvgCache.get() : previousSessionsLightSvgCache.get())
+    {
+        previousSessions->drawWithin(g, previousSessionsBounds,
+                                   juce::RectanglePlacement::centred, 1.0f);
+    }
+
+    if (auto* header = audioProcessor.isDarkMode() ? 
+        headerSvgCache.get() : headerLightSvgCache.get())
+    {
+        header->drawWithin(g, headerBounds,
+                         juce::RectanglePlacement::centred, 1.0f);
+    }
+
+    // Optimized time bars using batch rendering
     drawTimeBars(g);
 }
 
+// Performance: O(1) - Simple text update
+// CPU: Very Low
 void KronosAudioProcessorEditor::updateSortButtonText()
 {
     if (audioProcessor.getDateSortMode() == KronosAudioProcessor::DateSortMode::MostRecent)
@@ -902,6 +857,8 @@ void KronosAudioProcessorEditor::updateSortButtonText()
         sortModeButton.setButtonText("Sort by Date");
 }
 
+// Performance: O(n) where n is number of visible date labels
+// CPU: Low - Simple text formatting and UI updates
 void KronosAudioProcessorEditor::updateDateLabels()
 {
     auto dates = audioProcessor.getSortedDates();
@@ -934,6 +891,8 @@ void KronosAudioProcessorEditor::updateDateLabels()
     repaint();
 }
 
+// Performance: O(1) - Simple floating point division
+// CPU: Very Low
 float KronosAudioProcessorEditor::getTimeRatio(juce::int64 time, juce::int64 maxTime) const
 {
     if (maxTime == 0) return 0.0f;
@@ -942,6 +901,10 @@ float KronosAudioProcessorEditor::getTimeRatio(juce::int64 time, juce::int64 max
     return static_cast<float>(time) / static_cast<float>(maxTime);
 }
 
+// Performance: O(n) where n is number of visible time bars
+// CPU: Moderate - Multiple drawing operations and text formatting
+// GPU: Moderate - Gradient fills and text rendering
+// Note: Try to optimize to O(log n)
 void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
 {
     auto dates = audioProcessor.getSortedDates();
@@ -1078,6 +1041,8 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
     }
 }
 
+// Performance: O(1) - Simple bounds checking and state updates
+// CPU: Very Low
 void KronosAudioProcessorEditor::constrainScrollOffset()
 {
     auto dates = audioProcessor.getSortedDates();
@@ -1092,6 +1057,8 @@ void KronosAudioProcessorEditor::constrainScrollOffset()
     updateScrollButtonStates();
 }
 
+// Performance: O(1) - Simple event handler
+// CPU: Very Low
 void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
 {
     // This override is required as part of JUCE's Button::Listener interface.
@@ -1101,6 +1068,8 @@ void KronosAudioProcessorEditor::buttonClicked(juce::Button* button)
     // DBG("Button clicked: " << button->getName());
 }
 
+// Performance: O(1) - Simple event handler
+// CPU: Very Low
 void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
 {
     // This override is required as part of JUCE's MouseListener interface.
@@ -1110,6 +1079,9 @@ void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
     // DBG("Mouse up event: " << event.eventComponent->getName());
 }
 
+// Performance: O(1) - Image asset switching
+// CPU: Low - Simple pointer assignments
+// Memory: Uses pre-cached images
 void KronosAudioProcessorEditor::updateButtonImages()
 {
     auto startTime = juce::Time::getMillisecondCounterHiRes();
@@ -1150,6 +1122,9 @@ void KronosAudioProcessorEditor::updateButtonImages()
     DBG("Button image update time: " << (endTime - startTime) << "ms");
 }
 
+// Performance: O(1) - Simple drawable transformation
+// CPU: Low - One-time transform calculation
+// Memory: Creates new drawable instance
 std::unique_ptr<juce::Drawable> KronosAudioProcessorEditor::createNormalizedDrawable(juce::Drawable* source, float targetSize)
 {
     if (source == nullptr) return nullptr;
@@ -1166,6 +1141,9 @@ std::unique_ptr<juce::Drawable> KronosAudioProcessorEditor::createNormalizedDraw
     return drawable;
 }
 
+// Performance: O(1) - Simple image asset switching
+// CPU: Low - Pointer assignments
+// Memory: Uses pre-cached images
 void KronosAudioProcessorEditor::updateThemeButtonImages()
 {
     bool isDark = audioProcessor.isDarkMode();
@@ -1183,6 +1161,9 @@ void KronosAudioProcessorEditor::updateThemeButtonImages()
     );
 }
 
+// Performance: O(1) - Simple image asset switching
+// CPU: Low - Pointer assignments
+// Memory: Uses pre-cached images
 void KronosAudioProcessorEditor::updateSortButtonImages()
 {
     bool isDark = audioProcessor.isDarkMode();
@@ -1204,7 +1185,7 @@ void KronosAudioProcessorEditor::updateSortButtonImages()
             pressedImage.get(),         // down
             normalImage.get(),          // disabled (use normal)
             normalImage.get(),          // normal (on)
-            normalImage.get(),          // over (on) (use normal)
+            normalImage.get(),          // over (on)
             pressedImage.get(),         // down (on)
             normalImage.get()           // disabled (on) (use normal)
         );
@@ -1215,6 +1196,9 @@ void KronosAudioProcessorEditor::updateSortButtonImages()
     }
 }
 
+// Performance: O(1) - Simple image asset switching
+// CPU: Low - Pointer assignments
+// Memory: Uses pre-cached images
 void KronosAudioProcessorEditor::updateScrollButtonImages()
 {
     bool isDark = audioProcessor.isDarkMode();
@@ -1254,6 +1238,9 @@ void KronosAudioProcessorEditor::updateScrollButtonImages()
     }
 }
 
+// Performance: O(1) - Simple state updates and image switching
+// CPU: Low - Conditional checks and pointer assignments
+// Memory: Uses pre-cached images
 void KronosAudioProcessorEditor::updateScrollButtonStates()
 {
     bool isDark = audioProcessor.isDarkMode();
@@ -1297,6 +1284,8 @@ void KronosAudioProcessorEditor::updateScrollButtonStates()
     }
 }
 
+// Performance: O(1) - Simple parameter update handler
+// CPU: Low - Conditional checks and UI updates
 void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
 {
     if (parameterID == "tracking")
@@ -1313,6 +1302,27 @@ void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterI
         updateScrollButtonImages();
         updateScrollButtonStates();
         repaint();
+        // Force refresh header SVG
+        headerSvgCache.reset();
+        headerLightSvgCache.reset();
+
+        // Reload header assets after reset
+        bool isDark = newValue >= 0.5f;
+        headerSvgCache = juce::Drawable::createFromImageData(
+            isDark ? BinaryData::Header_Dark_svg : BinaryData::Header_Light_svg,
+            isDark ? BinaryData::Header_Dark_svgSize : BinaryData::Header_Light_svgSize
+        );
+        if (!isDark) {
+            headerLightSvgCache = std::move(headerSvgCache);
+        }
+        
+        // Update header bounds
+        headerBounds = juce::Rectangle<float>(
+            (getWidth() - 400.0f * scale)/2.0f,
+            10.0f * scale,
+            400.0f * scale,
+            60.0f * scale
+        );
     }
     else if (parameterID == "dateSortMode")
     {

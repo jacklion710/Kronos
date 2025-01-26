@@ -43,7 +43,6 @@ void KronosLookAndFeel::setupDarkColorScheme()
     setColour(KronosLookAndFeel::outlineColourId, juce::Colour(0xFFE0E0E0));  // For borders
     
     // Date label colors (slightly dimmer than main text)
-    setColour(juce::Label::textColourId, juce::Colour(0xFFE0E0E0));
     setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
 }
 
@@ -62,7 +61,6 @@ void KronosLookAndFeel::setupLightColorScheme()
     setColour(KronosLookAndFeel::outlineColourId, juce::Colour(0xFF2D2D2D));  // For borders
     
     // Date label colors (slightly dimmer than main text)
-    setColour(juce::Label::textColourId, juce::Colour(0xFF2D2D2D));
     setColour(juce::Label::backgroundColourId, juce::Colours::transparentWhite);
 }
 
@@ -81,46 +79,51 @@ void KronosLookAndFeel::GlowingLabelLookAndFeel::drawLabel(juce::Graphics& g, ju
 {
     auto bounds = label.getLocalBounds().toFloat();
     auto text = label.getText();
-    auto font = label.getFont();
-
-    // Theme-appropriate glow color
+    
+    // Set Astera font with dynamic sizing
+    g.setFont(juce::Font("ASTERA", bounds.getHeight() * 0.5f, juce::Font::plain));
+    
+    // Enhanced glow color with higher alpha
     auto glowColor = darkModeEnabled ? 
-        juce::Colour(64, 64, 255).withAlpha(0.2f) :     // Blue glow for dark mode
-        juce::Colour(160, 140, 120).withAlpha(0.2f);    // Soft warm grey for light mode
+        juce::Colour(64, 64, 255).withAlpha(0.3f) :     // Brighter blue glow for dark mode
+        juce::Colour(160, 140, 120).withAlpha(0.3f);    // Brighter warm grey for light mode
 
-    // Draw glow (multiple passes with decreasing alpha)
-    for (float i = 6; i > 0; --i)
+    // Increased number of glow passes for more pronounced effect
+    for (float i = 8; i > 0; --i)  // Increased from 6 to 8 passes
     {
-        g.setColour(glowColor.withAlpha(glowColor.getFloatAlpha() / i));
-        g.setFont(font);
-        auto glowBounds = bounds.expanded(i * 0.3f);
-        g.drawText(text, glowBounds, label.getJustificationType(), true);
+        float alpha = glowColor.getFloatAlpha() / (i * 0.7f);  // Adjusted alpha falloff
+        g.setColour(glowColor.withAlpha(alpha));
+        g.drawText(text, bounds, label.getJustificationType(), true);
     }
 
-    // Theme-appropriate stroke color
+    // Enhanced stroke effect
     auto strokeColor = darkModeEnabled ?
-        juce::Colour(30, 50, 150) :         // Dark blue-grey for dark mode
-        juce::Colour(120, 100, 80);         // Warm metallic grey for light mode
+        juce::Colour(30, 50, 150).brighter(0.2f) :      // Brighter stroke for dark mode
+        juce::Colour(120, 100, 80).brighter(0.2f);      // Brighter stroke for light mode
 
-    // Draw multiple colored strokes for a neon effect
-    float strokeWidth = 0.8f;
+    // Thicker stroke
+    float strokeWidth = 2.5f;
     g.setColour(strokeColor);
-    g.setFont(font);
     
     for (float x = -strokeWidth; x <= strokeWidth; x += strokeWidth)
         for (float y = -strokeWidth; y <= strokeWidth; y += strokeWidth)
             if (x != 0 || y != 0)
                 g.drawText(text, bounds.translated(x, y), label.getJustificationType(), true);
 
-    // Draw main text in white
+    // Main text in pure white for better contrast
     g.setColour(juce::Colours::white);
     g.drawText(text, bounds, label.getJustificationType(), true);
 }
 
 void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
 {
-    // Special handling for "Previous Sessions" text
-    if (label.getName().contains("PreviousSessions"))
+    if (label.getName() == "TitleLabel") 
+    {
+        // Let the glowing label look handle all title drawing
+        glowingLabelLookAndFeel.drawLabel(g, label);
+        return;  // Add return to prevent default drawing
+    }
+    else if (label.getName().contains("PreviousSessions"))
     {
         // Use same very muted grey for both modes
         g.setColour(juce::Colour(0x30, 0x30, 0x35));    // Very muted grey with slight blue tint
