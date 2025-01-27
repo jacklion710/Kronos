@@ -485,10 +485,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
 
     // Pre-process grit texture
     auto gritImage = juce::ImageCache::getFromMemory(BinaryData::Grit_jpg, BinaryData::Grit_jpgSize);
-    gritTexture = gritImage.convertedToFormat(juce::Image::ARGB);
-    #if JUCE_WINDOWS
-    gritTexture.multiplyAllAlphas(0.07f);
-    #endif
+    if (gritImage.isValid())
+    {
+        gritTexture = gritImage.convertedToFormat(juce::Image::ARGB);
+    }
 
     // Replace manual title image with styled label
     addAndMakeVisible(titleLabel);
@@ -786,19 +786,35 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     g.drawRoundedRectangle(bounds.reduced(borderThickness * 0.5f), 2.0f, borderThickness);
 
 
-    // Draw grit texture
-    if (gritTexture.isValid()) 
+    // Draw grit texture overlay with platform-specific handling
+    if (gritTexture.isValid())
     {
-        g.setOpacity(0.07f);
-        auto destRect = bounds.reduced(borderThickness + 1.0f).toNearestInt();
-        g.drawImageWithin(gritTexture, 
-                         destRect.getX(),
-                         destRect.getY(),
-                         destRect.getWidth(),
-                         destRect.getHeight(),
-                         juce::RectanglePlacement::stretchToFit,
-                         false);
-        g.setOpacity(1.0f);
+        auto gritBounds = bounds.reduced(borderThickness + 1.0f);
+        
+        #if JUCE_WINDOWS
+            g.setOpacity(0.07f);
+            g.drawImageWithin(gritTexture,
+                            gritBounds.getX(),
+                            gritBounds.getY(),
+                            gritBounds.getWidth(),
+                            gritBounds.getHeight(),
+                            juce::RectanglePlacement::stretchToFit,
+                            false);
+            g.setOpacity(1.0f);
+        #else
+            // Original Mac handling
+            juce::Image gritCopy = gritTexture.createCopy();
+            gritCopy.multiplyAllAlphas(0.07f);
+            g.drawImage(gritCopy,
+                       gritBounds.getX(),
+                       gritBounds.getY(),
+                       gritBounds.getWidth(),
+                       gritBounds.getHeight(),
+                       0,
+                       0,
+                       gritTexture.getWidth(),
+                       gritTexture.getHeight());
+        #endif
     }
 
     // Fixed time display scaling with solid background
