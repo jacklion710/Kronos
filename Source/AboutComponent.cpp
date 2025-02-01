@@ -63,7 +63,7 @@ void AboutComponent::paint(juce::Graphics& g)
     
     // Version - immediately below title
     g.setFont(asteraFont.withHeight(20.0f));
-    g.drawText("V1.0.0-beta.2", contentBounds.removeFromTop(30), juce::Justification::centred, true);
+    g.drawText("V1.0.0-beta.3", contentBounds.removeFromTop(30), juce::Justification::centred, true);
     
     contentBounds.removeFromTop(20); // Space before description
     
@@ -105,7 +105,7 @@ void AboutComponent::paint(juce::Graphics& g)
                juce::Justification::centred, true);
                
     contentBounds.removeFromTop(30);
-    g.drawText("BUG REPORTS and FEATURE REQUESTS", 
+    g.drawText("BUG REPORTS", 
                contentBounds.removeFromTop(30), 
                juce::Justification::centred, true);
                
