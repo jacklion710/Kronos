@@ -276,7 +276,39 @@ void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
     }
     lastSaveTime = now;
 
+    // Create the base state from parameters
     auto state = parameters->copyState();
+    
+    // Add tracking data as child elements
+    auto trackingData = state.getOrCreateChildWithName("TrackingData", nullptr);
+    
+    // Save total time
+    trackingData.setProperty("totalTimeInSeconds", totalTimeInSeconds, nullptr);
+    
+    // Save dates and their times
+    auto datesElement = trackingData.getOrCreateChildWithName("DatesData", nullptr);
+    datesElement.removeAllChildren(nullptr);
+    
+    // Store session dates
+    for (const auto& date : sessionDates)
+    {
+        auto dateElement = juce::ValueTree("Date");
+        dateElement.setProperty("timestamp", date.toMilliseconds(), nullptr);
+        datesElement.appendChild(dateElement, nullptr);
+    }
+    
+    // Store time per date
+    auto timePerDateElement = trackingData.getOrCreateChildWithName("TimePerDate", nullptr);
+    timePerDateElement.removeAllChildren(nullptr);
+    
+    for (auto it = timePerDate.begin(); it != timePerDate.end(); ++it)
+    {
+        auto entry = juce::ValueTree("DateEntry");
+        entry.setProperty("key", it.getKey(), nullptr);
+        entry.setProperty("time", it.getValue(), nullptr);
+        timePerDateElement.appendChild(entry, nullptr);
+    }
+
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
 }
@@ -284,8 +316,57 @@ void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
-    if (xmlState.get() != nullptr)
-        parameters->replaceState(juce::ValueTree::fromXml(*xmlState));
+    
+    if (xmlState != nullptr)
+    {
+        auto state = juce::ValueTree::fromXml(*xmlState);
+        parameters->replaceState(state);
+        
+        // Restore tracking data
+        auto trackingData = state.getChildWithName("TrackingData");
+        if (trackingData.isValid()) 
+        {
+            // Restore total time
+            totalTimeInSeconds = trackingData.getProperty("totalTimeInSeconds", 0);
+            
+            // Restore dates
+            sessionDates.clear();
+            auto datesElement = trackingData.getChildWithName("DatesData");
+            if (datesElement.isValid()) 
+            {
+                for (auto dateElement : datesElement)
+                {
+                    auto timestamp = dateElement.getProperty("timestamp").toString().getLargeIntValue();
+                    sessionDates.add(juce::Time(timestamp));
+                }
+            }
+            
+            // Restore time per date
+            timePerDate.clear();
+            auto timePerDateElement = trackingData.getChildWithName("TimePerDate");
+            if (timePerDateElement.isValid())  
+            {
+                for (auto entry : timePerDateElement)
+                {
+                    auto key = entry.getProperty("key").toString();
+                    auto time = entry.getProperty("time");
+                    timePerDate.set(key, static_cast<juce::int64>(time));
+                }
+            }
+            
+            // Check if we need to add today's date
+            auto today = juce::Time::getCurrentTime();
+            juce::String todayKey = today.formatted("%Y-%m-%d");
+            
+            if (!timePerDate.contains(todayKey))
+            {
+                timePerDate.set(todayKey, 0);
+                addSessionDate();
+            }
+            
+            sortedDatesNeedsRefresh = true;
+        }
+    }
 }
 
 //==============================================================================
