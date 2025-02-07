@@ -108,32 +108,32 @@ void AboutComponent::paint(juce::Graphics& g)
     // Left Column
     g.setColour(juce::Colours::white); // Reset color after line
     g.drawText("PLUGINS and MORE AT:", 
-               leftColumn.removeFromTop(25),  // Reduced from 30 
+               leftColumn.removeFromTop(30),
                juce::Justification::centred, true);
                
-    leftColumn.removeFromTop(25); // Reduced spacing
+    leftColumn.removeFromTop(45); 
     g.drawText("MUSIC", 
-               leftColumn.removeFromTop(25), 
+               leftColumn.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    leftColumn.removeFromTop(25);
+    leftColumn.removeFromTop(45); 
     g.drawText("INSTAGRAM", 
-               leftColumn.removeFromTop(25), 
+               leftColumn.removeFromTop(30), 
                juce::Justification::centred, true);
 
     // Right Column - match left column spacing
     g.drawText("WEBSITE", 
-               rightColumn.removeFromTop(25), 
+               rightColumn.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    rightColumn.removeFromTop(25);
+    rightColumn.removeFromTop(45); 
     g.drawText("BUG REPORTS", 
-               rightColumn.removeFromTop(25), 
+               rightColumn.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    rightColumn.removeFromTop(25);
+    rightColumn.removeFromTop(45); 
     g.drawText("GRAPHICS BY AZNADEL", 
-               rightColumn.removeFromTop(25), 
+               rightColumn.removeFromTop(30), 
                juce::Justification::centred, true);
 
     // Draw metallic border
@@ -175,20 +175,20 @@ void AboutComponent::positionLinks()
     // Position left column links with consistent spacing
     int leftY = leftColumn.getY();
     gumroadLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
-                         leftY + 40, linkWidth, linkHeight);
+                         leftY + 45, linkWidth, linkHeight);
     soundcloudLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
-                            leftY + 90, linkWidth, linkHeight);
+                            leftY + 120, linkWidth, linkHeight);
     jlInstaLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
-                         leftY + 140, linkWidth, linkHeight);
+                         leftY + 195, linkWidth, linkHeight);
 
     // Position right column links with matching spacing
     int rightY = rightColumn.getY();
     jlWebLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
-                       rightY + 40, linkWidth, linkHeight);
+                       rightY + 45, linkWidth, linkHeight);
     discordLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
-                         rightY + 90, linkWidth, linkHeight);
+                         rightY + 120, linkWidth, linkHeight);
     aznadelLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
-                         rightY + 140, linkWidth, linkHeight);
+                         rightY + 195, linkWidth, linkHeight);
 
     // Update link appearance
     bool isDarkMode = audioProcessor.isDarkMode();
