@@ -298,24 +298,16 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
             [this](int result) {
                 if (result == 1)
                 {
-                    auto* window = new juce::DialogWindow("About", 
-                        juce::Colours::black, true, true);
+                    aboutComponent = std::make_unique<AboutComponent>(audioProcessor);
+                    addAndMakeVisible(aboutComponent.get());
+                    aboutComponent->setBounds(getLocalBounds());
+                    aboutComponent->setVisible(true);
+                    aboutComponent->toFront(true);
                     
-                    auto content = std::make_unique<AboutComponent>(audioProcessor);
-                    content->closeButton.onClick = [window]() { window->exitModalState(0); };
-                    
-                    window->setContentOwned(content.release(), true);
-                    window->setLookAndFeel(&customLookAndFeel);
-                    window->centreAroundComponent(this, window->getWidth(), window->getHeight());
-                    window->setAlwaysOnTop(true);
-                    window->setUsingNativeTitleBar(false);
-                    window->setTitleBarHeight(0);
-                    
-                    window->enterModalState(true, juce::ModalCallbackFunction::create(
-                        [window](int) {
-                            window->setLookAndFeel(nullptr);
-                            delete window;
-                        }), true);
+                    // Set up the close button handler
+                    aboutComponent->closeButton.onClick = [this]() {
+                        aboutComponent->setVisible(false);
+                    };
                 }
             });
     };

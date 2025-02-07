@@ -3,14 +3,12 @@
 AboutComponent::AboutComponent(KronosAudioProcessor& processor)
     : audioProcessor(processor)
 {
-    // Window size
-    setSize(400, 550);
-
+    // No need to set a fixed size anymore - we'll use parent bounds
+    
     // Close button setup
     closeButton.setButtonText("x");
     closeButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
     closeButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
-    closeButton.setBounds(370, 5, 20, 20);
     addAndMakeVisible(closeButton);
     
     // Initialize hyperlinks
@@ -42,6 +40,15 @@ AboutComponent::AboutComponent(KronosAudioProcessor& processor)
     positionLinks();
 }
 
+void AboutComponent::resized()
+{
+    // Position close button relative to parent bounds
+    closeButton.setBounds(getWidth() - 25, 5, 20, 20);
+    
+    // Update other component positions
+    positionLinks();
+}
+
 void AboutComponent::paint(juce::Graphics& g)
 {
     bool isDarkMode = audioProcessor.isDarkMode();
@@ -51,70 +58,85 @@ void AboutComponent::paint(juce::Graphics& g)
         juce::Colour(0xFF1A1A1A) :           // Dark charcoal for dark mode
         juce::Colour(0xFF8A8A8A));           // Concrete gray for light mode
     
-    // Text color - white for dark mode, dark gray for light mode
-    g.setColour(isDarkMode ? juce::Colours::white : juce::Colours::white);
+    // Text color - white for both modes for now
+    g.setColour(juce::Colours::white);
     
     auto asteraFont = juce::Font("ASTERA", 24.0f, juce::Font::plain);
     auto contentBounds = getLocalBounds().reduced(20);
     
-    // Title - stick to top with minimal padding
+    // Top section (centered, unchanged)
+    auto topSectionBounds = contentBounds.removeFromTop(170); // Match the height used in positionLinks
+    
+    // Title
     g.setFont(asteraFont);
-    g.drawText("KRONOS", contentBounds.removeFromTop(30), juce::Justification::centred, true);
+    g.drawText("KRONOS", topSectionBounds.removeFromTop(30), juce::Justification::centred, true);
     
-    // Version - immediately below title
+    // Version
     g.setFont(asteraFont.withHeight(20.0f));
-    g.drawText("V1.0.0-beta.4", contentBounds.removeFromTop(30), juce::Justification::centred, true);
+    g.drawText("V1.0.0-beta.4", topSectionBounds.removeFromTop(30), juce::Justification::centred, true);
     
-    contentBounds.removeFromTop(20); // Space before description
+    topSectionBounds.removeFromTop(20); // Space before description
     
-    // Description - using taller bounds for wrapping
+    // Description
     g.setFont(asteraFont.withHeight(16.0f));
-    auto descriptionBounds = contentBounds.removeFromTop(30);  
+    auto descriptionBounds = topSectionBounds.removeFromTop(30);
     g.drawFittedText("A SIMPLE TIME TRACKING PLUGIN FOR YOUR DAW", 
                      descriptionBounds,
                      juce::Justification::centred, 
-                     2);  // Allow up to 2 lines of text
+                     2);
     
-    // Creator credit - also with wrapping
-    auto creditBounds = contentBounds.removeFromTop(30);  
+    // Creator credit
+    auto creditBounds = topSectionBounds.removeFromTop(30);
     g.drawFittedText("CREATED BY JACOB LEONE AKA JACK.LION", 
                      creditBounds,
                      juce::Justification::centred, 
-                     2);  // Allow up to 2 lines of text
+                     2);
+
+    // Draw separator line
+    int lineWidth = getWidth() * 0.8f; // 80% of component width
+    int lineX = (getWidth() - lineWidth) / 2;
+    int lineY = 190; // Adjust this value to position the line
+    g.setColour(juce::Colours::white);
+    g.drawLine(lineX, lineY, lineX + lineWidth, lineY, 1.0f);
     
-    contentBounds.removeFromTop(40); // Space after description
-    
-    // Draw all labels first
+    contentBounds.removeFromTop(40); // Space after separator
+
+    // Split remaining content into two columns
+    auto leftColumn = contentBounds.removeFromLeft(contentBounds.getWidth() / 2);
+    auto rightColumn = contentBounds;
+
+    // Left Column
+    g.setColour(juce::Colours::white); // Reset color after line
     g.drawText("PLUGINS and MORE AT:", 
-               contentBounds.removeFromTop(20), 
+               leftColumn.removeFromTop(25),  // Reduced from 30 
                juce::Justification::centred, true);
-    
-    contentBounds.removeFromTop(30);
+               
+    leftColumn.removeFromTop(25); // Reduced spacing
     g.drawText("MUSIC", 
-               contentBounds.removeFromTop(30), 
+               leftColumn.removeFromTop(25), 
                juce::Justification::centred, true);
                
-    contentBounds.removeFromTop(30);
+    leftColumn.removeFromTop(25);
     g.drawText("INSTAGRAM", 
-               contentBounds.removeFromTop(30), 
-               juce::Justification::centred, true);
-               
-    contentBounds.removeFromTop(30);
-    g.drawText("WEBSITE", 
-               contentBounds.removeFromTop(30), 
-               juce::Justification::centred, true);
-               
-    contentBounds.removeFromTop(30);
-    g.drawText("BUG REPORTS", 
-               contentBounds.removeFromTop(30), 
-               juce::Justification::centred, true);
-               
-    contentBounds.removeFromTop(30);
-    g.drawText("GRAPHICS BY AZNADEL", 
-               contentBounds.removeFromTop(30), 
+               leftColumn.removeFromTop(25), 
                juce::Justification::centred, true);
 
-    // Draw custom metallic border
+    // Right Column - match left column spacing
+    g.drawText("WEBSITE", 
+               rightColumn.removeFromTop(25), 
+               juce::Justification::centred, true);
+               
+    rightColumn.removeFromTop(25);
+    g.drawText("BUG REPORTS", 
+               rightColumn.removeFromTop(25), 
+               juce::Justification::centred, true);
+               
+    rightColumn.removeFromTop(25);
+    g.drawText("GRAPHICS BY AZNADEL", 
+               rightColumn.removeFromTop(25), 
+               juce::Justification::centred, true);
+
+    // Draw metallic border
     float borderThickness = 2.0f;
     
     // Create gradient for border
@@ -134,40 +156,41 @@ void AboutComponent::paint(juce::Graphics& g)
     g.drawRect(borderBounds, borderThickness);
 }
 
-void AboutComponent::resized()
-{
-    positionLinks();
-}
-
 void AboutComponent::positionLinks()
 {
     // Calculate center position and consistent width for all links
     int linkWidth = 300;
     int linkHeight = 30;
-    int centerX = getWidth() / 2 - linkWidth / 2;
     
-    // Starting Y position after the initial text
-    int currentY = 215;
+    // Get bounds for layout
+    auto bounds = getLocalBounds().reduced(20);
     
-    // Position each link with reduced spacing
-    gumroadLink.setBounds(centerX, currentY, linkWidth, linkHeight);
-    currentY += 55; // Space to next link
+    // Skip past the fixed content at the top (including separator line)
+    bounds.removeFromTop(190); 
     
-    soundcloudLink.setBounds(centerX, currentY, linkWidth, linkHeight);
-    currentY += 60;
-    
-    jlInstaLink.setBounds(centerX, currentY, linkWidth, linkHeight);
-    currentY += 60;
-    
-    jlWebLink.setBounds(centerX, currentY, linkWidth, linkHeight);
-    currentY += 60;
-    
-    discordLink.setBounds(centerX, currentY, linkWidth, linkHeight);
-    currentY += 60;
-    
-    aznadelLink.setBounds(centerX, currentY, linkWidth, linkHeight);
+    // Split into two columns
+    auto leftColumn = bounds.removeFromLeft(bounds.getWidth() / 2);
+    auto rightColumn = bounds;
 
-    // Update link appearance based on theme
+    // Position left column links with consistent spacing
+    int leftY = leftColumn.getY();
+    gumroadLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
+                         leftY + 40, linkWidth, linkHeight);
+    soundcloudLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
+                            leftY + 90, linkWidth, linkHeight);
+    jlInstaLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
+                         leftY + 140, linkWidth, linkHeight);
+
+    // Position right column links with matching spacing
+    int rightY = rightColumn.getY();
+    jlWebLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
+                       rightY + 40, linkWidth, linkHeight);
+    discordLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
+                         rightY + 90, linkWidth, linkHeight);
+    aznadelLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
+                         rightY + 140, linkWidth, linkHeight);
+
+    // Update link appearance
     bool isDarkMode = audioProcessor.isDarkMode();
     juce::Colour linkColor = isDarkMode ? 
         juce::Colour(64, 64, 255) :      // Blue for dark mode

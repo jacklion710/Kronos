@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "LookAndFeel.h"
+#include "AboutComponent.h"
 
 //==============================================================================
 /**
@@ -149,6 +150,8 @@ private:
     float scale = 1.0f;
 
     juce::Label titleLabel;  // Add title label declaration
+
+    std::unique_ptr<AboutComponent> aboutComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };

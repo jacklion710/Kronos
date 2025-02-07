@@ -11,12 +11,11 @@ public:
 
     void paint(juce::Graphics& g) override;
     void resized() override;
+    void positionLinks();
 
     juce::TextButton closeButton;
 
 private:
-    void positionLinks();
-
     KronosAudioProcessor& audioProcessor;
     juce::HyperlinkButton gumroadLink, soundcloudLink, jlWebLink, 
                          jlInstaLink, discordLink, aznadelLink;
