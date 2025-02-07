@@ -64,7 +64,6 @@ void AboutComponent::paint(juce::Graphics& g)
     auto asteraFont = juce::Font("ASTERA", 24.0f, juce::Font::plain);
     auto contentBounds = getLocalBounds().reduced(20);
     
-    // Top section (centered, unchanged)
     auto topSectionBounds = contentBounds.removeFromTop(170); // Match the height used in positionLinks
     
     // Title
@@ -111,27 +110,27 @@ void AboutComponent::paint(juce::Graphics& g)
                leftColumn.removeFromTop(30),
                juce::Justification::centred, true);
                
-    leftColumn.removeFromTop(45); 
+    leftColumn.removeFromTop(45); // Space between sections
     g.drawText("MUSIC", 
                leftColumn.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    leftColumn.removeFromTop(45); 
+    leftColumn.removeFromTop(45); // Space between sections
     g.drawText("INSTAGRAM", 
                leftColumn.removeFromTop(30), 
                juce::Justification::centred, true);
 
-    // Right Column - match left column spacing
+    // Right Column
     g.drawText("WEBSITE", 
                rightColumn.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    rightColumn.removeFromTop(45); 
+    rightColumn.removeFromTop(45); // Space between sections
     g.drawText("BUG REPORTS", 
                rightColumn.removeFromTop(30), 
                juce::Justification::centred, true);
                
-    rightColumn.removeFromTop(45); 
+    rightColumn.removeFromTop(45); // Space between sections
     g.drawText("GRAPHICS BY AZNADEL", 
                rightColumn.removeFromTop(30), 
                juce::Justification::centred, true);
@@ -172,7 +171,7 @@ void AboutComponent::positionLinks()
     auto leftColumn = bounds.removeFromLeft(bounds.getWidth() / 2);
     auto rightColumn = bounds;
 
-    // Position left column links with consistent spacing
+    // Position links
     int leftY = leftColumn.getY();
     gumroadLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
                          leftY + 45, linkWidth, linkHeight);
@@ -181,7 +180,7 @@ void AboutComponent::positionLinks()
     jlInstaLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
                          leftY + 195, linkWidth, linkHeight);
 
-    // Position right column links with matching spacing
+    // Right column links
     int rightY = rightColumn.getY();
     jlWebLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
                        rightY + 45, linkWidth, linkHeight);
