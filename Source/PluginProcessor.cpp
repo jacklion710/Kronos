@@ -480,30 +480,67 @@ void KronosAudioProcessor::setDateSortMode(KronosAudioProcessor::DateSortMode mo
 
 void KronosAudioProcessor::addDummyDates()
 {
-    // Clear existing dates for testing
+    // Clear existing dates and times
     sessionDates.clear();
     timePerDate.clear();
-
-    // Add 10 dummy dates with different times
+    
+    // Set a realistic total accumulated time (around 180 hours)
+    totalTimeInSeconds = 648000;  // 180 hours in seconds
+    
+    // Create base date as current time
     juce::Time baseDate = juce::Time::getCurrentTime();
     
-    // First add a date with a very large time value (over 100 hours)
-    // juce::Time longDate = baseDate - juce::RelativeTime::days(10);
-    // sessionDates.add(longDate);
-    // juce::String longDateKey = longDate.formatted("%Y-%m-%d");
-    // timePerDate.set(longDateKey, 400000);  // About 111 hours
-    
-    // Then add the regular test dates
-    for (int i = 0; i < 9; ++i)  // Reduced to 9 to keep total at 10 with long session
+    // Recent dates (last 5 days) with higher activity
+    for (int i = 0; i < 5; ++i)
     {
-        // Create dates going backwards from today
         juce::Time date = baseDate - juce::RelativeTime::days(i);
         sessionDates.add(date);
         
-        // Add varying times (increasing pattern for testing)
+        // Vary times between 2-6 hours for recent days
         juce::String dateKey = date.formatted("%Y-%m-%d");
-        timePerDate.set(dateKey, (i + 1) * 300);  // Varying seconds (5 min increments)
+        int hoursWorked = 2 + (rand() % 4);  // Random between 2-6 hours
+        timePerDate.set(dateKey, hoursWorked * 3600);  // Convert to seconds
     }
+    
+    // Add some medium-length sessions from last week
+    for (int i = 6; i < 12; ++i)
+    {
+        juce::Time date = baseDate - juce::RelativeTime::days(i);
+        sessionDates.add(date);
+        
+        // Medium sessions 4-7 hours
+        juce::String dateKey = date.formatted("%Y-%m-%d");
+        int hoursWorked = 4 + (rand() % 3);  // Random between 4-7 hours
+        timePerDate.set(dateKey, hoursWorked * 3600);
+    }
+    
+    // Add sparse older dates with varying times
+    int olderDates[] = {14, 16, 19, 22, 25, 28};
+    for (int daysAgo : olderDates)
+    {
+        juce::Time date = baseDate - juce::RelativeTime::days(daysAgo);
+        sessionDates.add(date);
+        
+        // Varying times 3-8 hours
+        juce::String dateKey = date.formatted("%Y-%m-%d");
+        int hoursWorked = 3 + (rand() % 5);  // Random between 3-8 hours
+        timePerDate.set(dateKey, hoursWorked * 3600);
+    }
+    
+    // Add a few very productive days scattered throughout
+    int longDates[] = {8, 17, 24};
+    for (int daysAgo : longDates)
+    {
+        juce::Time date = baseDate - juce::RelativeTime::days(daysAgo);
+        sessionDates.add(date);
+        
+        // Long sessions 9-12 hours
+        juce::String dateKey = date.formatted("%Y-%m-%d");
+        int hoursWorked = 9 + (rand() % 3);  // Random between 9-12 hours
+        timePerDate.set(dateKey, hoursWorked * 3600);
+    }
+    
+    sortedDatesNeedsRefresh = true;
 }
 
 // Implement the accessor methods
