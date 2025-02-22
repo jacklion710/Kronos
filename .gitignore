@@ -9,6 +9,8 @@ DeriveData/
 build/
 bin/
 obj/
+KronosInstallerRoot/
+*.pkg
 
 # Platform-specific files
 *.sln
