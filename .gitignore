@@ -11,6 +11,7 @@ bin/
 obj/
 KronosInstallerRoot/
 *.pkg
+Kronos Builds/
 
 # Platform-specific files
 *.sln
