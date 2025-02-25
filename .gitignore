@@ -12,6 +12,11 @@ obj/
 KronosInstallerRoot/
 *.pkg
 Kronos Builds/
+*.iss
+*.vst3
+*.vst
+*.au
+*.exe
 
 # Platform-specific files
 *.sln
