@@ -42,15 +42,25 @@ AboutComponent::AboutComponent(KronosAudioProcessor& processor)
 
 void AboutComponent::resized()
 {
-    // Position close button relative to parent bounds
-    closeButton.setBounds(getWidth() - 25, 5, 20, 20);
+    // Calculate scale factor based on default size of 600x450
+    float widthScale = getWidth() / 600.0f;
+    float heightScale = getHeight() / 450.0f;
+    float scale = juce::jmin(widthScale, heightScale);
+
+    // Position close button relative to parent bounds with scaling
+    closeButton.setBounds(getWidth() - (25 * scale), 5 * scale, 20 * scale, 20 * scale);
     
-    // Update other component positions
+    // Update other component positions with scaling
     positionLinks();
 }
 
 void AboutComponent::paint(juce::Graphics& g)
 {
+    // Calculate scale factor
+    float widthScale = getWidth() / 600.0f;
+    float heightScale = getHeight() / 450.0f;
+    float scale = juce::jmin(widthScale, heightScale);
+
     bool isDarkMode = audioProcessor.isDarkMode();
     
     // Background color based on theme
@@ -61,44 +71,44 @@ void AboutComponent::paint(juce::Graphics& g)
     // Text color - white for both modes for now
     g.setColour(juce::Colours::white);
     
-    auto asteraFont = juce::Font("ASTERA", 24.0f, juce::Font::plain);
-    auto contentBounds = getLocalBounds().reduced(20);
+    auto asteraFont = juce::Font("ASTERA", 24.0f * scale, juce::Font::plain);
+    auto contentBounds = getLocalBounds().reduced(20 * scale);
     
-    auto topSectionBounds = contentBounds.removeFromTop(170); // Match the height used in positionLinks
+    auto topSectionBounds = contentBounds.removeFromTop(170 * scale); 
     
     // Title
     g.setFont(asteraFont);
-    g.drawText("KRONOS", topSectionBounds.removeFromTop(30), juce::Justification::centred, true);
+    g.drawText("KRONOS", topSectionBounds.removeFromTop(30 * scale), juce::Justification::centred, true);
     
     // Version
-    g.setFont(asteraFont.withHeight(20.0f));
-    g.drawText("V1.0.0", topSectionBounds.removeFromTop(30), juce::Justification::centred, true);
+    g.setFont(asteraFont.withHeight(20.0f * scale));
+    g.drawText("V1.0.1", topSectionBounds.removeFromTop(30 * scale), juce::Justification::centred, true);
     
-    topSectionBounds.removeFromTop(20); // Space before description
+    topSectionBounds.removeFromTop(20 * scale); // Space before description
     
     // Description
-    g.setFont(asteraFont.withHeight(16.0f));
-    auto descriptionBounds = topSectionBounds.removeFromTop(30);
+    g.setFont(asteraFont.withHeight(16.0f * scale));
+    auto descriptionBounds = topSectionBounds.removeFromTop(30 * scale);
     g.drawFittedText("A SIMPLE TIME TRACKING PLUGIN FOR YOUR DAW", 
                      descriptionBounds,
                      juce::Justification::centred, 
                      2);
     
     // Creator credit
-    auto creditBounds = topSectionBounds.removeFromTop(30);
+    auto creditBounds = topSectionBounds.removeFromTop(30 * scale);
     g.drawFittedText("CREATED BY JACOB LEONE AKA JACK.LION", 
                      creditBounds,
                      juce::Justification::centred, 
                      2);
 
     // Draw separator line
-    int lineWidth = getWidth() * 0.8f; // 80% of component width
+    int lineWidth = getWidth() * 0.8f;
     int lineX = (getWidth() - lineWidth) / 2;
-    int lineY = 190; // Adjust this value to position the line
+    int lineY = 190 * scale;
     g.setColour(juce::Colours::white);
-    g.drawLine(lineX, lineY, lineX + lineWidth, lineY, 1.0f);
+    g.drawLine(lineX, lineY, lineX + lineWidth, lineY, 1.0f * scale);
     
-    contentBounds.removeFromTop(40); // Space after separator
+    contentBounds.removeFromTop(40 * scale); // Space after separator
 
     // Split remaining content into two columns
     auto leftColumn = contentBounds.removeFromLeft(contentBounds.getWidth() / 2);
@@ -107,36 +117,36 @@ void AboutComponent::paint(juce::Graphics& g)
     // Left Column
     g.setColour(juce::Colours::white); // Reset color after line
     g.drawText("PLUGINS and MORE AT:", 
-               leftColumn.removeFromTop(30),
+               leftColumn.removeFromTop(30 * scale),
                juce::Justification::centred, true);
                
-    leftColumn.removeFromTop(45); // Space between sections
+    leftColumn.removeFromTop(45 * scale); // Space between sections
     g.drawText("MUSIC", 
-               leftColumn.removeFromTop(30), 
+               leftColumn.removeFromTop(30 * scale), 
                juce::Justification::centred, true);
                
-    leftColumn.removeFromTop(45); // Space between sections
+    leftColumn.removeFromTop(45 * scale); // Space between sections
     g.drawText("INSTAGRAM", 
-               leftColumn.removeFromTop(30), 
+               leftColumn.removeFromTop(30 * scale), 
                juce::Justification::centred, true);
 
     // Right Column
     g.drawText("WEBSITE", 
-               rightColumn.removeFromTop(30), 
+               rightColumn.removeFromTop(30 * scale), 
                juce::Justification::centred, true);
                
-    rightColumn.removeFromTop(45); // Space between sections
+    rightColumn.removeFromTop(45 * scale); // Space between sections
     g.drawText("BUG REPORTS", 
-               rightColumn.removeFromTop(30), 
+               rightColumn.removeFromTop(30 * scale), 
                juce::Justification::centred, true);
                
-    rightColumn.removeFromTop(45); // Space between sections
+    rightColumn.removeFromTop(45 * scale); // Space between sections
     g.drawText("GRAPHICS BY AZNADEL", 
-               rightColumn.removeFromTop(30), 
+               rightColumn.removeFromTop(30 * scale), 
                juce::Justification::centred, true);
 
     // Draw metallic border
-    float borderThickness = 2.0f;
+    float borderThickness = 2.0f * scale;
     
     // Create gradient for border
     juce::ColourGradient borderGradient(
@@ -157,15 +167,20 @@ void AboutComponent::paint(juce::Graphics& g)
 
 void AboutComponent::positionLinks()
 {
-    // Calculate center position and consistent width for all links
-    int linkWidth = 300;
-    int linkHeight = 30;
+    // Calculate scale factor
+    float widthScale = getWidth() / 600.0f;
+    float heightScale = getHeight() / 450.0f;
+    float scale = juce::jmin(widthScale, heightScale);
+
+    // Calculate center position and consistent width for all links with scaling
+    int linkWidth = 300 * scale;
+    int linkHeight = 30 * scale;
     
     // Get bounds for layout
-    auto bounds = getLocalBounds().reduced(20);
+    auto bounds = getLocalBounds().reduced(20 * scale);
     
     // Skip past the fixed content at the top (including separator line)
-    bounds.removeFromTop(190); 
+    bounds.removeFromTop(190 * scale); 
     
     // Split into two columns
     auto leftColumn = bounds.removeFromLeft(bounds.getWidth() / 2);
@@ -174,20 +189,20 @@ void AboutComponent::positionLinks()
     // Position links
     int leftY = leftColumn.getY();
     gumroadLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
-                         leftY + 45, linkWidth, linkHeight);
+                         leftY + 45 * scale, linkWidth, linkHeight);
     soundcloudLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
-                            leftY + 120, linkWidth, linkHeight);
+                            leftY + 120 * scale, linkWidth, linkHeight);
     jlInstaLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
-                         leftY + 195, linkWidth, linkHeight);
+                         leftY + 195 * scale, linkWidth, linkHeight);
 
     // Right column links
     int rightY = rightColumn.getY();
     jlWebLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
-                       rightY + 45, linkWidth, linkHeight);
+                       rightY + 45 * scale, linkWidth, linkHeight);
     discordLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
-                         rightY + 120, linkWidth, linkHeight);
+                         rightY + 120 * scale, linkWidth, linkHeight);
     aznadelLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
-                         rightY + 195, linkWidth, linkHeight);
+                         rightY + 195 * scale, linkWidth, linkHeight);
 
     // Update link appearance
     bool isDarkMode = audioProcessor.isDarkMode();
@@ -195,7 +210,7 @@ void AboutComponent::positionLinks()
         juce::Colour(64, 64, 255) :      // Blue for dark mode
         juce::Colour(255, 150, 50);      // Orange for light mode
     
-    auto asteraFont = juce::Font("ASTERA", 16.0f, juce::Font::plain);
+    auto asteraFont = juce::Font("ASTERA", 16.0f * scale, juce::Font::plain);
     
     for (auto* link : {&gumroadLink, &soundcloudLink, &jlInstaLink, 
                       &jlWebLink, &discordLink, &aznadelLink})

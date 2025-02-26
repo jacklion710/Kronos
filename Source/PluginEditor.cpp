@@ -717,6 +717,12 @@ void KronosAudioProcessorEditor::resized()
         300 * scale,
         50 * scale
     );
+
+    // Update AboutComponent bounds if it exists and is visible
+    if (aboutComponent != nullptr && aboutComponent->isVisible())
+    {
+        aboutComponent->setBounds(getLocalBounds());
+    }
 }
 
 // Performance: O(1) - Simple cleanup operations
