@@ -46,6 +46,7 @@ test project/
 # Asset Compositions
 Kronos Compositions/
 Promo Content/
+*.afphoto
 
 # Obsidian
 .obsidian/

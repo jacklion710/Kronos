@@ -1,3 +1,5 @@
 Resources/*.svg filter=lfs diff=lfs merge=lfs -text
 Resources/*.ttf filter=lfs diff=lfs merge=lfs -text
 Resources/*.jpg filter=lfs diff=lfs merge=lfs -text
+Kronos_Manual/Kronos[[:space:]]Manual/manual_screenshots/*.png filter=lfs diff=lfs merge=lfs -text
+Kronos_Manual/Kronos[[:space:]]Manual/manual_screenshots/*.jpg filter=lfs diff=lfs merge=lfs -text
