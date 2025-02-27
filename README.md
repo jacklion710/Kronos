@@ -87,17 +87,17 @@ Graphics by Aznadel
 - Push to the branch (`git push origin feature/NewFeature`)
 - Open a Pull Request
 
-### Guidelines
+#### Guidelines
 - Follow existing code style and conventions
 - Update documentation as needed at `./Kronos_Manual/Kronos Manual/Kronos Manual.md`
 
-### Feature Requests & Bug Reports
+#### Feature Requests & Bug Reports
 - Use the Issues tab on GitHub to submit feature requests or bug reports (**preffered**)
 - Clearly describe the proposed feature or bug with relevant details
 - For bugs, include steps to reproduce and expected behavior
 - For bug reports you may also reach me directly at [jack.lion710@gmail.com](mailto:jack.lion710@gmail.com)
 
-### Getting Help
+#### Getting Help
 - Check existing Issues and Pull Requests before creating new ones
 - Join my Discord community for deeper discussions and questions
 - Review the documentation in the Kronos Manual
