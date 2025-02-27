@@ -1,6 +1,8 @@
 # Kronos - DAW Time Tracking Plugin
 
-![Kronos Plugin](Resources/screenshot.png)
+<p align="center">
+  <img src="./Kronos_Manual/Kronos%20Manual/manual_screenshots/Kronos%20Screenshot%20Dark.png" alt="Kronos UI">
+</p>
 
 Kronos is a simple yet powerful time tracking plugin for your DAW. Keep track of how much time you spend on your music production sessions with an elegant, easy-to-use interface.
 
@@ -72,11 +74,36 @@ Graphics by Aznadel
 
 ## Links
 
-- Website: https://jacklion.com
-- Instagram: @jack.lion
+- Website: [\[Jack.Lion Official Website\]](https://jacklion.xyz)
+- Instagram: [\[@jack.lion\]](https://www.instagram.com/jack.lion)
 - Discord: [\[Join my community\]](https://discord.gg/EFQq7BX)
 - Gumroad: [\[More plugins\]](https://jacklion.gumroad.com)
+- Tech Portfolio: [\[Jacob Leones Tech Portfolio\]](https://jacobleone.tech)
+
+### Contributing Code
+- Fork the repository
+- Create a feature branch (`git checkout -b feature/NewFeature`)
+- Commit your changes (`git commit -m 'Add some NewFeature'`)
+- Push to the branch (`git push origin feature/NewFeature`)
+- Open a Pull Request
+
+### Guidelines
+- Follow existing code style and conventions
+- Update documentation as needed at `./Kronos_Manual/Kronos Manual/Kronos Manual.md`
+
+### Feature Requests & Bug Reports
+- Use the Issues tab on GitHub to submit feature requests or bug reports (**preffered**)
+- Clearly describe the proposed feature or bug with relevant details
+- For bugs, include steps to reproduce and expected behavior
+- For bug reports you may also reach me directly at [jack.lion710@gmail.com](mailto:jack.lion710@gmail.com)
+
+### Getting Help
+- Check existing Issues and Pull Requests before creating new ones
+- Join my Discord community for deeper discussions and questions
+- Review the documentation in the Kronos Manual
+
+I appreciate all contributions that help make Kronos better!
 
 ## License
 
-...
+Kronos is licensed under the GPL v3. Redistribution of compiled binaries is discouraged unless significant modifications are made. See the LICENSE file for details.
