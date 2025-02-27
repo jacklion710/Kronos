@@ -1,5 +1,9 @@
 # Kronos - DAW Time Tracking Plugin
 
+V1.0.1
+
+**Official release coming March 1st 2025!**
+
 <p align="center">
   <img src="./Kronos_Manual/Kronos%20Manual/manual_screenshots/Kronos%20Screenshot%20Dark.png" alt="Kronos UI">
 </p>
@@ -21,7 +25,6 @@ Kronos is a simple yet powerful time tracking plugin for your DAW. Keep track of
 ### Supported Formats
 - VST3
 - AU (Mac only)
-- Standalone
 
 ### System Requirements
 - Windows 10 or later
@@ -44,7 +47,7 @@ git clone https://github.com/jacklion710/kronos.git
 
 2. Download and install JUCE v7.0.12 from [JUCE's website](https://juce.com/get-juce/download)
 
-Note: You may need to visit the JUCE github [releases](https://github.com/juce-framework/JUCE/releases) page to find the correct version.
+**Note:** You may need to visit the JUCE github [releases](https://github.com/juce-framework/JUCE/releases) page to find the correct version.
 
 3. Open `Kronos.jucer` in Projucer
 
