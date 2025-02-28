@@ -72,6 +72,8 @@ The plugin is built using JUCE framework and follows a standard audio plugin arc
 - `PluginEditor` - Manages the UI and user interactions
 - `LookAndFeel` - Custom styling and theme implementation
 - `AboutComponent` - About window with links and information
+- `BackupComponent` - Backup window for saving `.kronos` log files with project time data
+- `RestoreComponent` - Restore window for loading `.kronos` log files into the project time
 
 ## Credits
 
