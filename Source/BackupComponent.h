@@ -32,7 +32,6 @@ private:
     // UI Elements
     juce::Label titleLabel;
     juce::Label instructionLabel;
-    juce::Label locationLabel;
     juce::TextEditor projectNameEditor;
     juce::TextButton backupButton;
     

@@ -5,7 +5,7 @@
               companyName="Jack.Lion" companyWebsite="https://jacklion.com"
               companyEmail="jack.lion710@gmail.com" pluginFormats="buildAU,buildStandalone,buildVST,buildVST3"
               pluginCode="KRNS" cppLanguageStandard="20" pluginVST3Category="Tools"
-              version="1.0.1">
+              version="1.0.2">
   <MAINGROUP id="BaOmXI" name="Kronos">
     <GROUP id="{95DFCBFD-71F4-784F-99EE-B168B870A2CB}" name="Assets">
       <FILE id="QrDnb8" name="AboutComponent.cpp" compile="1" resource="0"
@@ -87,6 +87,14 @@
             file="Resources/Up Arrow Pressed Light.svg"/>
     </GROUP>
     <GROUP id="{3F17D307-FD11-C3B5-9773-A8098DD394F4}" name="Source">
+      <FILE id="QGOI8q" name="BackupComponent.cpp" compile="1" resource="0"
+            file="Source/BackupComponent.cpp"/>
+      <FILE id="N9TnVQ" name="BackupComponent.h" compile="0" resource="0"
+            file="Source/BackupComponent.h"/>
+      <FILE id="iKZI6b" name="RestoreComponent.cpp" compile="1" resource="0"
+            file="Source/RestoreComponent.cpp"/>
+      <FILE id="pdYedH" name="RestoreComponent.h" compile="0" resource="0"
+            file="Source/RestoreComponent.h"/>
       <FILE id="D7CUVz" name="LookAndFeel.h" compile="0" resource="0" file="Source/LookAndFeel.h"/>
       <FILE id="rckogh" name="LookAndFeel.cpp" compile="1" resource="0" file="Source/LookAndFeel.cpp"/>
       <FILE id="MJF2rv" name="PluginProcessor.cpp" compile="1" resource="0"

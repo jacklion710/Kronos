@@ -64,14 +64,6 @@ BackupComponent::BackupComponent(KronosAudioProcessor& p)
     projectNameEditor.setText("MY PROJECT", juce::dontSendNotification);
     addAndMakeVisible(projectNameEditor);
     
-    // Configure and add location label
-    juce::String locationText = "Backup will be saved to:\n" + getBackupDirectory();
-    locationLabel.setText(locationText, juce::dontSendNotification);
-    locationLabel.setFont(juce::Font("ASTERA", 14.0f, juce::Font::plain));
-    locationLabel.setJustificationType(juce::Justification::centred);
-    locationLabel.setColour(juce::Label::textColourId, juce::Colour(0xFFE6E6FF));
-    addAndMakeVisible(locationLabel);
-    
     // Configure and add backup button
     backupButton.setButtonText("Create Backup");
     backupButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xFF404080));
@@ -153,23 +145,6 @@ void BackupComponent::paint(juce::Graphics& g)
         
         contentBounds.removeFromTop(50 * scale);
         contentBounds.removeFromTop(60 * scale);
-        
-        g.setFont(asteraFont.withHeight(16.0f * scale));
-        g.drawText("BACKUP WILL BE SAVED TO:", 
-                   contentBounds.removeFromTop(30 * scale), 
-                   juce::Justification::centred, true);
-        
-        // Get the backup folder path
-        juce::File backupDir = getBackupDirectory();
-        juce::String path = backupDir.getFullPathName().toUpperCase();
-        
-        g.setFont(asteraFont.withHeight(14.0f * scale));
-        g.drawFittedText(path, 
-                       contentBounds.removeFromTop(40 * scale),
-                       juce::Justification::centred, 
-                       3);
-                       
-        contentBounds.removeFromTop(60 * scale);
     }
     
     // Draw metallic border
@@ -203,7 +178,6 @@ void BackupComponent::resized()
     {
         // Hide normal UI elements
         projectNameEditor.setVisible(false);
-        locationLabel.setVisible(false);
         backupButton.setVisible(false);
 
         // Position confirmation buttons
@@ -224,7 +198,6 @@ void BackupComponent::resized()
     {
         // Show normal UI elements
         projectNameEditor.setVisible(true);
-        locationLabel.setVisible(true);
         backupButton.setVisible(true);
         confirmButton.setVisible(false);
         cancelButton.setVisible(false);
@@ -342,25 +315,17 @@ void BackupComponent::resetConfirmationState()
 
 void BackupComponent::saveBackup(const juce::File& backupFile)
 {
-    // Create memory block to store state
     juce::MemoryBlock memoryBlock;
     audioProcessor.getStateInformation(memoryBlock);
     
-    // Save to file
     if (backupFile.replaceWithData(memoryBlock.getData(), memoryBlock.getSize()))
     {
-        // Update success message and close
         titleLabel.setText("Backup Successful", juce::dontSendNotification);
-        locationLabel.setText("Session data has been backed up to:\n" + backupFile.getFullPathName(),
-                            juce::dontSendNotification);
-        startTimer(2000); // Close window after 2 seconds
+        startTimer(2000);
     }
     else
     {
-        // Update error message
         titleLabel.setText("Backup Failed", juce::dontSendNotification);
-        locationLabel.setText("Could not write to file:\n" + backupFile.getFullPathName(),
-                            juce::dontSendNotification);
         startTimer(2000);
     }
 }
