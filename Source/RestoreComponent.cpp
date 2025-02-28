@@ -175,8 +175,8 @@ void RestoreComponent::resized()
     
     auto contentBounds = getLocalBounds().reduced(20 * scale);
     
-    // Skip space for title and instructions
-    contentBounds.removeFromTop(120 * scale);
+    // Reserve space for title and instructions (120 pixels at default scale)
+    auto topSection = contentBounds.removeFromTop(120 * scale);
     
     if (isConfirmationMode)
     {
@@ -191,7 +191,9 @@ void RestoreComponent::resized()
         int buttonSpacing = 20 * scale;
         int totalWidth = (buttonWidth * 2) + buttonSpacing;
         int startX = (getWidth() - totalWidth) / 2;
-        int buttonY = getHeight() - buttonHeight - (60 * scale);
+        
+        // Position buttons relative to bottom of content bounds
+        int buttonY = getHeight() - buttonHeight - (40 * scale);
 
         confirmButton.setBounds(startX, buttonY, buttonWidth, buttonHeight);
         cancelButton.setBounds(startX + buttonWidth + buttonSpacing, buttonY, buttonWidth, buttonHeight);
@@ -217,23 +219,22 @@ void RestoreComponent::resized()
         confirmButton.setVisible(false);
         cancelButton.setVisible(false);
 
-        // Position listbox
-        int listBoxHeight = (getHeight() - 300) * scale;
-        backupListBox.setBounds(contentBounds.getX() + (20 * scale), 
-                              contentBounds.getY(),
-                              contentBounds.getWidth() - (40 * scale), 
-                              listBoxHeight);
-        
-        // Position buttons at bottom
-        int buttonWidth = 200 * scale;
+        // Reserve space for buttons at bottom
         int buttonHeight = 60 * scale;
+        int bottomPadding = 40 * scale;
+        auto bottomSection = contentBounds.removeFromBottom(buttonHeight + bottomPadding);
+        
+        // Position buttons
+        int buttonWidth = 200 * scale;
         int buttonSpacing = 20 * scale;
         int totalWidth = (buttonWidth * 2) + buttonSpacing;
         int startX = (getWidth() - totalWidth) / 2;
-        int buttonY = getHeight() - buttonHeight - (60 * scale);
         
-        restoreButton.setBounds(startX, buttonY, buttonWidth, buttonHeight);
-        browseButton.setBounds(startX + buttonWidth + buttonSpacing, buttonY, buttonWidth, buttonHeight);
+        restoreButton.setBounds(startX, bottomSection.getY(), buttonWidth, buttonHeight);
+        browseButton.setBounds(startX + buttonWidth + buttonSpacing, bottomSection.getY(), buttonWidth, buttonHeight);
+
+        // Position listbox in remaining space
+        backupListBox.setBounds(contentBounds.reduced(20 * scale));
     }
 }
 
@@ -331,8 +332,8 @@ void RestoreComponent::initiateRestore()
         juce::File selectedFile = backupFiles[selectedRow];
         juce::MemoryBlock memoryBlock;
         
-        if (selectedFile.loadFileAsData(memoryBlock))
-        {
+                            if (selectedFile.loadFileAsData(memoryBlock))
+                            {
             confirmationMessage = "Are you sure you want to restore from:\n\n" + 
                                 selectedFile.getFileName() + "\n\n" +
                                 "This will replace your current session data.";
@@ -341,9 +342,9 @@ void RestoreComponent::initiateRestore()
             isConfirmationMode = true;
             resized();
             repaint();
-        }
-        else
-        {
+                            }
+                            else
+                            {
             showErrorMessage("Could not read backup file:\n" + selectedFile.getFullPathName());
         }
     }
@@ -485,7 +486,7 @@ void RestoreComponent::paintListBoxItem(int rowNumber, juce::Graphics& g,
     g.setFont(juce::Font("ASTERA", 12.0f, juce::Font::plain));
     g.setColour(juce::Colour(0xFFBBBBDD));
     g.drawText(file.getCreationTime().formatted("%Y-%m-%d %H:%M:%S"), 
-              10, height / 2, width - 20, height / 2, juce::Justification::topLeft, true);
+             10, height / 2, width - 20, height / 2, juce::Justification::topLeft, true);
 }
 
 void RestoreComponent::listBoxItemDoubleClicked(int row, const juce::MouseEvent&)
