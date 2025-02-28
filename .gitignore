@@ -10,6 +10,7 @@ build/
 bin/
 obj/
 KronosInstallerRoot/
+Kronos Installers/
 *.pkg
 Kronos Builds/
 *.iss
