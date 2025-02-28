@@ -185,6 +185,11 @@ Located in the top right corner of the UI `...`, clicking shows a dropdown menu.
 
 Located in the top right corner of the UI `...`, clicking shows a dropdown menu. Selecting `Backup` brings up a modal display which allows users to save a backup of their time data in a `.kronos` log file. Selecting `Restore` allows users to select a log file to restore from.
 
+**Note:** If you wish to delete a backup log, they may be overwritten or otherwise deleted manually via the MacOS Finder or Windows File Explorer.
+
+- **MacOS path:** `/Users/<YourUsername>/Library/Application Support/KronosTimeTracker/Backups`
+- **Windows path:** `C:\Users\<YourUsername>\AppData\Roaming`
+
 ## Tips & Tricks
 
 - Each day automatically creates a new session
