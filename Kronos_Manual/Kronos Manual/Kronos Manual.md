@@ -1,4 +1,4 @@
-## User Manual v1.0.0
+## User Manual v1.0.2
 
 <p align="center">
   <img src="./manual_screenshots/Kronos%20Sketch%20Poster.png" alt="Kronos Cover" width="80%" height="80%">
@@ -15,6 +15,7 @@ Kronos is a simple yet powerful time tracking plugin for your DAW. It helps you 
 - Dark/Light theme support
 - Session sorting by date or duration
 - Persistent data storage
+- Data backup and restoration
 - Resizable interface
 
 ## Installation
@@ -173,12 +174,16 @@ Located to the left of the session history:
 
 ### About Panel
 
-Located in the top right corner of the UI `...`, clicking shows a dropdown menu. Currently the only option is to select `About` which brings up a modal display including the current version as well as credits.
+Located in the top right corner of the UI `...`, clicking shows a dropdown menu. Selecting `About` brings up a modal display including the current version as well as credits.
 
 <p align="center">
   <img src="./manual_screenshots/Kronos%20About.png" alt="About Button">
   <img src="./manual_screenshots/Kronos%20About%20Panel.png" alt="About Panel">
 </p>
+
+### Data Backup & Restoration
+
+Located in the top right corner of the UI `...`, clicking shows a dropdown menu. Selecting `Backup` brings up a modal display which allows users to save a backup of their time data in a `.kronos` log file. Selecting `Restore` allows users to select a log file to restore from.
 
 ## Tips & Tricks
 
@@ -186,6 +191,7 @@ Located in the top right corner of the UI `...`, clicking shows a dropdown menu.
 - All previous sessions are retained
 - Press pause when taking a break from the session and press play when resuming
 - Time accumulates per day when you reopen a project on the same date
+- Users should save backup logs for restoration often in case of unexpected bugs
 - Interface Scaling:
 
   - Grab any corner to resize the plugin window
@@ -226,4 +232,4 @@ Visit our Discord server for support and to submit feature requests or bug repor
 
 ---
 
-Note: This manual reflects version 1.0.0 of Kronos. Features and interface may change in future updates.
+Note: This manual reflects version 1.0.2 of Kronos. Features and interface may change in future updates.

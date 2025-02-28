@@ -1,6 +1,6 @@
 # Kronos - DAW Time Tracking Plugin
 
-V1.0.1
+V1.0.2
 
 **Official release coming March 1st 2025!**
 
@@ -17,16 +17,19 @@ Kronos is a simple yet powerful time tracking plugin for your DAW. Keep track of
 - Dark/Light theme support
 - Session sorting by date or duration
 - Persistent data storage
+- Data backup and restoration
 - Resizable interface
 - Visual time bars for session comparison
 
 ## Installation
 
 ### Supported Formats
+
 - VST3
 - AU (Mac only)
 
 ### System Requirements
+
 - Windows 10 or later
 - macOS 10.13 or later
 - A DAW that supports VST3 or AU plugins
@@ -34,6 +37,7 @@ Kronos is a simple yet powerful time tracking plugin for your DAW. Keep track of
 ## Building from Source
 
 ### Prerequisites
+
 - JUCE Framework v7.0.12
 - C++20 compatible compiler
 - Visual Studio 2022 (Windows) or Xcode (macOS)
@@ -41,18 +45,17 @@ Kronos is a simple yet powerful time tracking plugin for your DAW. Keep track of
 ### Build Steps
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/jacklion710/kronos.git
 ```
 
-2. Download and install JUCE v7.0.12 from [JUCE's website](https://juce.com/get-juce/download)
+2. Download and install JUCE v7.0.12 from [JUCE&#39;s website](https://juce.com/get-juce/download)
 
 **Note:** You may need to visit the JUCE github [releases](https://github.com/juce-framework/JUCE/releases) page to find the correct version.
 
 3. Open `Kronos.jucer` in Projucer
-
 4. Generate project files for your IDE
-
 5. Build the project in your IDE
 
 ## Project Structure
@@ -84,6 +87,7 @@ Graphics by Aznadel
 - Tech Portfolio: [\[Jacob Leones Tech Portfolio\]](https://jacobleone.tech)
 
 ### Contributing Code
+
 - Fork the repository
 - Create a feature branch (`git checkout -b feature/NewFeature`)
 - Commit your changes (`git commit -m 'Add some NewFeature'`)
@@ -91,16 +95,19 @@ Graphics by Aznadel
 - Open a Pull Request
 
 #### Guidelines
+
 - Follow existing code style and conventions
 - Update documentation as needed at `./Kronos_Manual/Kronos Manual/Kronos Manual.md`
 
 #### Feature Requests & Bug Reports
+
 - Use the Issues tab on GitHub to submit feature requests or bug reports (**preffered**)
 - Clearly describe the proposed feature or bug with relevant details
 - For bugs, include steps to reproduce and expected behavior
 - For bug reports you may also reach me directly at [jack.lion710@gmail.com](mailto:jack.lion710@gmail.com)
 
 #### Getting Help
+
 - Check existing Issues and Pull Requests before creating new ones
 - Join my Discord community for deeper discussions and questions
 - Review the documentation in the Kronos Manual

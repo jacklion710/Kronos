@@ -12,6 +12,8 @@
 #include "PluginProcessor.h"
 #include "LookAndFeel.h"
 #include "AboutComponent.h"
+#include "BackupComponent.h"
+#include "RestoreComponent.h"
 
 //==============================================================================
 /**
@@ -152,6 +154,8 @@ private:
     juce::Label titleLabel;  // Add title label declaration
 
     std::unique_ptr<AboutComponent> aboutComponent;
+    std::unique_ptr<BackupComponent> backupComponent;
+    std::unique_ptr<RestoreComponent> restoreComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };

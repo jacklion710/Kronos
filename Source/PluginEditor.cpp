@@ -10,6 +10,8 @@
 #include "PluginEditor.h"
 #include <JuceHeader.h>
 #include "AboutComponent.h"
+#include "BackupComponent.h"
+#include "RestoreComponent.h"
 #if JUCE_WINDOWS
     #include "BinaryData.h"
 #endif
@@ -292,9 +294,16 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
         juce::PopupMenu menu;
         menu.setLookAndFeel(&customLookAndFeel);
         menu.addItem(1, "About");
+        menu.addItem(2, "Backup");
+        menu.addItem(3, "Restore");
         
-        menu.showMenuAsync(juce::PopupMenu::Options()
-            .withTargetComponent(&menuButton),
+        // Set minimum width for the popup menu so text doesn't get cut off
+        juce::PopupMenu::Options options = juce::PopupMenu::Options()
+            .withMinimumWidth(112)  // Set a minimum width in pixels
+            .withMaximumNumColumns(1)
+            .withTargetComponent(&menuButton);
+            
+        menu.showMenuAsync(options,
             [this](int result) {
                 if (result == 1)
                 {
@@ -307,6 +316,32 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
                     // Set up the close button handler
                     aboutComponent->closeButton.onClick = [this]() {
                         aboutComponent->setVisible(false);
+                    };
+                }
+                else if (result == 2) // Backup
+                {
+                    backupComponent = std::make_unique<BackupComponent>(audioProcessor);
+                    addAndMakeVisible(backupComponent.get());
+                    backupComponent->setBounds(getLocalBounds());
+                    backupComponent->setVisible(true);
+                    backupComponent->toFront(true);
+                    
+                    // Set up the close button handler
+                    backupComponent->closeButton.onClick = [this]() {
+                        backupComponent->setVisible(false);
+                    };
+                }
+                else if (result == 3) // Restore
+                {
+                    restoreComponent = std::make_unique<RestoreComponent>(audioProcessor);
+                    addAndMakeVisible(restoreComponent.get());
+                    restoreComponent->setBounds(getLocalBounds());
+                    restoreComponent->setVisible(true);
+                    restoreComponent->toFront(true);
+                    
+                    // Set up the close button handler
+                    restoreComponent->closeButton.onClick = [this]() {
+                        restoreComponent->setVisible(false);
                     };
                 }
             });
@@ -723,6 +758,18 @@ void KronosAudioProcessorEditor::resized()
     {
         aboutComponent->setBounds(getLocalBounds());
     }
+    
+    // Update BackupComponent bounds if it exists and is visible
+    if (backupComponent != nullptr && backupComponent->isVisible())
+    {
+        backupComponent->setBounds(getLocalBounds());
+    }
+    
+    // Update RestoreComponent bounds if it exists and is visible
+    if (restoreComponent != nullptr && restoreComponent->isVisible())
+    {
+        restoreComponent->setBounds(getLocalBounds());
+    }
 }
 
 // Performance: O(1) - Simple cleanup operations
@@ -739,6 +786,19 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
     minuteUnitLabel.setLookAndFeel(nullptr);
     secondUnitLabel.setLookAndFeel(nullptr);
     menuButton.setLookAndFeel(nullptr);
+
+    // Ensure backup and restore components are properly cleaned up
+    if (backupComponent != nullptr)
+    {
+        backupComponent->setVisible(false);
+        removeChildComponent(backupComponent.get());
+    }
+    
+    if (restoreComponent != nullptr)
+    {
+        restoreComponent->setVisible(false);
+        removeChildComponent(restoreComponent.get());
+    }
 
     // Remove parameter listeners
     audioProcessor.parameters->removeParameterListener("tracking", this);
