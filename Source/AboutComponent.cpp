@@ -80,7 +80,7 @@ void AboutComponent::paint(juce::Graphics& g)
     
     // Version
     g.setFont(asteraFont.withHeight(20.0f * scale));
-    g.drawText("V1.0.2", topSectionBounds.removeFromTop(30 * scale), juce::Justification::centred, true);
+    g.drawText("V1.0.3", topSectionBounds.removeFromTop(30 * scale), juce::Justification::centred, true);
     
     topSectionBounds.removeFromTop(20 * scale); // Space before description
     

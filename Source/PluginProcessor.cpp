@@ -83,13 +83,8 @@ void KronosAudioProcessor::startTracking()
         auto today = juce::Time::getCurrentTime();
         juce::String dateKey = today.formatted("%Y-%m-%d");
         
-        // Check if we already have time logged for today
-        if (timePerDate.contains(dateKey))
-        {
-            // Start from the existing time for today
-            totalTimeInSeconds = timePerDate[dateKey];
-        }
-        else
+        // Initialize new date if needed
+        if (!timePerDate.contains(dateKey))
         {
             timePerDate.set(dateKey, 0);
         }
