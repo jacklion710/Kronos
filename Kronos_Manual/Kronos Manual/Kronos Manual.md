@@ -1,4 +1,4 @@
-## User Manual v1.0.2
+## User Manual v1.0.3
 
 <p align="center">
   <img src="./manual_screenshots/Kronos%20Sketch%20Poster.png" alt="Kronos Cover" width="80%" height="80%">
