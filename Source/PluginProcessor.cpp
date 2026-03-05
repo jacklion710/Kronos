@@ -20,6 +20,35 @@ bool isEnvEnabled(const char* key)
 {
     return juce::SystemStats::getEnvironmentVariable(key, "0") == "1";
 }
+
+void emitEmbeddedTestLog(const juce::String& message)
+{
+    juce::Logger::writeToLog(message);
+
+    const auto logPath = juce::SystemStats::getEnvironmentVariable("KRONOS_TEST_LOG_FILE", {});
+    if (logPath.isNotEmpty())
+        juce::File(logPath).appendText(message + "\n");
+}
+
+class StreamingUnitTestRunner : public juce::UnitTestRunner
+{
+public:
+    explicit StreamingUnitTestRunner(const juce::File& logFileToUse)
+        : logFile(logFileToUse)
+    {
+    }
+
+    void logMessage(const juce::String& message) override
+    {
+        juce::UnitTestRunner::logMessage(message);
+
+        if (logFile != juce::File() && !message.isEmpty())
+            logFile.appendText(message + "\n");
+    }
+
+private:
+    juce::File logFile;
+};
 }
 
 //==============================================================================
@@ -691,6 +720,62 @@ private:
     juce::Time current;
 };
 
+juce::MemoryBlock buildStateWithTrackingData(KronosAudioProcessor& processor,
+                                             juce::int64 totalSeconds,
+                                             const juce::Array<juce::Time>& sessionDates,
+                                             const juce::Array<std::pair<juce::String, juce::int64>>& timeEntries)
+{
+    auto state = processor.parameters->copyState();
+    auto trackingData = state.getOrCreateChildWithName("TrackingData", nullptr);
+    trackingData.setProperty("totalTimeInSeconds", totalSeconds, nullptr);
+
+    auto datesElement = trackingData.getOrCreateChildWithName("DatesData", nullptr);
+    datesElement.removeAllChildren(nullptr);
+    for (const auto& date : sessionDates)
+    {
+        auto dateElement = juce::ValueTree("Date");
+        dateElement.setProperty("timestamp", date.toMilliseconds(), nullptr);
+        datesElement.appendChild(dateElement, nullptr);
+    }
+
+    auto timePerDateElement = trackingData.getOrCreateChildWithName("TimePerDate", nullptr);
+    timePerDateElement.removeAllChildren(nullptr);
+    for (const auto& entryPair : timeEntries)
+    {
+        auto entry = juce::ValueTree("DateEntry");
+        entry.setProperty("key", entryPair.first, nullptr);
+        entry.setProperty("time", entryPair.second, nullptr);
+        timePerDateElement.appendChild(entry, nullptr);
+    }
+
+    juce::MemoryBlock data;
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    KronosAudioProcessor::copyXmlToBinary(*xml, data);
+    return data;
+}
+
+bool hasDateKey(const juce::Array<juce::Time>& dates, const juce::String& expectedDateKey)
+{
+    for (const auto& date : dates)
+    {
+        if (date.formatted("%Y-%m-%d") == expectedDateKey)
+            return true;
+    }
+
+    return false;
+}
+
+bool areMemoryBlocksEqual(const juce::MemoryBlock& a, const juce::MemoryBlock& b)
+{
+    if (a.getSize() != b.getSize())
+        return false;
+
+    if (a.getSize() == 0)
+        return true;
+
+    return std::memcmp(a.getData(), b.getData(), a.getSize()) == 0;
+}
+
 class KronosProcessorTests : public juce::UnitTest
 {
 public:
@@ -698,9 +783,10 @@ public:
 
     void runTest() override
     {
+        emitEmbeddedTestLog("[TEST] State serialization returns data even when called rapidly");
         beginTest("State serialization returns data even when called rapidly");
         {
-            FakeClock clock(juce::Time::fromISO8601("2025-01-01T10:00:00"));
+            FakeClock clock(juce::Time(2025, 1, 1, 10, 0, 0, 0, true));
             KronosAudioProcessor processor([&clock]() { return clock.now(); });
 
             juce::MemoryBlock first;
@@ -713,9 +799,10 @@ public:
             expect(second.getSize() > 0, "Debounced serialized state should not be empty.");
         }
 
+        emitEmbeddedTestLog("[TEST] New day is added to session dates when tracking starts");
         beginTest("New day is added to session dates when tracking starts");
         {
-            FakeClock clock(juce::Time::fromISO8601("2025-01-01T23:50:00"));
+            FakeClock clock(juce::Time(2025, 1, 1, 23, 50, 0, 0, true));
             KronosAudioProcessor processor([&clock]() { return clock.now(); });
 
             const auto beforeCount = processor.getSessionDates().size();
@@ -727,10 +814,11 @@ public:
             expect(afterCount >= beforeCount + 1, "Expected a new session date to be added.");
         }
 
+        emitEmbeddedTestLog("[TEST] Midnight rollover uses per-instance state");
         beginTest("Midnight rollover uses per-instance state");
         {
-            FakeClock clockA(juce::Time::fromISO8601("2025-01-01T23:59:59"));
-            FakeClock clockB(juce::Time::fromISO8601("2025-01-01T12:00:00"));
+            FakeClock clockA(juce::Time(2025, 1, 1, 23, 59, 59, 0, true));
+            FakeClock clockB(juce::Time(2025, 1, 1, 12, 0, 0, 0, true));
 
             KronosAudioProcessor processorA([&clockA]() { return clockA.now(); });
             KronosAudioProcessor processorB([&clockB]() { return clockB.now(); });
@@ -751,6 +839,105 @@ public:
             const auto bAfter = processorB.getSessionDates().size();
             expect(bAfter >= bBefore + 1, "Instance B should independently detect midnight rollover.");
         }
+
+        emitEmbeddedTestLog("[TEST] Debounced serialization reuses previous state bytes");
+        beginTest("Debounced serialization reuses previous state bytes");
+        {
+            FakeClock clock(juce::Time(2025, 1, 1, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            juce::MemoryBlock first;
+            juce::MemoryBlock second;
+            processor.getStateInformation(first);
+            processor.getStateInformation(second);
+
+            expect(first.getSize() > 0, "First state should not be empty.");
+            expect(second.getSize() > 0, "Second state should not be empty.");
+            expect(areMemoryBlocksEqual(first, second), "Expected same serialized bytes inside debounce window.");
+        }
+
+        emitEmbeddedTestLog("[TEST] Stop tracking accumulates elapsed time");
+        beginTest("Stop tracking accumulates elapsed time");
+        {
+            FakeClock clock(juce::Time(2025, 1, 1, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            const auto todayKey = clock.now().formatted("%Y-%m-%d");
+
+            processor.startTracking();
+            clock.advanceSeconds(65);
+            processor.stopTracking();
+
+            expectEquals(static_cast<int>(processor.getTotalTimeInSeconds()), 65,
+                         "Stopping tracking should add elapsed seconds.");
+            expectEquals(static_cast<int>(processor.timePerDate[todayKey]), 65,
+                         "Today's bucket should receive elapsed seconds.");
+        }
+
+        emitEmbeddedTestLog("[TEST] Timer callback increments total and per-day counters");
+        beginTest("Timer callback increments total and per-day counters");
+        {
+            FakeClock clock(juce::Time(2025, 1, 1, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            processor.startTracking();
+            const auto todayKey = clock.now().formatted("%Y-%m-%d");
+            const auto initialDateSeconds = processor.timePerDate[todayKey];
+
+            processor.timerCallback();
+
+            expectEquals(static_cast<int>(processor.getTotalTimeInSeconds()), 1,
+                         "Timer callback should increment total time by 1 second.");
+            expectEquals(static_cast<int>(processor.timePerDate[todayKey]), static_cast<int>(initialDateSeconds + 1),
+                         "Timer callback should increment today's tracked time by 1 second.");
+        }
+
+        emitEmbeddedTestLog("[TEST] Restoring old state inserts current day");
+        beginTest("Restoring old state inserts current day");
+        {
+            FakeClock sourceClock(juce::Time(2025, 1, 1, 10, 0, 0, 0, true));
+            KronosAudioProcessor sourceProcessor([&sourceClock]() { return sourceClock.now(); });
+
+            juce::MemoryBlock oldState;
+            sourceProcessor.getStateInformation(oldState);
+
+            FakeClock targetClock(juce::Time(2025, 1, 2, 10, 0, 0, 0, true));
+            KronosAudioProcessor targetProcessor([&targetClock]() { return targetClock.now(); });
+            targetProcessor.setStateInformation(oldState.getData(), static_cast<int>(oldState.getSize()));
+
+            const auto todayKey = targetClock.now().formatted("%Y-%m-%d");
+            expect(targetProcessor.timePerDate.contains(todayKey),
+                   "Current day should be inserted when restoring old state.");
+            expect(hasDateKey(targetProcessor.getSessionDates(), todayKey),
+                   "Current day should exist in visible session dates after restore.");
+        }
+
+        emitEmbeddedTestLog("[TEST] Most-time sorting orders days by descending tracked time");
+        beginTest("Most-time sorting orders days by descending tracked time");
+        {
+            FakeClock clock(juce::Time(2025, 1, 5, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            const juce::Time jan2(2025, 1, 2, 10, 0, 0, 0, true);
+            const juce::Time jan3(2025, 1, 3, 10, 0, 0, 0, true);
+            const juce::Time jan4(2025, 1, 4, 10, 0, 0, 0, true);
+            juce::Array<juce::Time> dates { jan2, jan3, jan4 };
+            juce::Array<std::pair<juce::String, juce::int64>> times;
+            times.add({ jan2.formatted("%Y-%m-%d"), 100 });
+            times.add({ jan3.formatted("%Y-%m-%d"), 350 });
+            times.add({ jan4.formatted("%Y-%m-%d"), 200 });
+
+            auto state = buildStateWithTrackingData(processor, 650, dates, times);
+            processor.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+
+            processor.setDateSortMode(KronosAudioProcessor::DateSortMode::MostTime);
+            const auto sorted = processor.getSortedDates();
+
+            expect(sorted.size() >= 3, "Expected at least three sorted dates.");
+            expectEquals(sorted[0].formatted("%Y-%m-%d"), jan3.formatted("%Y-%m-%d"));
+            expectEquals(sorted[1].formatted("%Y-%m-%d"), jan4.formatted("%Y-%m-%d"));
+            expectEquals(sorted[2].formatted("%Y-%m-%d"), jan2.formatted("%Y-%m-%d"));
+        }
     }
 };
 
@@ -763,7 +950,13 @@ int KronosAudioProcessor::runEmbeddedTests()
 #if JUCE_UNIT_TESTS
     gEmbeddedTestsRunning = true;
 
-    juce::UnitTestRunner runner;
+    const auto logPath = juce::SystemStats::getEnvironmentVariable("KRONOS_TEST_LOG_FILE", {});
+    const juce::File logFile(logPath);
+
+    if (logPath.isNotEmpty())
+        logFile.replaceWithText({});
+
+    StreamingUnitTestRunner runner(logFile);
     runner.setAssertOnFailure(false);
     runner.setPassesAreLogged(true);
     runner.runTestsInCategory("Kronos");
@@ -778,6 +971,7 @@ int KronosAudioProcessor::runEmbeddedTests()
     gEmbeddedTestsRunning = false;
     return failures;
 #else
-    return 0;
+    emitEmbeddedTestLog("[TEST] JUCE_UNIT_TESTS is disabled; no embedded tests were executed.");
+    return -1;
 #endif
 }

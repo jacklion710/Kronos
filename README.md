@@ -89,6 +89,11 @@ Optional configuration:
 - State serialization debounce behavior
 - New-day session insertion when tracking starts
 - Midnight rollover behavior across multiple processor instances
+- Debounced state byte reuse (rapid serialization safety)
+- Stop-tracking elapsed-time accumulation
+- Timer callback per-day and total counter increments
+- Legacy/older state restore inserts current day
+- Date sorting correctness for `MostTime` mode
 
 ## Project Structure
 

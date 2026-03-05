@@ -11,6 +11,7 @@ xcodebuild \
   -project "${PROJECT_PATH}" \
   -target "${TARGET_NAME}" \
   -configuration "${CONFIGURATION}" \
+  GCC_PREPROCESSOR_DEFINITIONS='$(inherited) JUCE_UNIT_TESTS=1' \
   CODE_SIGNING_ALLOWED=NO \
   CODE_SIGNING_REQUIRED=NO \
   build >/tmp/kronos_test_build.log
@@ -23,12 +24,18 @@ if [[ ! -x "${APP_BINARY}" ]]; then
 fi
 
 RESULT_FILE="$(mktemp)"
-trap 'rm -f "${RESULT_FILE}"' EXIT
+LOG_FILE="$(mktemp)"
+trap 'rm -f "${RESULT_FILE}" "${LOG_FILE}"' EXIT
 
 echo "Running embedded JUCE tests..."
+touch "${LOG_FILE}"
+tail -n +1 -f "${LOG_FILE}" &
+TAIL_PID=$!
+
 KRONOS_TEST_MODE=1 \
 KRONOS_RUN_TESTS=1 \
 KRONOS_TEST_RESULTS_FILE="${RESULT_FILE}" \
+KRONOS_TEST_LOG_FILE="${LOG_FILE}" \
 "${APP_BINARY}" &
 APP_PID=$!
 
@@ -42,6 +49,11 @@ done
 if kill -0 "${APP_PID}" >/dev/null 2>&1; then
   kill "${APP_PID}" >/dev/null 2>&1 || true
   wait "${APP_PID}" || true
+fi
+
+if kill -0 "${TAIL_PID}" >/dev/null 2>&1; then
+  kill "${TAIL_PID}" >/dev/null 2>&1 || true
+  wait "${TAIL_PID}" || true
 fi
 
 if [[ ! -s "${RESULT_FILE}" ]]; then
