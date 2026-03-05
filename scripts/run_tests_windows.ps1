@@ -5,6 +5,7 @@ param(
     [string]$Platform = "x64",
     [switch]$SkipBuild,
     [string]$AppBinary,
+    [bool]$UseIsolatedBuildOutput = $true,
     [int]$TimeoutSeconds = 120
 )
 
@@ -50,6 +51,62 @@ if (-not $SkipBuild) {
         throw "msbuild not found (PATH/vswhere). Run from Developer PowerShell for VS2022 or install Build Tools + MSBuild."
     }
 
+    $isolatedBuildRoot = $null
+    $isolatedSharedOutDir = $null
+    $isolatedSharedIntDir = $null
+    $isolatedStandaloneOutDir = $null
+    $isolatedStandaloneIntDir = $null
+    $isolatedSharedOverrideProps = $null
+    $isolatedStandaloneOverrideProps = $null
+
+    if ($UseIsolatedBuildOutput) {
+        $isolatedBuildId = [Guid]::NewGuid().ToString("N")
+        $isolatedBuildRoot = Join-Path $SolutionDir ("Builds\VisualStudio2022\.test-build\{0}" -f $isolatedBuildId)
+
+        $isolatedSharedOutDir = Join-Path $isolatedBuildRoot ("{0}\{1}\SharedCode\" -f $Platform, $Configuration)
+        $isolatedSharedIntDir = Join-Path $isolatedBuildRoot ("obj\{0}\{1}\SharedCode\" -f $Platform, $Configuration)
+        $isolatedStandaloneOutDir = Join-Path $isolatedBuildRoot ("{0}\{1}\StandalonePlugin\" -f $Platform, $Configuration)
+        $isolatedStandaloneIntDir = Join-Path $isolatedBuildRoot ("obj\{0}\{1}\StandalonePlugin\" -f $Platform, $Configuration)
+
+        New-Item -ItemType Directory -Path $isolatedSharedOutDir -Force | Out-Null
+        New-Item -ItemType Directory -Path $isolatedSharedIntDir -Force | Out-Null
+        New-Item -ItemType Directory -Path $isolatedStandaloneOutDir -Force | Out-Null
+        New-Item -ItemType Directory -Path $isolatedStandaloneIntDir -Force | Out-Null
+
+        $isolatedSharedOverrideProps = Join-Path $isolatedBuildRoot "sharedcode-test-overrides.props"
+        $isolatedStandaloneOverrideProps = Join-Path $isolatedBuildRoot "standalone-test-overrides.props"
+
+        $sharedOverrideXml = @"
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>JUCE_UNIT_TESTS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>JUCE_UNIT_TESTS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+</Project>
+"@
+
+        $escapedSharedOutDir = $isolatedSharedOutDir.Replace("&", "&amp;")
+        $standaloneOverrideXml = @"
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalLibraryDirectories>${escapedSharedOutDir};%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>KronosTests.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>
+"@
+
+        Set-Content -Path $isolatedSharedOverrideProps -Value $sharedOverrideXml -Encoding UTF8
+        Set-Content -Path $isolatedStandaloneOverrideProps -Value $standaloneOverrideXml -Encoding UTF8
+
+        Write-Host "Using isolated test build output: $isolatedBuildRoot"
+    }
+
     $previousCL = $null
     $hadCL = Test-Path Env:CL
     if ($hadCL) {
@@ -81,14 +138,32 @@ if (-not $SkipBuild) {
 
         # Force a full rebuild so JUCE_UNIT_TESTS=1 is applied where test code is compiled
         # (SharedCode), then rebuild the Standalone host that links against it.
-        & $msbuildPath $sharedCodeProject "/m" "/t:Rebuild" "/p:Configuration=$Configuration;Platform=$Platform"
+        if ($UseIsolatedBuildOutput) {
+            $sharedBuildProps = "Configuration={0};Platform={1};OutDir={2};IntDir={3};TargetName=KronosTests;ForceImportBeforeCppTargets={4}" -f $Configuration, $Platform, $isolatedSharedOutDir, $isolatedSharedIntDir, $isolatedSharedOverrideProps
+            & $msbuildPath $sharedCodeProject "/m" "/t:Rebuild" "/p:$sharedBuildProps"
+        }
+        else {
+            & $msbuildPath $sharedCodeProject "/m" "/t:Rebuild" "/p:Configuration=$Configuration;Platform=$Platform"
+        }
+
         if ($LASTEXITCODE -ne 0) {
             throw "SharedCode test build failed with exit code $LASTEXITCODE"
         }
 
-        & $msbuildPath $standaloneProject "/m" "/t:Rebuild" "/p:Configuration=$Configuration;Platform=$Platform"
+        if ($UseIsolatedBuildOutput) {
+            $standaloneBuildProps = "Configuration={0};Platform={1};BuildProjectReferences=false;OutDir={2};IntDir={3};ForceImportBeforeCppTargets={4}" -f $Configuration, $Platform, $isolatedStandaloneOutDir, $isolatedStandaloneIntDir, $isolatedStandaloneOverrideProps
+            & $msbuildPath $standaloneProject "/m" "/t:Rebuild" "/p:$standaloneBuildProps"
+        }
+        else {
+            & $msbuildPath $standaloneProject "/m" "/t:Rebuild" "/p:Configuration=$Configuration;Platform=$Platform"
+        }
+
         if ($LASTEXITCODE -ne 0) {
             throw "Standalone test build failed with exit code $LASTEXITCODE"
+        }
+
+        if ([string]::IsNullOrWhiteSpace($AppBinary) -and $UseIsolatedBuildOutput) {
+            $AppBinary = Join-Path $isolatedStandaloneOutDir "Kronos.exe"
         }
     }
     finally {
