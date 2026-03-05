@@ -812,9 +812,6 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
 // Note: Try to optimize to O(log n)
 void KronosAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    // Paint duration enter
-    auto paintStart = juce::Time::getMillisecondCounterHiRes();
-
     // Pre-calculate frequently used values
     const auto& processor = audioProcessor;
     const bool isDarkMode = processor.isDarkMode();
@@ -913,8 +910,6 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
     // Optimized time bars using batch rendering
     drawTimeBars(g);
 
-    // paint duration exit
-    DBG("Paint duration: " << (juce::Time::getMillisecondCounterHiRes() - paintStart) << " ms");
 }
 
 // Performance: O(1) - Simple text update
@@ -1151,8 +1146,6 @@ void KronosAudioProcessorEditor::mouseUp(const juce::MouseEvent& event)
 // Memory: Uses pre-cached images
 void KronosAudioProcessorEditor::updateButtonImages()
 {
-    auto startTime = juce::Time::getMillisecondCounterHiRes();
-    
     bool isDark = audioProcessor.isDarkMode();
     
     // Get the correct themed assets
@@ -1185,8 +1178,6 @@ void KronosAudioProcessorEditor::updateButtonImages()
                                 nullptr);                        // disabled on
     }
 
-    auto endTime = juce::Time::getMillisecondCounterHiRes();
-    DBG("Button image update time: " << (endTime - startTime) << "ms");
 }
 
 // Performance: O(1) - Simple drawable transformation
@@ -1359,9 +1350,6 @@ void KronosAudioProcessorEditor::updateScrollButtonStates()
 // CPU: Low - Conditional checks and UI updates
 void KronosAudioProcessorEditor::applyParameterChange(const juce::String& parameterID, float newValue)
 {
-    // Parameter change duration enter
-    auto paramChangeStart = juce::Time::getMillisecondCounterHiRes();
-    
     if (parameterID == "tracking")
     {
         playPauseButton.setToggleState(newValue >= 0.5f, juce::dontSendNotification);
@@ -1404,8 +1392,6 @@ void KronosAudioProcessorEditor::applyParameterChange(const juce::String& parame
         updateDateLabels();
     }
 
-    // Parameter change duration exit
-    DBG("Parameter change handling took: " << (juce::Time::getMillisecondCounterHiRes() - paramChangeStart) << " ms");
 }
 
 void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)

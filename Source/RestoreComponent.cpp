@@ -176,7 +176,7 @@ void RestoreComponent::resized()
     auto contentBounds = getLocalBounds().reduced(20 * scale);
     
     // Reserve space for title and instructions (120 pixels at default scale)
-    auto topSection = contentBounds.removeFromTop(120 * scale);
+    contentBounds.removeFromTop(120 * scale);
     
     if (isConfirmationMode)
     {
