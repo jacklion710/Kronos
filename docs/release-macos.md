@@ -25,7 +25,7 @@ Scripts:
 
 - Use semver for releases.
 - Accepted format examples:
-  - `1.0.4`
+  - `1.1.0`
   - `1.1.0-beta.1`
 
 The script validates this format before building.
@@ -57,19 +57,19 @@ xcrun notarytool store-credentials kronos-plugin \
 ## Run a local signed/notarized release (one command)
 
 ```bash
-./scripts/release/macos-cut-release.sh 1.0.4-beta.1
+./scripts/release/macos-cut-release.sh 1.1.0-beta.1
 ```
 
 What it does automatically:
 - Validates semver version format.
-- Updates project/plugin metadata to the core version (`1.0.4` in this example).
+- Updates project/plugin metadata to the core version (`1.1.0` in this example).
 - Uses your Developer ID Application + Installer certs.
 - Runs build, signing, installer packaging, notarization, stapling, and checksum output.
 
 ## Low-level direct run (manual env vars)
 
 ```bash
-VERSION=1.0.4-beta.1 \
+VERSION=1.1.0-beta.1 \
 MACOS_APP_SIGNING_IDENTITY="Developer ID Application: Jacob Leone (TEAMID)" \
 MACOS_INSTALLER_SIGNING_IDENTITY="Developer ID Installer: Jacob Leone (TEAMID)" \
 NOTARIZE=1 \

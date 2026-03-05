@@ -48,13 +48,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release/windows-rele
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release/windows-cut-release.ps1 `
-  -Version "1.0.4-beta.1"
+  -Version "1.1.0-beta.1"
 ```
 
 This wrapper:
 
 - validates version format (`x.y.z` or `x.y.z-beta.N`)
-- updates project/plugin version metadata to core semver (`1.0.4` in this example)
+- updates project/plugin version metadata to core semver (`1.1.0` in this example)
 - builds `Kronos - VST3` and `Kronos - Standalone Plugin` in `Release|x64`
 - runs the embedded JUCE test gate (`scripts/run_tests_windows.ps1 -Configuration Release`) using the same in-plugin test suite as macOS
 - runs installer packaging and writes checksums

@@ -1,6 +1,6 @@
 # Kronos - DAW Time Tracking Plugin
 
-V1.0.4
+V1.1.0
 
 **Official release coming March 1st 2025!**
 
@@ -141,11 +141,11 @@ Kronos now includes the same local-first Mac/Windows release pipeline structure 
 Common commands:
 
 ```bash
-./scripts/release/macos-cut-release.sh 1.0.4-beta.1
+./scripts/release/macos-cut-release.sh 1.1.0-beta.1
 ```
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release/windows-cut-release.ps1 -Version "1.0.4-beta.1"
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release/windows-cut-release.ps1 -Version "1.1.0-beta.1"
 ```
 
 ## Credits

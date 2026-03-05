@@ -13,7 +13,7 @@ PREPARE_ONLY="${PREPARE_ONLY:-0}"
 
 if [[ -z "${RELEASE_VERSION}" ]]; then
   echo "Usage: $0 <version>" >&2
-  echo "Example: $0 1.0.4-beta.1" >&2
+  echo "Example: $0 1.1.0-beta.1" >&2
   exit 1
 fi
 
