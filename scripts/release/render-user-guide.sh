@@ -9,6 +9,7 @@ fi
 
 SOURCE_MD="$1"
 OUT_DIR="$2"
+SOURCE_DIR="$(cd "$(dirname "${SOURCE_MD}")" && pwd)"
 
 if [[ ! -f "${SOURCE_MD}" ]]; then
   echo "ERROR: user guide source not found: ${SOURCE_MD}" >&2
@@ -29,6 +30,23 @@ else
     sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' "${SOURCE_MD}"
     echo "</pre></body></html>"
   } > "${OUT_DIR}/Kronos User Guide.html"
+fi
+
+# Keep local image references working when the manual uses ./manual_screenshots/*
+if [[ -d "${SOURCE_DIR}/manual_screenshots" ]]; then
+  rm -rf "${OUT_DIR}/manual_screenshots"
+  mkdir -p "${OUT_DIR}/manual_screenshots"
+
+  while IFS= read -r -d '' file; do
+    cp "${file}" "${OUT_DIR}/manual_screenshots/$(basename "${file}")"
+  done < <(find "${SOURCE_DIR}/manual_screenshots" -type f \( \
+      -iname '*.png' -o \
+      -iname '*.jpg' -o \
+      -iname '*.jpeg' -o \
+      -iname '*.gif' -o \
+      -iname '*.svg' -o \
+      -iname '*.webp' \
+    \) -print0)
 fi
 
 echo "Rendered user guide assets in: ${OUT_DIR}"

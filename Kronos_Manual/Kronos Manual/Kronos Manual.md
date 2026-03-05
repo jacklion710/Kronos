@@ -6,7 +6,14 @@
 
 ## Overview
 
-Kronos is a simple yet powerful time tracking plugin for your DAW. It helps you monitor how much time you spend on your music production sessions, with features to track daily sessions and view historical data.
+Kronos is a time tracking plugin for your DAW. It tracks how long you work on sessions, stores historical totals, and keeps your session history available between launches.
+
+## New in 1.0.4
+
+- Improved time accounting around day rollover (including midnight, month, and year boundaries).
+- Safer session-state restore behavior for older or invalid saved state payloads.
+- Stronger same-day session deduplication when repeatedly starting and stopping tracking.
+- Release installers now bundle a rendered local user guide generated from this manual.
 
 ## Features
 
@@ -23,7 +30,7 @@ Kronos is a simple yet powerful time tracking plugin for your DAW. It helps you 
 ### Supported Formats
 
 - VST3
-- AU (Mac only)
+- AU (macOS only)
 
 ### System Requirements
 
@@ -31,79 +38,28 @@ Kronos is a simple yet powerful time tracking plugin for your DAW. It helps you 
 - macOS 10.13 or later
 - A DAW that supports VST3 or AU plugins
 
-### Guide
+### Automatic Installers
 
-Below is a short guide on how to manually install your plugin files onto macOS and Windows systems.
+Kronos installers include selectable plugin format components and bundled user guide files.
 
-## macOS
+## Manual Plugin Paths
 
-### VST3 Plugins
+### macOS VST3
 
-• Plugin file extension: .vst3
+- Extension: `.vst3`
+- System-wide: `/Library/Audio/Plug-Ins/VST3`
+- User-only: `~/Library/Audio/Plug-Ins/VST3`
 
-• Default location:
+### macOS AU
 
-`Library/Audio/Plug-Ins/VST3` (system-wide)
+- Extension: `.component`
+- System-wide: `/Library/Audio/Plug-Ins/Components`
+- User-only: `~/Library/Audio/Plug-Ins/Components`
 
-or
+### Windows VST3
 
-`~/Library/Audio/Plug-Ins/VST3` (user-only)
-
-### AU Plugins
-
-• Plugin file extension: .component
-
-• Default location:
-
-`/Library/Audio/Plug-Ins/Components` (system-wide)
-
-or
-
-`~/Library/Audio/Plug-Ins/Components` (user-only)
-
-### Automatic Installation
-
-To install automatically:
-
-- Close your DAW.
-- Locate your `Kronos.pkg` file.
-- Double click to run the installer.
-- Relaunch your DAW, and it should detect the plugin.
-
-If you wish to have it installed elsewhere you should see an option in the package installation window that allows you to choose a custom path. If not, simply move the files from their default installation location into the desired path.
-
----
-
-## Windows
-
-### VST3 Plugins
-
-• Plugin file extension: `.vst3`
-
-• Common default location:
-
-`C:\Program Files\Common Files\VST3` (64-bit)
-
-To install Automatically:
-
-- Close your DAW.
-- Locate your `KronosInstaller.exe` file.
-- Double click to run the installer.
-- Relaunch your DAW, and it should detect the plugin.
-
-▶ Note: Some DAWs let you configure custom plugin folders. If yours looks like it installed in a different location, place your `.vst3` in that folder instead or add an additional scan path in your DAW settings.
-
----
-
-## Troubleshooting
-
-• After moving the plugin, always relaunch your DAW to ensure it scans the new or updated plugin file.
-
-• On Windows, if your plugin doesn't appear, confirm that your DAW is scanning the correct folder in its preferences/settings.
-
-• On macOS, if the plugin still fails to load, you may need to open Security & Privacy settings to grant permission to load software from an "unidentified developer".
-
-With these steps, you should be able to automatically install both VST3 and AU plugins on macOS, and VST3 plugins on Windows, ensuring they're detected and loaded properly in your DAW.
+- Extension: `.vst3`
+- Common 64-bit path: `C:\Program Files\Common Files\VST3`
 
 ## Kronos UI
 
@@ -117,7 +73,7 @@ With these steps, you should be able to automatically install both VST3 and AU p
   <img src="./manual_screenshots/Kronos%20Main%20Time%20Display.png" alt="Main Time Display">
 </p>
 
-The main time display shows your current session time in hours, minutes, and seconds format (HH:MM:SS).
+The main display shows total tracked session time in `HH:MM:SS`.
 
 ### Controls
 
@@ -127,10 +83,8 @@ The main time display shows your current session time in hours, minutes, and sec
   <img src="./manual_screenshots/Kronos%20Tracking%20Button.png" alt="Tracking Button">
 </p>
 
-Located beneath the time display, this button controls time tracking:
-
-- ▶️ Play: Start tracking time
-- ⏸️ Pause: Pause time tracking
+- `Play`: Start tracking time
+- `Pause`: Pause tracking time
 
 #### Theme Toggle
 
@@ -139,15 +93,13 @@ Located beneath the time display, this button controls time tracking:
   <img src="./manual_screenshots/Kronos%20Color%20Theme%20Light.png" alt="Light Theme">
 </p>
 
-Located in the bottom-right corner:
-
-- 🌙 Dark mode (default)
+- Dark mode (default)
 
 <p align="center">
   <img src="./manual_screenshots/Kronos%20Screenshot%20Dark.png" alt="Dark Mode">
 </p>
 
-- ☀️ Light mode
+- Light mode
 
 <p align="center">
   <img src="./manual_screenshots/Kronos%20Screenshot%20Light.png" alt="Light Mode">
@@ -155,10 +107,10 @@ Located in the bottom-right corner:
 
 #### Sort Button
 
-Located to the left of the session history:
+The sort control to the left of session history supports:
 
-- Sort by Most Recent (default): Shows most recent sessions at the top and descends by date
-- Sort by Most Time: Shows
+- `Most Recent` (default): newest sessions first
+- `Most Time`: highest tracked-time sessions first
 
 ### Previous Sessions Panel
 
@@ -168,64 +120,59 @@ Located to the left of the session history:
 
 - Shows unlimited previous sessions
 - Displays date and duration for each session
-- Sort dates by recency or by time spent
-- Visual bars indicate relative session lengths
-- Use up/down arrows to scroll through sessions
+- Sorts by recency or tracked duration
+- Uses bars to indicate relative session lengths
+- Supports list scrolling with up/down arrows
 
 ### About Panel
 
-Located in the top right corner of the UI `...`, clicking shows a dropdown menu. Selecting `About` brings up a modal display including the current version as well as credits.
+Use the top-right `...` menu and choose `About` to open the about panel with version and credits.
 
 <p align="center">
   <img src="./manual_screenshots/Kronos%20About.png" alt="About Button">
   <img src="./manual_screenshots/Kronos%20About%20Panel.png" alt="About Panel">
 </p>
 
-### Data Backup & Restoration
+### Data Backup and Restoration
 
-Located in the top right corner of the UI `...`, clicking shows a dropdown menu. Selecting `Backup` brings up a modal display which allows users to save a backup of their time data in a `.kronos` log file. Selecting `Restore` allows users to select a log file to restore from.
+Use the top-right `...` menu:
 
-**Note:** If you wish to delete a backup log, they may be overwritten or otherwise deleted manually via the MacOS Finder or Windows File Explorer.
+- `Backup` creates a `.kronos` backup file.
+- `Restore` loads a `.kronos` backup file.
 
-- **MacOS path:** `/Users/<YourUsername>/Library/Application Support/KronosTimeTracker/Backups`
-- **Windows path:** `C:\Users\<YourUsername>\AppData\Roaming`
+Default backup locations:
 
-## Tips & Tricks
+- macOS: `/Users/<YourUsername>/Library/Application Support/KronosTimeTracker/Backups`
+- Windows: `C:\Users\<YourUsername>\AppData\Roaming\KronosTimeTracker\Backups`
 
-- Each day automatically creates a new session
-- All previous sessions are retained
-- Press pause when taking a break from the session and press play when resuming
-- Time accumulates per day when you reopen a project on the same date
-- Users should save backup logs for restoration often in case of unexpected bugs
-- Interface Scaling:
+## Tips
 
-  - Grab any corner to resize the plugin window
-  - Maintains aspect ratio for consistent appearance
+- A new session bucket is created automatically per day.
+- Reopening on the same day keeps accumulating that day's total.
+- Pause tracking when taking breaks.
+- Save backups regularly.
+- Resize the window from corners; aspect ratio is preserved.
 
 ## Troubleshooting
 
-### Common Issues
+### Plugin Not Appearing
 
-Plugin not saving time:
+- Confirm your DAW scans the correct plugin folder.
+- Restart or rescan plugins in your DAW.
 
-- Ensure your DAW has proper plugin state saving enabled
-- Check if you have write permissions in your DAW's plugin data directory
+### Plugin Not Saving Time
 
-Time tracking seems inaccurate:
+- Confirm your DAW allows plugin state persistence.
+- Confirm write permissions for your user data directories.
 
-- Time tracking may pause when your DAW is not the active window
-- Some DAWs may suspend plugin processing when audio is stopped
+### macOS Security Prompt
 
-## Support & Feedback
+- If macOS blocks loading, review Security settings and allow the plugin if needed.
 
-### Bug Reports & Feature Requests
-
-Visit our Discord server for support and to submit feature requests or bug reports.
-
-### Links
+## Support
 
 - Website: https://jacklion.xyz
-- Email: jacklion710@gmail.com
+- Email: jack.lion710@gmail.com
 - Instagram: [@jack.lion](https://www.instagram.com/jack.lion)
 - Discord: [Join my community](https://discord.gg/EFQq7BX)
 - Gumroad: [More plugins](https://jacklion.gumroad.com)
@@ -237,4 +184,4 @@ Visit our Discord server for support and to submit feature requests or bug repor
 
 ---
 
-Note: This manual reflects version 1.0.2 of Kronos. Features and interface may change in future updates.
+Note: This manual reflects version 1.0.4 of Kronos.

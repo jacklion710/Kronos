@@ -56,6 +56,7 @@ This wrapper:
 - validates version format (`x.y.z` or `x.y.z-beta.N`)
 - updates project/plugin version metadata to core semver (`1.0.4` in this example)
 - builds `Kronos - VST3` and `Kronos - Standalone Plugin` in `Release|x64`
+- runs the embedded JUCE test gate (`scripts/run_tests_windows.ps1 -Configuration Release`) using the same in-plugin test suite as macOS
 - runs installer packaging and writes checksums
 
 ## Output
@@ -69,7 +70,7 @@ Installer provides selectable components:
 
 - Standalone application
 - VST3 plugin
-- User Guide files
+- User Guide files (rendered from `Kronos_Manual/Kronos Manual/Kronos Manual.md` as canonical source, including `manual_screenshots/` assets)
 
 Installer shows separate destination pages:
 
@@ -81,7 +82,17 @@ Installer shows separate destination pages:
 - `KRONOS_WINDOWS_AUTO_RELEASE=0` disables auto-packaging from build hooks.
 - `KRONOS_INNO_COMPILER=<full path to ISCC.exe>` overrides Inno compiler path.
 
+## Manual test command (Windows)
+
+Run the Windows embedded test suite directly:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run_tests_windows.ps1 -Configuration Release
+```
+
 ## Update log
 
 - 2026-03-01: Added VS2022 Release auto-packaging pipeline for Standalone + VST3.
 - 2026-03-01: Added `windows-cut-release.ps1` one-command Windows release wrapper.
+- 2026-03-05: Added mandatory Windows release test gate and fail-on-test-failure behavior.
+- 2026-03-05: Added rendered/bundled user guide assets from `Kronos_Manual/Kronos Manual/Kronos Manual.md`.

@@ -11,9 +11,9 @@ This project ships macOS releases fully from your local machine.
 3. Runs the embedded JUCE test suite gate (`./scripts/run_tests_macos.sh Release`) and fails the release if tests fail.
 4. Packages both into a signed installer `.pkg`.
    - Default: system plugin paths under `/Library/Audio/Plug-Ins/...`
-   - Override option in Installer: “Install for me only” (`~/Library/Audio/Plug-Ins/...`)
+   - Override option in Installer: "Install for me only" (`~/Library/Audio/Plug-Ins/...`)
    - Format choices are user-selectable in Installer (`VST3`, `AU`) so either can be unchecked.
-   - Includes a selectable `User Guide` component rendered from `docs/user-guide.md`.
+   - Includes a selectable `User Guide` component rendered from `Kronos_Manual/Kronos Manual/Kronos Manual.md` (canonical source).
 5. Notarizes the `.pkg` with Apple `notarytool` and staples the notarization ticket.
 6. Writes a SHA-256 checksum file for release distribution.
 
@@ -131,3 +131,5 @@ Useful environment overrides for Xcode build runs:
 - 2026-03-01: Switched release process to local-only signed/notarized pipeline.
 - 2026-03-04: Added auto release packaging build phase on `Kronos - All` (Release only) with env-based overrides.
 - 2026-03-04: Added mandatory embedded test gate for release packaging (`run_tests_macos.sh Release`).
+- 2026-03-05: Switched packaged user guide source to `Kronos_Manual/Kronos Manual/Kronos Manual.md` and included screenshot assets.
+

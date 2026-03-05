@@ -51,7 +51,7 @@ try {
     }
 
     if ([string]::IsNullOrWhiteSpace($UserGuideSource)) {
-        $UserGuideSource = Join-Path $SolutionDir "docs\user-guide.md"
+        $UserGuideSource = Join-Path $SolutionDir "Kronos_Manual\Kronos Manual\Kronos Manual.md"
     }
 
     if ([string]::IsNullOrWhiteSpace($Version)) {
@@ -72,6 +72,19 @@ try {
     $releaseRoot = Join-Path $BuildRoot ("{0}\{1}" -f $Platform, $Configuration)
     $standalonePath = Join-Path $releaseRoot "Standalone Plugin\$ProductName.exe"
     $vst3Path = Join-Path $releaseRoot "VST3\$ProductName.vst3"
+
+    $windowsTestScript = Join-Path $SolutionDir "scripts\run_tests_windows.ps1"
+    if (-not (Test-Path $windowsTestScript)) {
+        throw "[windows-release][tests] Windows test runner not found: $windowsTestScript"
+    }
+
+    Write-Host "[windows-release] Running embedded test suite gate (Release)..."
+    try {
+        & $windowsTestScript -Configuration $Configuration -Platform $Platform -SolutionDir $SolutionDir
+    }
+    catch {
+        throw "[windows-release][tests] $($_.Exception.Message)"
+    }
 
     function Wait-ForArtifacts {
         param(
@@ -146,12 +159,16 @@ try {
         Copy-Item -Path $standalonePath -Destination (Join-Path $standaloneStage "$ProductName.exe") -Force
         Copy-Item -Path $vst3Path -Destination (Join-Path $vst3Stage "$ProductName.vst3") -Recurse -Force
 
-        if (Test-Path $UserGuideSource) {
-            Copy-Item -Path $UserGuideSource -Destination (Join-Path $guideStage "$ProductName-User-Guide.md") -Force
-        }
-        else {
+        if (-not (Test-Path $UserGuideSource)) {
             throw "User guide source not found: $UserGuideSource"
         }
+
+        $renderUserGuideScript = Join-Path $SolutionDir "scripts\release\render-user-guide.ps1"
+        if (-not (Test-Path $renderUserGuideScript)) {
+            throw "User guide renderer not found: $renderUserGuideScript"
+        }
+
+        & $renderUserGuideScript -SourceMarkdown $UserGuideSource -OutputDir $guideStage -ProductName $ProductName
 
         if ([string]::IsNullOrWhiteSpace($InnoCompilerPath)) {
             if (-not [string]::IsNullOrWhiteSpace($env:KRONOS_INNO_COMPILER)) {
@@ -306,7 +323,9 @@ end;
     }
 }
 catch {
-    if ($TriggeredByPostBuild) {
+    $isTestGateFailure = $_.Exception.Message.StartsWith("[windows-release][tests]")
+
+    if ($TriggeredByPostBuild -and -not $isTestGateFailure) {
         Write-Host "[windows-release] Post-build packaging failed but will not fail the build."
         Write-Host "[windows-release] Error: $($_.Exception.Message)"
         exit 0

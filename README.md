@@ -84,7 +84,18 @@ Optional configuration:
 ./scripts/run_tests_macos.sh Release
 ```
 
-Release packaging now enforces this gate: `scripts/release/macos-release.sh` will fail if `./scripts/run_tests_macos.sh Release` does not pass.
+### One-Command Local Test Run (Windows)
+
+From the repo root (Developer PowerShell for VS2022):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run_tests_windows.ps1 -Configuration Release
+```
+
+Release packaging enforces this gate on both platforms:
+- `scripts/release/macos-release.sh` fails if `./scripts/run_tests_macos.sh Release` does not pass.
+- `scripts/release/windows-release.ps1` fails if `scripts/run_tests_windows.ps1 -Configuration Release` does not pass.
+- User guide packaging uses `Kronos_Manual/Kronos Manual/Kronos Manual.md` as the bundled source of truth.
 
 ### What the tests currently cover
 
