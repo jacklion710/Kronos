@@ -317,6 +317,13 @@ void BackupComponent::saveBackup(const juce::File& backupFile)
 {
     juce::MemoryBlock memoryBlock;
     audioProcessor.getStateInformation(memoryBlock);
+
+    if (memoryBlock.getSize() == 0)
+    {
+        titleLabel.setText("Backup Failed", juce::dontSendNotification);
+        startTimer(2000);
+        return;
+    }
     
     if (backupFile.replaceWithData(memoryBlock.getData(), memoryBlock.getSize()))
     {

@@ -57,3 +57,23 @@ Time Component Migration.md
 # Miscellaneous
 misc_notes/
 Plugin Codesigning and Notarization.md
+
+# Keep release scripts/docs tracked
+!scripts/release/
+!scripts/release/**
+!docs/
+!docs/**
+!dist/.gitkeep
+
+# Keep specific VS project files tracked for release hook updates
+!Builds/
+Builds/MacOSX/**
+Builds/VisualStudio2022/**
+!Builds/VisualStudio2022/
+!Builds/VisualStudio2022/Kronos_StandalonePlugin.vcxproj
+!Builds/VisualStudio2022/Kronos_VST3.vcxproj
+!Builds/VisualStudio2022/Kronos_SharedCode.vcxproj
+!Builds/VisualStudio2022/Kronos_VST3ManifestHelper.vcxproj
+Builds/*/build/
+Builds/DerivedData/
+Builds/VisualStudio2022/resources.rc

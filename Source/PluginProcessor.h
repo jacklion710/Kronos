@@ -22,7 +22,7 @@ class KronosAudioProcessor  : public juce::AudioProcessor,
 {
 public:
     //==============================================================================
-    KronosAudioProcessor();
+    KronosAudioProcessor(std::function<juce::Time()> nowProvider = {});
     ~KronosAudioProcessor() override;
 
     //==============================================================================
@@ -98,6 +98,8 @@ public:
 
     void setTracking(bool shouldTrack);
     juce::Array<juce::Time> getSortedDates() const;
+    void setNowProviderForTests(std::function<juce::Time()> nowProvider);
+    static int runEmbeddedTests();
 
     void addDummyDates();
 
@@ -113,14 +115,19 @@ private:
 
     juce::Time lastSaveTime;
     const int minimumSaveIntervalMs = 100; // Minimum time between saves
+    juce::MemoryBlock lastSerializedState;
+    bool hasSerializedState = false;
 
     bool showBarsEnabled = false;
+    juce::String lastTimerDateKey;
 
     bool trackingState = false;  
     DateSortMode currentSortMode = DateSortMode::MostRecent;
+    std::function<juce::Time()> nowProviderForTests;
 
     mutable juce::Array<juce::Time> cachedSortedDates;
     mutable bool sortedDatesNeedsRefresh = true;
+    juce::Time getCurrentTime() const;
 
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 };

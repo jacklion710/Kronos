@@ -147,6 +147,7 @@ private:
     
     void updateScrollButtonImages();
     void updateScrollButtonStates();
+    void applyParameterChange(const juce::String& parameterID, float newValue);
 
     // Add scale factor
     float scale = 1.0f;

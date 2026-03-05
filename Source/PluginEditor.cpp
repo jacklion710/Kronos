@@ -932,12 +932,14 @@ void KronosAudioProcessorEditor::updateSortButtonText()
 void KronosAudioProcessorEditor::updateDateLabels()
 {
     auto dates = audioProcessor.getSortedDates();
+    int firstVisibleIndex = static_cast<int>(scrollOffset / dateHeight);
     
     for (int i = 0; i < 3; ++i)
     {
-        if (i < dates.size())
+        int dateIndex = i + firstVisibleIndex;
+        if (dateIndex < dates.size())
         {
-            auto date = dates[i];
+            auto date = dates[dateIndex];
             auto timeSpent = audioProcessor.getTimeForDate(date);
             
             dateLabels[i].setVisible(true);
@@ -995,7 +997,7 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
     // Draw bars for visible dates
     for (int i = 0; i < 3; ++i)
     {
-        int dateIndex = i + (int)(scrollOffset / (dateHeight * scale));
+        int dateIndex = i + static_cast<int>(scrollOffset / dateHeight);
         
         if (dateIndex < dates.size())
         {
@@ -1355,7 +1357,7 @@ void KronosAudioProcessorEditor::updateScrollButtonStates()
 
 // Performance: O(1) - Simple parameter update handler
 // CPU: Low - Conditional checks and UI updates
-void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
+void KronosAudioProcessorEditor::applyParameterChange(const juce::String& parameterID, float newValue)
 {
     // Parameter change duration enter
     auto paramChangeStart = juce::Time::getMillisecondCounterHiRes();
@@ -1404,4 +1406,20 @@ void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterI
 
     // Parameter change duration exit
     DBG("Parameter change handling took: " << (juce::Time::getMillisecondCounterHiRes() - paramChangeStart) << " ms");
+}
+
+void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread())
+    {
+        applyParameterChange(parameterID, newValue);
+        return;
+    }
+
+    juce::MessageManager::callAsync([safeThis = juce::Component::SafePointer<KronosAudioProcessorEditor>(this),
+                                     parameterID,
+                                     newValue]() {
+        if (safeThis != nullptr)
+            safeThis->applyParameterChange(parameterID, newValue);
+    });
 }

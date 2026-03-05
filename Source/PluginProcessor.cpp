@@ -10,9 +10,20 @@
 #include "PluginEditor.h"
 #include <JuceHeader.h>
 #include "JucePluginDefines.h"
+#include <atomic>
+
+namespace
+{
+std::atomic<bool> gEmbeddedTestsRunning { false };
+
+bool isEnvEnabled(const char* key)
+{
+    return juce::SystemStats::getEnvironmentVariable(key, "0") == "1";
+}
+}
 
 //==============================================================================
-KronosAudioProcessor::KronosAudioProcessor()
+KronosAudioProcessor::KronosAudioProcessor(std::function<juce::Time()> nowProvider)
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -24,6 +35,9 @@ KronosAudioProcessor::KronosAudioProcessor()
                        )
 #endif
 {
+    nowProviderForTests = std::move(nowProvider);
+    const bool isTestMode = isEnvEnabled("KRONOS_TEST_MODE") || isEnvEnabled("KRONOS_RUN_TESTS");
+
     // Create the parameter layout first
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
     
@@ -54,12 +68,20 @@ KronosAudioProcessor::KronosAudioProcessor()
     // Then create the parameters with the layout
     parameters = std::make_unique<juce::AudioProcessorValueTreeState>(*this, nullptr, "Parameters", std::move(layout));
 
-    startTime = juce::Time::getCurrentTime();
+    startTime = getCurrentTime();
     totalTimeInSeconds = 0;
-    startTimer(1000);
+    lastTimerDateKey = startTime.formatted("%Y-%m-%d");
 
-    // Start tracking automatically upon instantiation
-    startTracking();
+    if (!isTestMode)
+    {
+        startTimer(1000);
+        // Start tracking automatically upon instantiation
+        startTracking();
+    }
+    else
+    {
+        setTracking(false);
+    }
 
 #if USE_DUMMY_DATES
     addDummyDates();
@@ -68,6 +90,19 @@ KronosAudioProcessor::KronosAudioProcessor()
 #endif
 
     parameters->addParameterListener("dateSortMode", dynamic_cast<juce::AudioProcessorValueTreeState::Listener*>(this));
+
+    if (isEnvEnabled("KRONOS_RUN_TESTS")
+        && juce::JUCEApplicationBase::isStandaloneApp()
+        && !gEmbeddedTestsRunning.load())
+    {
+        const auto failures = KronosAudioProcessor::runEmbeddedTests();
+        const auto resultPath = juce::SystemStats::getEnvironmentVariable("KRONOS_TEST_RESULTS_FILE", {});
+        if (resultPath.isNotEmpty())
+        {
+            juce::File(resultPath).replaceWithText(juce::String(failures));
+        }
+        juce::MessageManager::callAsync([] { juce::JUCEApplicationBase::quit(); });
+    }
 }
 
 KronosAudioProcessor::~KronosAudioProcessor()
@@ -80,16 +115,18 @@ void KronosAudioProcessor::startTracking()
     if (!isTracking())  // Use the accessor method
     {
         // Get current date
-        auto today = juce::Time::getCurrentTime();
+        auto today = getCurrentTime();
         juce::String dateKey = today.formatted("%Y-%m-%d");
         
         // Initialize new date if needed
         if (!timePerDate.contains(dateKey))
         {
             timePerDate.set(dateKey, 0);
+            addSessionDate();
+            sortedDatesNeedsRefresh = true;
         }
         
-        startTime = juce::Time::getCurrentTime();
+        startTime = getCurrentTime();
         setTracking(true);  // Use the parameter system
         startTimer(1000);        
     }
@@ -100,12 +137,12 @@ void KronosAudioProcessor::stopTracking()
     if (isTracking())  // Use the accessor method
     {
         // Get final time including any partial seconds
-        auto currentTime = juce::Time::getCurrentTime();
+        auto currentTime = getCurrentTime();
         auto elapsedSeconds = (currentTime - startTime).inSeconds();
         totalTimeInSeconds += elapsedSeconds;
         
         // Store the current time for today in timePerDate
-        auto today = juce::Time::getCurrentTime();
+        auto today = getCurrentTime();
         juce::String dateKey = today.formatted("%Y-%m-%d");
         
         // Get existing time for today (if any) and add elapsed time
@@ -115,7 +152,7 @@ void KronosAudioProcessor::stopTracking()
         stopTimer();
         setTracking(false);  // Use the parameter system
                 
-        startTime = juce::Time::getCurrentTime();
+        startTime = getCurrentTime();
     }
 }
 
@@ -124,7 +161,7 @@ juce::int64 KronosAudioProcessor::getTotalTimeInSeconds() const
     if (isTracking())
     {
         // Return real-time value including partial seconds
-        auto currentTime = juce::Time::getCurrentTime();
+        auto currentTime = getCurrentTime();
         auto elapsedSeconds = (currentTime - startTime).inSeconds();
         return totalTimeInSeconds + elapsedSeconds;
     }
@@ -263,10 +300,11 @@ juce::AudioProcessorEditor* KronosAudioProcessor::createEditor()
 //==============================================================================
 void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    // Add debouncing
-    auto now = juce::Time::getCurrentTime();
-    if ((now - lastSaveTime).inMilliseconds() < minimumSaveIntervalMs)
+    // Debounce serialization work, but always return valid state data.
+    auto now = getCurrentTime();
+    if ((now - lastSaveTime).inMilliseconds() < minimumSaveIntervalMs && hasSerializedState)
     {
+        destData = lastSerializedState;
         return;
     }
     lastSaveTime = now;
@@ -306,6 +344,8 @@ void KronosAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
+    lastSerializedState = destData;
+    hasSerializedState = true;
 }
 
 void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
@@ -350,7 +390,7 @@ void KronosAudioProcessor::setStateInformation(const void* data, int sizeInBytes
             }
             
             // Check if we need to add today's date
-            auto today = juce::Time::getCurrentTime();
+            auto today = getCurrentTime();
             juce::String todayKey = today.formatted("%Y-%m-%d");
             
             if (!timePerDate.contains(todayKey))
@@ -391,7 +431,7 @@ void KronosAudioProcessor::timerCallback()
         totalTimeInSeconds++;
         
         // Update per-date tracking separately
-        auto currentTime = juce::Time::getCurrentTime();
+        auto currentTime = getCurrentTime();
         juce::String dateKey = currentTime.formatted("%Y-%m-%d");
         
         // Initialize new date if needed
@@ -409,14 +449,13 @@ void KronosAudioProcessor::timerCallback()
         startTime = currentTime;
 
         // Check for midnight crossing
-        static juce::String lastDateKey = juce::Time::getCurrentTime().formatted("%Y-%m-%d");
-        juce::String currentDateKey = juce::Time::getCurrentTime().formatted("%Y-%m-%d");
-        
-        if (lastDateKey != currentDateKey)
+        juce::String currentDateKey = getCurrentTime().formatted("%Y-%m-%d");
+
+        if (lastTimerDateKey != currentDateKey)
         {
             addSessionDate();
             sortedDatesNeedsRefresh = true;
-            lastDateKey = currentDateKey;
+            lastTimerDateKey = currentDateKey;
         }
 
         // Timer callback duration exit
@@ -426,7 +465,7 @@ void KronosAudioProcessor::timerCallback()
 
 void KronosAudioProcessor::addSessionDate()
 {
-    auto today = juce::Time::getCurrentTime();
+    auto today = getCurrentTime();
     juce::String dateKey = today.formatted("%Y-%m-%d");
     
     // Check if we already have today's date
@@ -483,7 +522,7 @@ void KronosAudioProcessor::addDummyDates()
     totalTimeInSeconds = 648000;  // 180 hours in seconds
     
     // Create base date as current time
-    juce::Time baseDate = juce::Time::getCurrentTime();
+    juce::Time baseDate = getCurrentTime();
     
     // Recent dates (last 5 days) with higher activity
     for (int i = 0; i < 5; ++i)
@@ -621,4 +660,124 @@ void KronosAudioProcessor::parameterChanged(const juce::String& parameterID, flo
     {
         sortedDatesNeedsRefresh = true;
     }
+}
+
+juce::Time KronosAudioProcessor::getCurrentTime() const
+{
+    return nowProviderForTests ? nowProviderForTests() : juce::Time::getCurrentTime();
+}
+
+void KronosAudioProcessor::setNowProviderForTests(std::function<juce::Time()> nowProvider)
+{
+    nowProviderForTests = std::move(nowProvider);
+}
+
+#if JUCE_UNIT_TESTS
+namespace
+{
+class FakeClock
+{
+public:
+    explicit FakeClock(const juce::Time& start) : current(start) {}
+
+    juce::Time now() const { return current; }
+
+    void advanceSeconds(int secondsToAdvance)
+    {
+        current += juce::RelativeTime::seconds(secondsToAdvance);
+    }
+
+private:
+    juce::Time current;
+};
+
+class KronosProcessorTests : public juce::UnitTest
+{
+public:
+    KronosProcessorTests() : juce::UnitTest("Kronos Processor Tests", "Kronos") {}
+
+    void runTest() override
+    {
+        beginTest("State serialization returns data even when called rapidly");
+        {
+            FakeClock clock(juce::Time::fromISO8601("2025-01-01T10:00:00"));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            juce::MemoryBlock first;
+            juce::MemoryBlock second;
+
+            processor.getStateInformation(first);
+            processor.getStateInformation(second);
+
+            expect(first.getSize() > 0, "First serialized state should not be empty.");
+            expect(second.getSize() > 0, "Debounced serialized state should not be empty.");
+        }
+
+        beginTest("New day is added to session dates when tracking starts");
+        {
+            FakeClock clock(juce::Time::fromISO8601("2025-01-01T23:50:00"));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            const auto beforeCount = processor.getSessionDates().size();
+            clock.advanceSeconds(20 * 60); // move to next day
+
+            processor.startTracking();
+            const auto afterCount = processor.getSessionDates().size();
+
+            expect(afterCount >= beforeCount + 1, "Expected a new session date to be added.");
+        }
+
+        beginTest("Midnight rollover uses per-instance state");
+        {
+            FakeClock clockA(juce::Time::fromISO8601("2025-01-01T23:59:59"));
+            FakeClock clockB(juce::Time::fromISO8601("2025-01-01T12:00:00"));
+
+            KronosAudioProcessor processorA([&clockA]() { return clockA.now(); });
+            KronosAudioProcessor processorB([&clockB]() { return clockB.now(); });
+
+            processorA.startTracking();
+            processorB.startTracking();
+
+            const auto bBefore = processorB.getSessionDates().size();
+
+            // A crosses midnight first.
+            clockA.advanceSeconds(1);
+            processorA.timerCallback();
+
+            // B crosses midnight afterwards.
+            clockB.advanceSeconds(12 * 60 * 60 + 1);
+            processorB.timerCallback();
+
+            const auto bAfter = processorB.getSessionDates().size();
+            expect(bAfter >= bBefore + 1, "Instance B should independently detect midnight rollover.");
+        }
+    }
+};
+
+KronosProcessorTests kronosProcessorTests;
+} // namespace
+#endif
+
+int KronosAudioProcessor::runEmbeddedTests()
+{
+#if JUCE_UNIT_TESTS
+    gEmbeddedTestsRunning = true;
+
+    juce::UnitTestRunner runner;
+    runner.setAssertOnFailure(false);
+    runner.setPassesAreLogged(true);
+    runner.runTestsInCategory("Kronos");
+
+    int failures = 0;
+    for (int i = 0; i < runner.getNumResults(); ++i)
+    {
+        if (const auto* result = runner.getResult(i))
+            failures += result->failures;
+    }
+
+    gEmbeddedTestsRunning = false;
+    return failures;
+#else
+    return 0;
+#endif
 }

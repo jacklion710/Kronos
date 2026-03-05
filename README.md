@@ -58,6 +58,38 @@ git clone https://github.com/jacklion710/kronos.git
 4. Generate project files for your IDE
 5. Build the project in your IDE
 
+## Testing
+
+Kronos now has an embedded JUCE unit test suite for processor/state logic.
+
+### Test Mode
+
+Use these environment variables when launching the standalone target:
+
+- `KRONOS_TEST_MODE=1`: disables auto-start tracking so tests are deterministic.
+- `KRONOS_RUN_TESTS=1`: runs the embedded test suite on launch and quits.
+- `KRONOS_TEST_RESULTS_FILE=/path/to/file`: writes total failing assertions to the file.
+
+### One-Command Local Test Run (macOS)
+
+From the repo root:
+
+```bash
+./scripts/run_tests_macos.sh
+```
+
+Optional configuration:
+
+```bash
+./scripts/run_tests_macos.sh Release
+```
+
+### What the tests currently cover
+
+- State serialization debounce behavior
+- New-day session insertion when tracking starts
+- Midnight rollover behavior across multiple processor instances
+
 ## Project Structure
 
 - `/Source` - Core plugin implementation
@@ -74,6 +106,25 @@ The plugin is built using JUCE framework and follows a standard audio plugin arc
 - `AboutComponent` - About window with links and information
 - `BackupComponent` - Backup window for saving `.kronos` log files with project time data
 - `RestoreComponent` - Restore window for loading `.kronos` log files into the project time
+
+## Release Pipeline
+
+Kronos now includes the same local-first Mac/Windows release pipeline structure used in your other JUCE plugin repos.
+
+- macOS docs: `docs/release-macos.md`
+- Windows docs: `docs/release-windows.md`
+- Release scripts: `scripts/release/`
+- macOS `Kronos - All` + `Release` now auto-runs signing/notarization/pkg packaging (override with env vars documented in `docs/release-macos.md`)
+
+Common commands:
+
+```bash
+./scripts/release/macos-cut-release.sh 1.0.4-beta.1
+```
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release/windows-cut-release.ps1 -Version "1.0.4-beta.1"
+```
 
 ## Credits
 
