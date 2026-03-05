@@ -68,6 +68,7 @@ if [[ "${SKIP_XCODEBUILD}" != "1" ]]; then
     -project "${PROJECT_PATH}" \
     -scheme "${SCHEME}" \
     -configuration "${CONFIGURATION}" \
+    GCC_PREPROCESSOR_DEFINITIONS='$(inherited) JUCE_UNIT_TESTS=1' \
     -destination 'generic/platform=macOS' \
     clean build
 fi
@@ -85,7 +86,13 @@ fi
 # Enforce test gate for release packaging. Any failing test aborts the release build.
 if [[ "${CONFIGURATION}" == "Release" ]]; then
   echo "[macos-release] Running embedded test suite gate (Release)..."
-  "${REPO_ROOT}/scripts/run_tests_macos.sh" "Release"
+  if [[ "${SKIP_XCODEBUILD}" == "1" ]]; then
+    # In Xcode post-build mode we can't guarantee JUCE_UNIT_TESTS was enabled, so run the test runner's build path.
+    "${REPO_ROOT}/scripts/run_tests_macos.sh" "Release"
+  else
+    TEST_APP_BINARY="${BUILD_DIR}/${PRODUCT_NAME}.app/Contents/MacOS/${PRODUCT_NAME}"
+    "${REPO_ROOT}/scripts/run_tests_macos.sh" "Release" --skip-build --app-binary "${TEST_APP_BINARY}"
+  fi
 fi
 
 sign_bundle() {
