@@ -25,7 +25,7 @@ Scripts:
 
 - Use semver for releases.
 - Accepted format examples:
-  - `1.0.3`
+  - `1.0.4`
   - `1.1.0-beta.1`
 
 The script validates this format before building.

@@ -1,6 +1,6 @@
 # Kronos - DAW Time Tracking Plugin
 
-V1.0.3
+V1.0.4
 
 **Official release coming March 1st 2025!**
 
