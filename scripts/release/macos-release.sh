@@ -82,6 +82,12 @@ if [[ ! -d "${AU_SOURCE}" ]]; then
   exit 1
 fi
 
+# Enforce test gate for release packaging. Any failing test aborts the release build.
+if [[ "${CONFIGURATION}" == "Release" ]]; then
+  echo "[macos-release] Running embedded test suite gate (Release)..."
+  "${REPO_ROOT}/scripts/run_tests_macos.sh" "Release"
+fi
+
 sign_bundle() {
   local path="$1"
   codesign --force --deep --options runtime --timestamp --sign "${MACOS_APP_SIGNING_IDENTITY}" "${path}"

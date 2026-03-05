@@ -84,6 +84,8 @@ Optional configuration:
 ./scripts/run_tests_macos.sh Release
 ```
 
+Release packaging now enforces this gate: `scripts/release/macos-release.sh` will fail if `./scripts/run_tests_macos.sh Release` does not pass.
+
 ### What the tests currently cover
 
 - State serialization debounce behavior
@@ -94,6 +96,10 @@ Optional configuration:
 - Timer callback per-day and total counter increments
 - Legacy/older state restore inserts current day
 - Date sorting correctness for `MostTime` mode
+- Full state round-trip integrity for params + tracking data
+- Invalid/corrupt state payload safety behavior
+- Same-day duplicate session-date prevention
+- Parameter persistence across serialization boundaries
 
 ## Project Structure
 

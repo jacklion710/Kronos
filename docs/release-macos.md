@@ -8,13 +8,14 @@ This project ships macOS releases fully from your local machine.
 2. Signs plugin bundles:
    - `Kronos.vst3`
    - `Kronos.component`
-3. Packages both into a signed installer `.pkg`.
+3. Runs the embedded JUCE test suite gate (`./scripts/run_tests_macos.sh Release`) and fails the release if tests fail.
+4. Packages both into a signed installer `.pkg`.
    - Default: system plugin paths under `/Library/Audio/Plug-Ins/...`
    - Override option in Installer: “Install for me only” (`~/Library/Audio/Plug-Ins/...`)
    - Format choices are user-selectable in Installer (`VST3`, `AU`) so either can be unchecked.
    - Includes a selectable `User Guide` component rendered from `docs/user-guide.md`.
-4. Notarizes the `.pkg` with Apple `notarytool` and staples the notarization ticket.
-5. Writes a SHA-256 checksum file for release distribution.
+5. Notarizes the `.pkg` with Apple `notarytool` and staples the notarization ticket.
+6. Writes a SHA-256 checksum file for release distribution.
 
 Scripts:
 - `scripts/release/macos-cut-release.sh` (recommended one-command release)
@@ -102,6 +103,7 @@ Behavior:
 - Triggers only when `CONFIGURATION=Release`.
 - Runs only on scheme `Kronos - All` (because that is where the phase is attached).
 - Calls `scripts/release/macos-release.sh` with `SKIP_XCODEBUILD=1` to package already-built artifacts.
+- Enforces passing embedded tests before signing/packaging.
 - Performs signing, optional notarization, and `.pkg` generation automatically.
 
 Useful environment overrides for Xcode build runs:
@@ -128,3 +130,4 @@ Useful environment overrides for Xcode build runs:
 - 2026-03-04: Added script-based release packaging docs and commands for Kronos.
 - 2026-03-01: Switched release process to local-only signed/notarized pipeline.
 - 2026-03-04: Added auto release packaging build phase on `Kronos - All` (Release only) with env-based overrides.
+- 2026-03-04: Added mandatory embedded test gate for release packaging (`run_tests_macos.sh Release`).
