@@ -11,21 +11,43 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Resolve-MSBuildPath {
+    $msbuild = Get-Command msbuild -ErrorAction SilentlyContinue
+    if ($msbuild) {
+        return $msbuild.Source
+    }
+
+    $vswherePath = Join-Path "${env:ProgramFiles(x86)}" "Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswherePath) {
+        $resolved = & $vswherePath -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe" | Select-Object -First 1
+        if (-not [string]::IsNullOrWhiteSpace($resolved) -and (Test-Path $resolved)) {
+            return $resolved
+        }
+    }
+
+    return $null
+}
+
 if ([string]::IsNullOrWhiteSpace($SolutionDir)) {
     $SolutionDir = (Resolve-Path (Join-Path $PSScriptRoot ".." )).Path
 }
 
 $SolutionDir = [System.IO.Path]::GetFullPath($SolutionDir)
 $standaloneProject = Join-Path $SolutionDir "Builds\VisualStudio2022\Kronos_StandalonePlugin.vcxproj"
+$sharedCodeProject = Join-Path $SolutionDir "Builds\VisualStudio2022\Kronos_SharedCode.vcxproj"
 
 if (-not (Test-Path $standaloneProject)) {
     throw "Standalone project not found: $standaloneProject"
 }
 
+if (-not (Test-Path $sharedCodeProject)) {
+    throw "Shared code project not found: $sharedCodeProject"
+}
+
 if (-not $SkipBuild) {
-    $msbuild = Get-Command msbuild -ErrorAction SilentlyContinue
-    if (-not $msbuild) {
-        throw "msbuild not found on PATH. Run from Developer PowerShell for VS2022 or install Build Tools."
+    $msbuildPath = Resolve-MSBuildPath
+    if ([string]::IsNullOrWhiteSpace($msbuildPath)) {
+        throw "msbuild not found (PATH/vswhere). Run from Developer PowerShell for VS2022 or install Build Tools + MSBuild."
     }
 
     $previousCL = $null
@@ -57,7 +79,14 @@ if (-not $SkipBuild) {
         # Prevent Release post-build packaging while running the dedicated test build.
         $env:KRONOS_WINDOWS_AUTO_RELEASE = "0"
 
-        & $msbuild.Source $standaloneProject "/m" "/p:Configuration=$Configuration;Platform=$Platform"
+        # Force a full rebuild so JUCE_UNIT_TESTS=1 is applied where test code is compiled
+        # (SharedCode), then rebuild the Standalone host that links against it.
+        & $msbuildPath $sharedCodeProject "/m" "/t:Rebuild" "/p:Configuration=$Configuration;Platform=$Platform"
+        if ($LASTEXITCODE -ne 0) {
+            throw "SharedCode test build failed with exit code $LASTEXITCODE"
+        }
+
+        & $msbuildPath $standaloneProject "/m" "/t:Rebuild" "/p:Configuration=$Configuration;Platform=$Platform"
         if ($LASTEXITCODE -ne 0) {
             throw "Standalone test build failed with exit code $LASTEXITCODE"
         }
