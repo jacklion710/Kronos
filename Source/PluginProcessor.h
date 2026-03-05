@@ -115,6 +115,9 @@ private:
     juce::String makeDateKey(const juce::Time& time) const;
     void ensureDateEntryExists(const juce::Time& dateTime, bool addSessionIfMissing);
     void addTrackedSeconds(juce::int64 seconds, const juce::Time& dateTime, bool addSessionIfMissing);
+    void addElapsedSecondsAcrossDates(const juce::Time& startTime,
+                                      const juce::Time& endTime,
+                                      bool addSessionIfMissing);
     void markTrackingDataDirty();
     void invalidateAllSortCaches();
 

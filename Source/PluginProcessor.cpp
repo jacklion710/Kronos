@@ -167,9 +167,7 @@ void KronosAudioProcessor::stopTracking()
     {
         // Get final time including any partial seconds.
         const auto now = getCurrentTime();
-        const auto elapsedSeconds = (now - startTime).inSeconds();
-        if (elapsedSeconds > 0)
-            addTrackedSeconds(elapsedSeconds, now, true);
+        addElapsedSecondsAcrossDates(startTime, now, true);
 
         stopTimer();
         setTracking(false);  // Use the parameter system
@@ -453,15 +451,9 @@ void KronosAudioProcessor::timerCallback()
     if (isTracking())  // Use the accessor method
     {
         const auto now = getCurrentTime();
-        const auto currentDateKey = makeDateKey(now);
-        if (lastTimerDateKey != currentDateKey)
-        {
-            addSessionDate(now);
-            lastTimerDateKey = currentDateKey;
-        }
-
-        addTrackedSeconds(1, now, true);
+        addElapsedSecondsAcrossDates(startTime, now, true);
         startTime = now;
+        lastTimerDateKey = makeDateKey(now);
     }
 }
 
@@ -709,6 +701,36 @@ void KronosAudioProcessor::addTrackedSeconds(juce::int64 seconds, const juce::Ti
     markTrackingDataDirty();
 }
 
+void KronosAudioProcessor::addElapsedSecondsAcrossDates(const juce::Time& start,
+                                                        const juce::Time& end,
+                                                        bool addSessionIfMissing)
+{
+    const auto totalElapsedSeconds = (end - start).inSeconds();
+    if (totalElapsedSeconds <= 0)
+        return;
+
+    auto remainingSeconds = totalElapsedSeconds;
+    auto cursor = start;
+
+    while (remainingSeconds > 0)
+    {
+        const auto cursorDayStart = juce::Time(cursor.getYear(),
+                                               cursor.getMonth(),
+                                               cursor.getDayOfMonth(),
+                                               0, 0, 0, 0, true);
+        const auto nextDayStart = cursorDayStart + juce::RelativeTime::days(1);
+        auto secondsUntilNextDay = (nextDayStart - cursor).inSeconds();
+        if (secondsUntilNextDay <= 0)
+            secondsUntilNextDay = remainingSeconds;
+
+        const auto chunkSeconds = juce::jmin<juce::int64>(remainingSeconds, secondsUntilNextDay);
+        addTrackedSeconds(chunkSeconds, cursor, addSessionIfMissing);
+
+        remainingSeconds -= chunkSeconds;
+        cursor += juce::RelativeTime::seconds(static_cast<double>(chunkSeconds));
+    }
+}
+
 juce::Time KronosAudioProcessor::getCurrentTime() const
 {
     return nowProviderForTests ? nowProviderForTests() : juce::Time::getCurrentTime();
@@ -914,12 +936,87 @@ public:
             const auto todayKey = clock.now().formatted("%Y-%m-%d");
             const auto initialDateSeconds = processor.timePerDate[todayKey];
 
+            clock.advanceSeconds(1);
             processor.timerCallback();
 
             expectEquals(static_cast<int>(processor.getTotalTimeInSeconds()), 1,
                          "Timer callback should increment total time by 1 second.");
             expectEquals(static_cast<int>(processor.timePerDate[todayKey]), static_cast<int>(initialDateSeconds + 1),
                          "Timer callback should increment today's tracked time by 1 second.");
+        }
+
+        emitEmbeddedTestLog("[TEST] Delayed timer callback catches up elapsed seconds");
+        beginTest("Delayed timer callback catches up elapsed seconds");
+        {
+            FakeClock clock(juce::Time(2025, 1, 1, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            processor.startTracking();
+            const auto todayKey = clock.now().formatted("%Y-%m-%d");
+
+            clock.advanceSeconds(5);
+            processor.timerCallback();
+
+            expectEquals(static_cast<int>(processor.getTotalTimeInSeconds()), 5,
+                         "Delayed callback should accumulate full elapsed seconds.");
+            expectEquals(static_cast<int>(processor.timePerDate[todayKey]), 5,
+                         "Today's bucket should include all elapsed seconds.");
+        }
+
+        emitEmbeddedTestLog("[TEST] Stop tracking splits elapsed time across midnight");
+        beginTest("Stop tracking splits elapsed time across midnight");
+        {
+            FakeClock clock(juce::Time(2025, 1, 1, 23, 59, 58, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            const juce::String jan1Key = clock.now().formatted("%Y-%m-%d");
+
+            processor.startTracking();
+            clock.advanceSeconds(5);
+            const juce::String jan2Key = clock.now().formatted("%Y-%m-%d");
+            processor.stopTracking();
+
+            expectEquals(static_cast<int>(processor.getTotalTimeInSeconds()), 5);
+            expectEquals(static_cast<int>(processor.timePerDate[jan1Key]), 2,
+                         "Expected two seconds to remain on the previous day.");
+            expectEquals(static_cast<int>(processor.timePerDate[jan2Key]), 3,
+                         "Expected three seconds to roll into the next day.");
+        }
+
+        emitEmbeddedTestLog("[TEST] Timer logic handles month rollover");
+        beginTest("Timer logic handles month rollover");
+        {
+            FakeClock clock(juce::Time(2025, 1, 31, 23, 59, 58, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            const juce::String jan31Key = clock.now().formatted("%Y-%m-%d");
+
+            processor.startTracking();
+            clock.advanceSeconds(5);
+            const juce::String feb1Key = clock.now().formatted("%Y-%m-%d");
+            processor.stopTracking();
+
+            expectEquals(static_cast<int>(processor.getTotalTimeInSeconds()), 5);
+            expectEquals(static_cast<int>(processor.timePerDate[jan31Key]), 2);
+            expectEquals(static_cast<int>(processor.timePerDate[feb1Key]), 3);
+        }
+
+        emitEmbeddedTestLog("[TEST] Timer logic handles year rollover");
+        beginTest("Timer logic handles year rollover");
+        {
+            FakeClock clock(juce::Time(2024, 12, 31, 23, 59, 58, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            const juce::String dec31Key = clock.now().formatted("%Y-%m-%d");
+
+            processor.startTracking();
+            clock.advanceSeconds(5);
+            const juce::String jan1Key = clock.now().formatted("%Y-%m-%d");
+            processor.stopTracking();
+
+            expectEquals(static_cast<int>(processor.getTotalTimeInSeconds()), 5);
+            expectEquals(static_cast<int>(processor.timePerDate[dec31Key]), 2);
+            expectEquals(static_cast<int>(processor.timePerDate[jan1Key]), 3);
         }
 
         emitEmbeddedTestLog("[TEST] Restoring old state inserts current day");
