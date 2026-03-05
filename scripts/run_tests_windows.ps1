@@ -122,6 +122,50 @@ if (-not (Test-Path $AppBinary)) {
 
 $resultFile = Join-Path ([System.IO.Path]::GetTempPath()) ("kronos-tests-{0}.result" -f ([Guid]::NewGuid().ToString("N")))
 $logFile = Join-Path ([System.IO.Path]::GetTempPath()) ("kronos-tests-{0}.log" -f ([Guid]::NewGuid().ToString("N")))
+$logStreamOffset = 0L
+
+function Write-NewTestLogLines {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][ref]$Offset
+    )
+
+    if (-not (Test-Path $Path)) {
+        return
+    }
+
+    $length = (Get-Item $Path).Length
+    if ($length -lt $Offset.Value) {
+        $Offset.Value = 0L
+    }
+
+    if ($length -le $Offset.Value) {
+        return
+    }
+
+    $stream = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    try {
+        $stream.Seek($Offset.Value, [System.IO.SeekOrigin]::Begin) | Out-Null
+
+        $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8, $true, 1024, $true)
+        try {
+            while (-not $reader.EndOfStream) {
+                $line = $reader.ReadLine()
+                if ($null -ne $line) {
+                    Write-Host $line
+                }
+            }
+
+            $Offset.Value = $stream.Position
+        }
+        finally {
+            $reader.Dispose()
+        }
+    }
+    finally {
+        $stream.Dispose()
+    }
+}
 
 $previousTestMode = $null
 $hadTestMode = Test-Path Env:KRONOS_TEST_MODE
@@ -155,10 +199,13 @@ try {
     $env:KRONOS_TEST_LOG_FILE = $logFile
 
     Write-Host "Running embedded JUCE tests..."
+    New-Item -ItemType File -Path $logFile -Force | Out-Null
     $process = Start-Process -FilePath $AppBinary -WorkingDirectory (Split-Path -Parent $AppBinary) -PassThru
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
+        Write-NewTestLogLines -Path $logFile -Offset ([ref]$logStreamOffset)
+
         if ((Test-Path $resultFile) -and ((Get-Item $resultFile).Length -gt 0)) {
             break
         }
@@ -174,6 +221,8 @@ try {
         Stop-Process -Id $process.Id -Force
         $process.WaitForExit()
     }
+
+    Write-NewTestLogLines -Path $logFile -Offset ([ref]$logStreamOffset)
 
     if (-not (Test-Path $resultFile) -or (Get-Item $resultFile).Length -eq 0) {
         throw "No test results produced. Check log file: $logFile"
