@@ -111,22 +111,27 @@ private:
     
     // Array to store session dates
     juce::Array<juce::Time> sessionDates;
-    void addSessionDate();  // Helper function to add today's date
+    void addSessionDate(const juce::Time& dateToAdd);
+    juce::String makeDateKey(const juce::Time& time) const;
+    void ensureDateEntryExists(const juce::Time& dateTime, bool addSessionIfMissing);
+    void addTrackedSeconds(juce::int64 seconds, const juce::Time& dateTime, bool addSessionIfMissing);
+    void markTrackingDataDirty();
+    void invalidateAllSortCaches();
 
     juce::Time lastSaveTime;
     const int minimumSaveIntervalMs = 100; // Minimum time between saves
     juce::MemoryBlock lastSerializedState;
     bool hasSerializedState = false;
+    bool serializedStateDirty = true;
 
     bool showBarsEnabled = false;
     juce::String lastTimerDateKey;
-
-    bool trackingState = false;  
-    DateSortMode currentSortMode = DateSortMode::MostRecent;
     std::function<juce::Time()> nowProviderForTests;
 
-    mutable juce::Array<juce::Time> cachedSortedDates;
-    mutable bool sortedDatesNeedsRefresh = true;
+    mutable juce::Array<juce::Time> cachedMostRecentDates;
+    mutable juce::Array<juce::Time> cachedMostTimeDates;
+    mutable bool mostRecentCacheDirty = true;
+    mutable bool mostTimeCacheDirty = true;
     juce::Time getCurrentTime() const;
 
     void parameterChanged(const juce::String& parameterID, float newValue) override;
