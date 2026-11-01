@@ -202,15 +202,88 @@ void KronosAudioProcessor::stopTracking()
 juce::int64 KronosAudioProcessor::getTotalTimeInSeconds() const
 {
     const juce::ScopedLock lock(trackingLock);
+    return totalTimeInSeconds + getPendingSeconds(getCurrentTime());
+}
 
+juce::int64 KronosAudioProcessor::getPendingSeconds(const juce::Time& now) const
+{
     if (isAccumulating)
     {
-        const auto pendingMs = getCurrentTime().toMilliseconds() - startTime.toMilliseconds();
+        const auto pendingMs = now.toMilliseconds() - startTime.toMilliseconds();
         if (pendingMs > 0 && pendingMs <= maximumCreditableGapMs)
-            return totalTimeInSeconds + pendingMs / 1000;
+            return pendingMs / 1000;
     }
 
-    return totalTimeInSeconds;
+    return 0;
+}
+
+juce::int64 KronosAudioProcessor::getTodaySeconds() const
+{
+    const juce::ScopedLock lock(trackingLock);
+    const auto now = getCurrentTime();
+    return timePerDate[makeDateKey(now)] + getPendingSeconds(now);
+}
+
+bool KronosAudioProcessor::isToday(const juce::Time& date) const
+{
+    return makeDateKey(date) == makeDateKey(getCurrentTime());
+}
+
+juce::int64 KronosAudioProcessor::getCurrentRunSeconds() const
+{
+    const juce::ScopedLock lock(trackingLock);
+    return getTotalTimeInSeconds() - runStartTotalSeconds;
+}
+
+int KronosAudioProcessor::getDaysLogged() const
+{
+    const juce::ScopedLock lock(trackingLock);
+
+    int days = 0;
+    for (auto it = timePerDate.begin(); it != timePerDate.end(); ++it)
+        if (it.getValue() > 0)
+            ++days;
+
+    return days;
+}
+
+juce::int64 KronosAudioProcessor::getDailyAverageSeconds() const
+{
+    const juce::ScopedLock lock(trackingLock);
+    const auto days = getDaysLogged();
+    return days > 0 ? getTotalTimeInSeconds() / days : 0;
+}
+
+KronosAudioProcessor::BackupSummary KronosAudioProcessor::summariseBackup(const void* data, int sizeInBytes)
+{
+    BackupSummary summary;
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if (xmlState == nullptr)
+        return summary;
+
+    const auto* trackingData = xmlState->getChildByName("TrackingData");
+    if (trackingData == nullptr)
+        return summary;
+
+    juce::int64 sumOfDays = 0;
+
+    if (const auto* days = trackingData->getChildByName("TimePerDate"))
+    {
+        for (const auto* entry : days->getChildIterator())
+        {
+            const auto seconds = entry->getStringAttribute("time").getLargeIntValue();
+            if (seconds > 0)
+            {
+                sumOfDays += seconds;
+                ++summary.daysLogged;
+            }
+        }
+    }
+
+    summary.totalSeconds = juce::jmax(trackingData->getStringAttribute("totalTimeInSeconds").getLargeIntValue(), sumOfDays);
+    summary.isValid = true;
+    return summary;
 }
 
 //==============================================================================
@@ -490,6 +563,7 @@ bool KronosAudioProcessor::applyState(const void* data, int sizeInBytes, bool re
 
     startTime = now;
     carriedMilliseconds = 0;
+    runStartTotalSeconds = totalTimeInSeconds;
     isAccumulating = isTracking();
 
     invalidateAllSortCaches();
@@ -532,6 +606,7 @@ void KronosAudioProcessor::beginAccumulating(const juce::Time& now)
 {
     startTime = juce::Time(now.toMilliseconds() - carriedMilliseconds);
     carriedMilliseconds = 0;
+    runStartTotalSeconds = totalTimeInSeconds;
     isAccumulating = true;
 }
 
@@ -1904,6 +1979,94 @@ public:
 
             processor.setStateInformation(data.getData(), static_cast<int>(data.getSize()));
             expect(!processor.isDarkMode(), "Hosts may still load parameter-only state.");
+        }
+
+        scenario("Derived stats come from the real tracking data");
+        {
+            FakeClock clock(juce::Time(2026, 2, 21, 12, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            expectEquals(processor.getDailyAverageSeconds(), static_cast<juce::int64>(0));
+            expectEquals(processor.getDaysLogged(), 0);
+
+            const juce::Time dayA(2026, 2, 18, 12, 0, 0, 0, true);
+            const juce::Time dayB(2026, 2, 19, 12, 0, 0, 0, true);
+            const juce::Time dayC(2026, 2, 20, 12, 0, 0, 0, true);
+
+            juce::Array<std::pair<juce::String, juce::int64>> times;
+            times.add({ dayA.formatted("%Y-%m-%d"), 3000 });
+            times.add({ dayB.formatted("%Y-%m-%d"), 9000 });
+            times.add({ dayC.formatted("%Y-%m-%d"), 0 });
+
+            auto state = buildStateWithTrackingData(processor, 12000, { dayA, dayB, dayC }, times);
+            processor.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+
+            expectEquals(processor.getDaysLogged(), 2, "Days with no time do not count as logged.");
+            expectEquals(processor.getDailyAverageSeconds(), static_cast<juce::int64>(6000));
+            expectEquals(processor.getLongestDaySeconds(), static_cast<juce::int64>(9000));
+            expectEquals(processor.getTodaySeconds(), static_cast<juce::int64>(0));
+            expectEquals(processor.getCurrentRunSeconds(), static_cast<juce::int64>(0));
+
+            processor.startTracking();
+            clock.advanceSeconds(20);
+            processor.timerCallback();
+            clock.advanceMilliseconds(5500); // not yet credited by a tick
+
+            expectEquals(processor.getTodaySeconds(), static_cast<juce::int64>(25));
+            expectEquals(processor.getCurrentRunSeconds(), static_cast<juce::int64>(25));
+            expectEquals(processor.getDaysLogged(), 3);
+            expectEquals(processor.getDailyAverageSeconds(), static_cast<juce::int64>((12000 + 25) / 3));
+
+            processor.stopTracking();
+            clock.advanceSeconds(600);
+            expectEquals(processor.getCurrentRunSeconds(), static_cast<juce::int64>(25),
+                         "A paused run keeps showing what it reached.");
+
+            processor.startTracking();
+            expectEquals(processor.getCurrentRunSeconds(), static_cast<juce::int64>(0),
+                         "Resuming starts a new run.");
+            clock.advanceSeconds(7);
+            processor.timerCallback();
+            expectEquals(processor.getCurrentRunSeconds(), static_cast<juce::int64>(7));
+            expectEquals(processor.getTodaySeconds(), static_cast<juce::int64>(32));
+        }
+
+        scenario("Sleep is excluded from this run and today");
+        {
+            FakeClock clock(juce::Time(2026, 2, 22, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            processor.startTracking();
+            clock.advanceSeconds(30);
+            processor.timerCallback();
+            clock.advanceSeconds(3 * 3600);
+
+            expectEquals(processor.getCurrentRunSeconds(), static_cast<juce::int64>(30));
+            expectEquals(processor.getTodaySeconds(), static_cast<juce::int64>(30));
+        }
+
+        scenario("Backup summaries read totals without applying them");
+        {
+            FakeClock clock(juce::Time(2026, 2, 23, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            const juce::Time dayA(2026, 2, 18, 12, 0, 0, 0, true);
+            const juce::Time dayB(2026, 2, 19, 12, 0, 0, 0, true);
+
+            juce::Array<std::pair<juce::String, juce::int64>> times;
+            times.add({ dayA.formatted("%Y-%m-%d"), 3000 });
+            times.add({ dayB.formatted("%Y-%m-%d"), 4000 });
+
+            auto state = buildStateWithTrackingData(processor, 7000, { dayA, dayB }, times);
+            const auto summary = KronosAudioProcessor::summariseBackup(state.getData(), static_cast<int>(state.getSize()));
+
+            expect(summary.isValid, "A real backup should summarise.");
+            expectEquals(summary.totalSeconds, static_cast<juce::int64>(7000));
+            expectEquals(summary.daysLogged, 2);
+            expectEquals(processor.getTotalTimeInSeconds(), static_cast<juce::int64>(0));
+
+            const char garbage[] = "not-a-backup";
+            expect(!KronosAudioProcessor::summariseBackup(garbage, static_cast<int>(sizeof(garbage))).isValid,
+                   "Garbage must not summarise.");
         }
 
         scenario("A parameter changed right after a save reaches the next save");

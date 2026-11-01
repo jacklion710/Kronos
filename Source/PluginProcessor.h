@@ -83,6 +83,21 @@ public:
 
     juce::int64 getTimeForDate(const juce::Time& date) const;
     juce::int64 getLongestDaySeconds() const;
+    juce::int64 getTodaySeconds() const;
+    bool isToday(const juce::Time& date) const;
+    juce::int64 getCurrentRunSeconds() const;
+    juce::int64 getDailyAverageSeconds() const;
+    int getDaysLogged() const;
+
+    struct BackupSummary
+    {
+        bool isValid = false;
+        juce::int64 totalSeconds = 0;
+        int daysLogged = 0;
+    };
+
+    // Reads a .kronos file's totals without applying it.
+    static BackupSummary summariseBackup(const void* data, int sizeInBytes);
 
     enum class DateSortMode {
         MostRecent,
@@ -120,6 +135,7 @@ private:
     mutable juce::CriticalSection trackingLock;
     bool isAccumulating = false;
     juce::int64 carriedMilliseconds = 0;
+    juce::int64 runStartTotalSeconds = 0;
     
     // Array to store session dates
     juce::Array<juce::Time> sessionDates;
@@ -129,6 +145,7 @@ private:
     void addTrackedSeconds(juce::int64 seconds, const juce::Time& dateTime, const juce::String& dateKey, bool addSessionIfMissing);
     void addElapsedSecondsAcrossDates(const juce::Time& start, juce::int64 seconds, bool addSessionIfMissing);
     bool applyState(const void* data, int sizeInBytes, bool requireTrackingData);
+    juce::int64 getPendingSeconds(const juce::Time& now) const;
     void beginAccumulating(const juce::Time& now);
     void creditElapsedTime(const juce::Time& now);
     void synchroniseWithTrackingParameter(const juce::Time& now);
