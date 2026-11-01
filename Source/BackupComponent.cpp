@@ -34,6 +34,10 @@ BackupComponent::BackupComponent(KronosAudioProcessor& p) : audioProcessor(p)
 
 void BackupComponent::lookAndFeelChanged()
 {
+    // A sheet that is detached or closing has no Kronos colours to read
+    if (! getLookAndFeel().isColourSpecified(KLF::textColourId))
+        return;
+
     // Text that is already in the field keeps its colour unless told otherwise
     projectNameEditor.applyColourToAllText(findColour(KLF::textColourId), true);
 }
