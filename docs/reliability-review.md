@@ -44,7 +44,7 @@ Snapshots differ by a mean of 0.04 of 255 per channel.
 ## Not verified
 
 - ThreadSanitizer and AddressSanitizer: both crash in `__pthread_init` on this Intel Mac with macOS 26, even on a three-line program. Locking has only the stress test and code review behind it.
-- auval: not run. `auval -a` hung for over seven minutes on this machine, and validating an AU needs it installed.
+- auval: passed on the v2 AU once it was installed. `auval -a` hung for over seven minutes on this machine, so name the component directly with `auval -v aufx KRNS Manu`.
 - Nothing has been tested inside a DAW.
 - Windows: the tests are unverified there.
 
