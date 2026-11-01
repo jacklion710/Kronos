@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <atomic>
 
 #define USE_DUMMY_DATES 0  // Set to 1 to use dummy dates, 0 for real dates
 
@@ -57,6 +58,7 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    bool restoreStateFromData(const void* data, int sizeInBytes);
 
     //==============================================================================
     void startTracking();
@@ -65,7 +67,6 @@ public:
     juce::int64 getTotalTimeInSeconds() const;
     bool isTracking() const;
 
-    void suspendProcessing(bool shouldSuspend);
     void timerCallback() override;
 
     const juce::Array<juce::Time>& getSessionDates() const { return sessionDates; }
@@ -81,6 +82,7 @@ public:
     juce::HashMap<juce::String, juce::int64> timePerDate;
 
     juce::int64 getTimeForDate(const juce::Time& date) const;
+    juce::int64 getLongestDaySeconds() const;
 
     enum class DateSortMode {
         MostRecent,
@@ -108,16 +110,28 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KronosAudioProcessor)
     juce::Time startTime;
     juce::int64 totalTimeInSeconds = 0;
+
+    // A gap longer than this between credits means the machine slept or the
+    // clock changed, so it is treated as an interruption rather than work.
+    static constexpr juce::int64 maximumCreditableGapMs = 5 * 60 * 1000;
+
+    // Guards the tracking data below. Hosts may save from any thread. Never
+    // hold this across a parameter change, which can call back into the host.
+    mutable juce::CriticalSection trackingLock;
+    bool isAccumulating = false;
+    juce::int64 carriedMilliseconds = 0;
     
     // Array to store session dates
     juce::Array<juce::Time> sessionDates;
     void addSessionDate(const juce::Time& dateToAdd);
     juce::String makeDateKey(const juce::Time& time) const;
     void ensureDateEntryExists(const juce::Time& dateTime, bool addSessionIfMissing);
-    void addTrackedSeconds(juce::int64 seconds, const juce::Time& dateTime, bool addSessionIfMissing);
-    void addElapsedSecondsAcrossDates(const juce::Time& startTime,
-                                      const juce::Time& endTime,
-                                      bool addSessionIfMissing);
+    void addTrackedSeconds(juce::int64 seconds, const juce::Time& dateTime, const juce::String& dateKey, bool addSessionIfMissing);
+    void addElapsedSecondsAcrossDates(const juce::Time& start, juce::int64 seconds, bool addSessionIfMissing);
+    bool applyState(const void* data, int sizeInBytes, bool requireTrackingData);
+    void beginAccumulating(const juce::Time& now);
+    void creditElapsedTime(const juce::Time& now);
+    void synchroniseWithTrackingParameter(const juce::Time& now);
     void markTrackingDataDirty();
     void invalidateAllSortCaches();
 
@@ -125,16 +139,15 @@ private:
     const int minimumSaveIntervalMs = 100; // Minimum time between saves
     juce::MemoryBlock lastSerializedState;
     bool hasSerializedState = false;
-    bool serializedStateDirty = true;
+    std::atomic<bool> serializedStateDirty { true };
 
     bool showBarsEnabled = false;
-    juce::String lastTimerDateKey;
     std::function<juce::Time()> nowProviderForTests;
 
     mutable juce::Array<juce::Time> cachedMostRecentDates;
     mutable juce::Array<juce::Time> cachedMostTimeDates;
-    mutable bool mostRecentCacheDirty = true;
-    mutable bool mostTimeCacheDirty = true;
+    mutable std::atomic<bool> mostRecentCacheDirty { true };
+    mutable std::atomic<bool> mostTimeCacheDirty { true };
     juce::Time getCurrentTime() const;
 
     void parameterChanged(const juce::String& parameterID, float newValue) override;

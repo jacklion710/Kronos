@@ -8,6 +8,7 @@ CONFIGURATION="Debug"
 SKIP_BUILD=0
 APP_BINARY=""
 BUILD_LOG_FILE="${BUILD_LOG_FILE:-/tmp/kronos_test_build.log}"
+TEST_TIMEOUT_SECONDS="${KRONOS_TEST_TIMEOUT_SECONDS:-600}"
 
 if [[ $# -gt 0 && "${1}" != --* ]]; then
   CONFIGURATION="${1}"
@@ -69,7 +70,7 @@ KRONOS_TEST_LOG_FILE="${LOG_FILE}" \
 "${APP_BINARY}" &
 APP_PID=$!
 
-for _ in {1..120}; do
+for ((elapsed = 0; elapsed < TEST_TIMEOUT_SECONDS; elapsed++)); do
   if [[ -s "${RESULT_FILE}" ]]; then
     break
   fi

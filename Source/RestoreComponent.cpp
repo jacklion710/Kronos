@@ -354,8 +354,12 @@ void RestoreComponent::confirmRestore()
 {
     if (pendingRestoreFile != juce::File())
     {
-        performRestore(pendingRestoreFile, pendingRestoreData);
+        const auto file = pendingRestoreFile;
+        const auto data = pendingRestoreData;
+
+        // Reset first: this clears the result message that performRestore() shows
         resetConfirmationState();
+        performRestore(file, data);
     }
 }
 
@@ -378,8 +382,10 @@ void RestoreComponent::resetConfirmationState()
 
 void RestoreComponent::performRestore(const juce::File& file, const juce::MemoryBlock& data)
 {
-    audioProcessor.setStateInformation(data.getData(), static_cast<int>(data.getSize()));
-    showSuccessMessage("Session data has been restored from:\n" + file.getFullPathName());
+    if (audioProcessor.restoreStateFromData(data.getData(), static_cast<int>(data.getSize())))
+        showSuccessMessage("Session data has been restored from:\n" + file.getFullPathName());
+    else
+        showErrorMessage("Not a valid Kronos backup:\n" + file.getFullPathName());
 }
 
 void RestoreComponent::showSuccessMessage(const juce::String& message)
@@ -415,14 +421,14 @@ void RestoreComponent::performRestore()
 // Update browseForBackup to use the new confirmation flow
 void RestoreComponent::browseForBackup()
 {
-    juce::FileChooser chooser("Select Backup File",
-                             juce::File::getSpecialLocation(juce::File::userHomeDirectory),
-                             "*.kronos");
+    fileChooser = std::make_unique<juce::FileChooser>("Select Backup File",
+                                                      juce::File::getSpecialLocation(juce::File::userHomeDirectory),
+                                                      "*.kronos");
     
     auto chooserFlags = juce::FileBrowserComponent::openMode | 
                        juce::FileBrowserComponent::canSelectFiles;
                        
-    chooser.launchAsync(chooserFlags, [this](const juce::FileChooser& chooser) {
+    fileChooser->launchAsync(chooserFlags, [this](const juce::FileChooser& chooser) {
         auto selectedFile = chooser.getResult();
         if (selectedFile.existsAsFile())
         {

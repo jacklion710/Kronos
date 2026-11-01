@@ -54,6 +54,7 @@ private:
     juce::String statusMessage;
     juce::File pendingRestoreFile;
     juce::MemoryBlock pendingRestoreData;
+    std::unique_ptr<juce::FileChooser> fileChooser;
     
     // Data storage
     juce::Array<juce::File> backupFiles;

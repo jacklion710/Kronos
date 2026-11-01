@@ -510,11 +510,15 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     audioProcessor.parameters->addParameterListener("darkMode", this);
     audioProcessor.parameters->addParameterListener("dateSortMode", this);
 
-    // Pre-process grit texture
-    auto gritImage = juce::ImageCache::getFromMemory(BinaryData::Grit_jpg, BinaryData::Grit_jpgSize);
+    // Pre-process grit texture. The source is 5000px square, so scale it once
+    // to the largest editor size instead of keeping 100MB of pixels in memory.
+    auto gritImage = juce::ImageFileFormat::loadFrom(BinaryData::Grit_jpg, BinaryData::Grit_jpgSize);
     if (gritImage.isValid())
     {
-        gritTexture = gritImage.convertedToFormat(juce::Image::ARGB);
+        gritTexture = gritImage.rescaled(1200, 1200).convertedToFormat(juce::Image::ARGB);
+        #if ! JUCE_WINDOWS
+            gritTexture.multiplyAllAlphas(0.07f);
+        #endif
     }
 
     // Replace manual title image with styled label
@@ -544,44 +548,8 @@ void KronosAudioProcessorEditor::timerCallback()
     secondsLabel.setText(juce::String::formatted("%02d", (int)seconds), 
                     juce::dontSendNotification);
     
-    // Get the bounds of the Previous Sessions panel
-    auto bounds = getLocalBounds();
-    auto bottomSection = bounds.removeFromBottom(160);
-    bottomSection.removeFromTop(margin * 5); 
-    bottomSection.removeFromBottom(margin);
-    
-    // Update date labels with scrolling
-    auto dates = audioProcessor.getSortedDates();
-    for (int i = 0; i < 3; ++i)
-    {
-        int dateIndex = i + (int)(scrollOffset / dateHeight);
-        
-        if (dateIndex < dates.size())
-        {
-            auto date = dates[dateIndex];
-            
-            // Calculate position within the Previous Sessions panel
-            float y = bottomSection.getY() + (i * dateHeight);
-            
-            float barWidth = 70.0f;
-            float startX = (getWidth() - barWidth) / 2.0f;
-            dateLabels[i].setBounds(startX - 100, y, 100, dateHeight);
-            dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - ", 
-                                juce::dontSendNotification);
-            
-            // Only show label if it's within the Previous Sessions panel
-            dateLabels[i].setVisible(y >= bottomSection.getY() && 
-                                   y + dateHeight <= bottomSection.getBottom());
-        }
-        else
-        {
-            dateLabels[i].setVisible(false);
-        }
-    }
-
     // Force update of date labels and repaint
     updateDateLabels();
-    repaint(previousSessionsBounds.toNearestInt());
 }
 
 // Performance: O(1) - UI layout calculations
@@ -857,10 +825,8 @@ void KronosAudioProcessorEditor::paint(juce::Graphics& g)
                             false);
             g.setOpacity(1.0f);
         #else
-            // Original Mac handling
-            juce::Image gritCopy = gritTexture.createCopy();
-            gritCopy.multiplyAllAlphas(0.07f);
-            g.drawImage(gritCopy,
+            // Opacity is applied once in the constructor
+            g.drawImage(gritTexture,
                        gritBounds.getX(),
                        gritBounds.getY(),
                        gritBounds.getWidth(),
@@ -934,20 +900,8 @@ void KronosAudioProcessorEditor::updateDateLabels()
         int dateIndex = i + firstVisibleIndex;
         if (dateIndex < dates.size())
         {
-            auto date = dates[dateIndex];
-            auto timeSpent = audioProcessor.getTimeForDate(date);
-            
             dateLabels[i].setVisible(true);
-            auto hours = timeSpent / 3600;
-            auto minutes = (timeSpent % 3600) / 60;
-            auto seconds = timeSpent % 60;
-            
-            juce::String timeStr = juce::String::formatted("%02d:%02d:%02d", 
-                                                          (int)hours, 
-                                                          (int)minutes, 
-                                                          (int)seconds);
-            
-            dateLabels[i].setText(date.formatted("%m-%d-%Y") + " - " + timeStr, 
+            dateLabels[i].setText(dates[dateIndex].formatted("%m-%d-%Y") + " - ", 
                                  juce::dontSendNotification);
         }
         else
@@ -955,7 +909,9 @@ void KronosAudioProcessorEditor::updateDateLabels()
             dateLabels[i].setVisible(false);
         }
     }
-    repaint();
+
+    // Only the bars change here, and the labels repaint themselves
+    repaint(previousSessionsBounds.getSmallestIntegerContainer());
 }
 
 // Performance: O(1) - Simple floating point division
@@ -975,13 +931,7 @@ void KronosAudioProcessorEditor::drawTimeBars(juce::Graphics& g)
     auto dates = audioProcessor.getSortedDates();
     if (dates.isEmpty()) return;
 
-    // Find maximum time and debug output
-    juce::int64 maxTime = 0;
-    for (const auto& date : dates)
-    {
-        auto timeSpent = audioProcessor.getTimeForDate(date);
-        maxTime = juce::jmax(maxTime, timeSpent);
-    }
+    const auto maxTime = audioProcessor.getLongestDaySeconds();
 
     // Get the bounds of the Previous Sessions panel
     auto bounds = getLocalBounds();
