@@ -24,6 +24,7 @@ The 40-50% rule is read as applying to the dial, which is where the spec states 
 - **Theme swap:** a 340ms cross-fade from a snapshot. The panels do not settle with reading-order offsets.
 - **Sort switch:** the label decodes in 180ms and rows fade in with a 40ms stagger. Rows do not travel to their new positions.
 - **Reduced motion:** the prototype honours `prefers-reduced-motion`. JUCE has no cross-platform equivalent, so this is not implemented.
+- **Status chip:** the prototype sizes the chip to its text, which pushes the inscription and rule sideways on every state change. Here it stays TRACKING-width in both states, and the label, LED and glint cross-fade over 340ms.
 - **Readout label row:** the Greek tracking is .2em, not .3em, because both labels need to fit in 342px on one line.
 
 ## Fonts

@@ -100,7 +100,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
 
     header.setDark(audioProcessor.isDarkMode());
     wasTracking = audioProcessor.isTracking();
-    header.setTracking(wasTracking, false);
+    header.setTracking(wasTracking, false, false);
     sessions.showSortMode(false);
     refreshNow();
 
@@ -221,7 +221,7 @@ void KronosAudioProcessorEditor::refreshNow()
 {
     const auto tracking = audioProcessor.isTracking();
 
-    header.setTracking(tracking, motionEnabled && tracking && !wasTracking);
+    header.setTracking(tracking, motionEnabled && isShowing(), motionEnabled && tracking && !wasTracking);
     wasTracking = tracking;
 
     updateReadouts();

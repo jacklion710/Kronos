@@ -83,6 +83,12 @@ HeaderBar::HeaderBar()
 
     glitch.jumpTo(1.0f);
     glitch.onChange = [this] { repaint(wordmarkArea.getSmallestIntegerContainer().expanded(6, 0)); };
+
+    statusBlend.onChange = [this]
+    {
+        repaint(ruleArea.getSmallestIntegerContainer());
+        repaint(chipArea.getSmallestIntegerContainer());
+    };
 }
 
 void HeaderBar::setDark(bool isDark)
@@ -96,11 +102,14 @@ void HeaderBar::setMenuOpen(bool isOpen)
     menuButton.setActive(isOpen);
 }
 
-void HeaderBar::setTracking(bool isTracking, bool playStartGlitch)
+void HeaderBar::setTracking(bool isTracking, bool animate, bool playStartGlitch)
 {
     tracking = isTracking;
-    resized();
-    repaint();
+
+    if (animate)
+        statusBlend.animateTo(tracking ? 1.0f : 0.0f, 340);
+    else
+        statusBlend.jumpTo(tracking ? 1.0f : 0.0f);
 
     if (playStartGlitch)
     {
@@ -124,7 +133,9 @@ void HeaderBar::resized()
     themeButton.setBounds(menuButton.getX() - 44, 2, 32, 32);
 
     const auto chipFont = KLF::font(KLF::Face::monoRegular, 10.0f, 0.16f);
-    const auto chipWidth = 10.0f + 6.0f + 8.0f + widthOf(chipFont, tracking ? "TRACKING" : "PAUSED") + 10.0f;
+
+    // Sized for the longer label in both states, so nothing shifts when it changes
+    const auto chipWidth = 10.0f + 6.0f + 8.0f + widthOf(chipFont, "TRACKING") + 10.0f;
     chipArea = { static_cast<float>(themeButton.getX()) - 12.0f - chipWidth, 6.0f, chipWidth, 24.0f };
 
     const auto wordmarkFont = KLF::font(KLF::Face::sansBold, 15.0f, 0.34f);
@@ -179,6 +190,7 @@ void HeaderBar::paint(juce::Graphics& g)
     const auto faint = findColour(KLF::faintColourId);
     const auto line = findColour(KLF::lineColourId);
     const auto accent = findColour(KLF::accentColourId);
+    const auto trackingAmount = statusBlend.get();
 
     KronosArt::drawSigil(g, { 0.0f, 6.0f, 24.0f, 24.0f }, muted, accent, text);
     drawWordmark(g);
@@ -187,10 +199,10 @@ void HeaderBar::paint(juce::Graphics& g)
     g.setColour(line);
     g.fillRect(ruleArea.withHeight(1.0f));
 
-    if (tracking && glintPhase < 0.55)
+    if (trackingAmount > 0.0f && glintPhase < 0.55)
     {
         const auto travel = static_cast<float>(glintPhase / 0.55);
-        const auto opacity = juce::jmin(1.0f, travel / 0.22f) * juce::jmin(1.0f, (1.0f - travel) / 0.27f);
+        const auto opacity = trackingAmount * juce::jmin(1.0f, travel / 0.22f) * juce::jmin(1.0f, (1.0f - travel) / 0.27f);
         const auto x = ruleArea.getX() - 40.0f + (ruleArea.getWidth() + 40.0f) * travel;
         juce::Graphics::ScopedSaveState state(g);
         g.reduceClipRegion(ruleArea.getSmallestIntegerContainer());
@@ -217,25 +229,32 @@ void HeaderBar::paint(juce::Graphics& g)
 
     const auto led = juce::Rectangle<float>(6.0f, 6.0f).withCentre({ chipArea.getX() + 13.0f, chipArea.getCentreY() });
 
-    if (tracking)
+    // The lit and hollow LEDs and the two labels cross-fade in place
+    if (trackingAmount > 0.0f)
     {
         const auto breath = static_cast<float>(0.5 - 0.5 * std::cos(ledPhase * twoPi));
         const auto glow = led.expanded(1.0f + 3.0f * breath);
-        g.setGradientFill(juce::ColourGradient(accent.withAlpha(0.55f * breath), glow.getCentre(),
+        g.setGradientFill(juce::ColourGradient(accent.withAlpha(0.55f * breath * trackingAmount), glow.getCentre(),
                                                accent.withAlpha(0.0f), glow.getTopLeft().translated(0.0f, glow.getHeight() * 0.5f), true));
         g.fillEllipse(glow);
-        g.setColour(accent);
+        g.setColour(accent.withAlpha(trackingAmount));
         g.fillEllipse(led);
     }
-    else
+
+    if (trackingAmount < 1.0f)
     {
-        g.setColour(faint);
+        g.setColour(faint.withMultipliedAlpha(1.0f - trackingAmount));
         g.drawEllipse(led.reduced(0.5f), 1.0f);
     }
 
-    g.setColour(muted);
+    const auto labelArea = chipArea.withTrimmedLeft(24.0f).withTrimmedRight(10.0f);
     g.setFont(KLF::font(KLF::Face::monoRegular, 10.0f, 0.16f));
-    g.drawText(tracking ? "TRACKING" : "PAUSED", chipArea.withTrimmedLeft(24.0f), juce::Justification::centredLeft, false);
+
+    g.setColour(muted.withMultipliedAlpha(trackingAmount));
+    g.drawText("TRACKING", labelArea, juce::Justification::centred, false);
+
+    g.setColour(muted.withMultipliedAlpha(1.0f - trackingAmount));
+    g.drawText("PAUSED", labelArea, juce::Justification::centred, false);
 }
 
 //==============================================================================

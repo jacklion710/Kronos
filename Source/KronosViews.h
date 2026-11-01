@@ -22,10 +22,13 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
-    void setTracking(bool isTracking, bool playStartGlitch);
+    void setTracking(bool isTracking, bool animate, bool playStartGlitch);
     void setDark(bool isDark);
     void setMenuOpen(bool isOpen);
     void advance(double seconds);
+
+    juce::Rectangle<float> getRuleArea() const { return ruleArea; }
+    juce::Rectangle<float> getChipArea() const { return chipArea; }
 
     KronosButton themeButton { "Switch theme", KronosButton::Style::icon };
     KronosButton menuButton { "Menu", KronosButton::Style::icon };
@@ -35,7 +38,7 @@ private:
 
     bool tracking = false;
     double glintPhase = 0.0, ledPhase = 0.0;
-    Tween glitch;
+    Tween glitch, statusBlend;
     juce::Rectangle<float> ruleArea, chipArea, wordmarkArea;
 };
 

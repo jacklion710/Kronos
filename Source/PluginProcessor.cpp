@@ -12,6 +12,7 @@
 #include "JucePluginDefines.h"
 #include "BackupComponent.h"
 #include "RestoreComponent.h"
+#include "KronosViews.h"
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
@@ -2467,6 +2468,27 @@ private:
             auto* sheet = editor->getOpenSheet();
             sheet->onClose();
             expect(!sheet->isEnabled(), "A sheet that is closing must not take input.");
+        }
+
+        scenario("The header stays still when tracking changes");
+        {
+            KronosLookAndFeel lookAndFeel;
+            HeaderBar header;
+            header.setLookAndFeel(&lookAndFeel);
+            header.setBounds(16, 10, 568, 36);
+
+            header.setTracking(true, false, false);
+            const auto rule = header.getRuleArea();
+            const auto chip = header.getChipArea();
+
+            header.setTracking(false, false, false);
+            header.resized();
+
+            expect(header.getRuleArea() == rule, "The rule must not move between states.");
+            expect(header.getChipArea() == chip, "The chip must not change size between states.");
+            expect(header.getRuleArea().getWidth() > 10.0f, "The rule should have room for its glint.");
+
+            header.setLookAndFeel(nullptr);
         }
 
         scenario("Every session stays visible when a long list is scrolled");
