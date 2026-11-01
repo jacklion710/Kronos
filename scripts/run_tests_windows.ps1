@@ -6,7 +6,7 @@ param(
     [switch]$SkipBuild,
     [string]$AppBinary,
     [bool]$UseIsolatedBuildOutput = $true,
-    [int]$TimeoutSeconds = 120
+    [int]$TimeoutSeconds = 600
 )
 
 Set-StrictMode -Version Latest

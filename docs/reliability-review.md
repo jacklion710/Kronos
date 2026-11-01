@@ -32,12 +32,28 @@ Snapshots differ by a mean of 0.04 of 255 per channel.
 - Read tracked data only through `getSortedDates`, `getTimeForDate`, `getLongestDaySeconds` and `getTotalTimeInSeconds`.
 - Use `restoreStateFromData` for restores so invalid files are reported.
 
-## Not done
+## Validation
 
-- ThreadSanitizer and ASan/UBSan runs. The concurrent save scenario has only run unsanitized.
-- pluginval and auval on the fixed build. Nothing has been tested inside a DAW.
-- The real-clock soak. `KRONOS_SOAK_SECONDS` is implemented but has not been run.
-- Independent review of this diff, which was stopped before it reported.
-- `scripts/run_tests_windows.ps1` still times out at 120s and the tests are unverified on Windows. The Debug suite takes about 75s on this Mac.
-- `Builds/MacOSX` and `JuceLibraryCode` are stale and report 1.0.3 or 1.0.4, so re-run Projucer before a release.
-- Known limit: up to 1s of carried fraction is lost per project reopen, about 55s over two simulated years.
+- Long-run suite: passes in Debug and Release, three consecutive Debug runs after the final fix.
+- Real-clock soak: 1,802s tracked against 1,801s of wall clock over 30 minutes on the real JUCE timer.
+- pluginval strictness 10: all tests passed on the VST3, GUI tests skipped.
+- UBSan: 0 failures and 0 runtime errors.
+- Guard malloc: no memory faults. One timing assertion failed at 449ms against a 250ms budget, under its roughly 15x slowdown. Its large allocation warnings were the old 100MB and 118MB image decodes.
+- Independent code review: found a regression that rejected pre-February 2025 state, backups with no time data reporting success, impossible dates passing validation and a stale-parameter race. All four are fixed with tests. Hardening its concurrency test then caught a stale-clock rewind in the race fix, also fixed.
+
+## Not verified
+
+- ThreadSanitizer and AddressSanitizer: both crash in `__pthread_init` on this Intel Mac with macOS 26, even on a three-line program. Locking has only the stress test and code review behind it.
+- auval: not run. `auval -a` hung for over seven minutes on this machine, and validating an AU needs it installed.
+- Nothing has been tested inside a DAW.
+- Windows: the tests are unverified there.
+
+## Known limits
+
+- Up to 1s of carried fraction is lost per project reopen, about 55s over two simulated years.
+- A sleep under 5 minutes is credited as work, and a message thread blocked for over 5 minutes credits nothing. The threshold is `maximumCreditableGapMs`.
+- The old Restore screen still shows its status text in the title and can stay blank after restoring a shorter list. Both are in UI that the v2 redesign replaces.
+
+## Warning for local builds
+
+Release and Debug builds of the Xcode VST3, VST and AU targets copy into `~/Library/Audio/Plug-Ins`, replacing what is installed, whatever `SYMROOT` is set to. Build only the standalone target for testing, or remove the copy step in a scratch copy of the project.
