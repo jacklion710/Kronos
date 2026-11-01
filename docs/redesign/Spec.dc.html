@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kronos — system spec</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Noto+Sans+Symbols&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#ef593d}a:hover{color:#ff7a5f}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1420px; box-sizing: border-box; padding: 48px 56px; background: #0b0c0c; color: #eeece9; font-family: 'Source Sans 3', system-ui, sans-serif; display: flex; flex-direction: column; gap: 28px">
+
+<div style="display: flex; align-items: flex-end; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.22em; color: #b2b3b1">KRONOS · SYSTEM SPEC · v2.1 DRAFT</span>
+<h1 style="margin: 0; font-size: 40px; font-weight: 600; letter-spacing: 0.02em">Graphite astrolabe</h1>
+</div>
+<div style="flex-grow: 1; height: 1px; background: #343737; margin-bottom: 12px"></div>
+<p style="margin: 0 0 6px 0; width: 420px; font-size: 14px; line-height: 1.5; color: #b2b3b1">Jack.Lion family tokens (graphite, warm off-white, restrained vermilion), Source Sans 3 + JetBrains Mono, chamfered HUD panels, and a quiet mythic layer: Greek inscriptions, Saturn's hexagon and planetary day glyphs. It only moves while time is actually being tracked.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+
+<div style="border: 1px solid #343737; background: #101212; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">PALETTE · DARK (DEFAULT)</span>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #0b0c0c; border: 1px solid #343737"></div><span style="font-size: 11px; color: #b2b3b1">ground</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#0B0C0C</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #101212; border: 1px solid #343737"></div><span style="font-size: 11px; color: #b2b3b1">surface</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#101212</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #161919; border: 1px solid #343737"></div><span style="font-size: 11px; color: #b2b3b1">raised</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#161919</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #343737"></div><span style="font-size: 11px; color: #b2b3b1">line</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#343737</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #eeece9"></div><span style="font-size: 11px; color: #b2b3b1">text</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#EEECE9</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #b2b3b1"></div><span style="font-size: 11px; color: #b2b3b1">muted</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#B2B3B1</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #ef593d"></div><span style="font-size: 11px; color: #b2b3b1">accent</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#EF593D</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #bc321e"></div><span style="font-size: 11px; color: #b2b3b1">CTA fill</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#BC321E</span></div>
+</div>
+<span style="font-size: 12px; line-height: 1.45; color: #8f918f">Faint labels #8F918F · bar track #1F2323 · woven weft at 5% text colour.</span>
+</div>
+
+<div style="border: 1px solid #343737; background: #f5f4f1; color: #151616; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">PALETTE · LIGHT</span>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #e9e7e3; border: 1px solid #cbc8c2"></div><span style="font-size: 11px; color: #4c4e50">ground</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#E9E7E3</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #f5f4f1; border: 1px solid #cbc8c2"></div><span style="font-size: 11px; color: #4c4e50">surface</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#F5F4F1</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #fbfaf8; border: 1px solid #cbc8c2"></div><span style="font-size: 11px; color: #4c4e50">raised</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#FBFAF8</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #cbc8c2"></div><span style="font-size: 11px; color: #4c4e50">line</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#CBC8C2</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #151616"></div><span style="font-size: 11px; color: #4c4e50">text</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#151616</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #4c4e50"></div><span style="font-size: 11px; color: #4c4e50">muted</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#4C4E50</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #d2452b"></div><span style="font-size: 11px; color: #4c4e50">accent</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#D2452B</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><div style="height: 44px; background: #a82c19"></div><span style="font-size: 11px; color: #4c4e50">accent text</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">#A82C19</span></div>
+</div>
+<span style="font-size: 12px; line-height: 1.45; color: #5f6265">Accent text darkens to #A82C19 so small readouts keep 4.5:1 on paper.</span>
+</div>
+
+<div style="border: 1px solid #343737; background: #101212; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">TYPE</span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'JetBrains Mono', monospace; font-weight: 300; font-size: 44px; line-height: 1">180:01:38</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">JETBRAINS MONO 300 · 54 / readout · tabular nums</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 18px; font-weight: 700; letter-spacing: 0.34em">KRONOS</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">SOURCE SANS 3 700 · 15 · tracking .34em / wordmark</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 22px; font-weight: 600">Back up session data</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">SOURCE SANS 3 600 · 22 / sheet titles · 13 body</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: #b2b3b1">PROJECT TIME · TRACKING</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">MONO 400 · 10 · .16–.2em / HUD labels</span>
+</div>
+<span style="font-size: 12px; line-height: 1.45; color: #8f918f">ASTERA retires; embed both families via BinaryData so the plugin matches site, Members and CRM.</span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+
+<div style="border: 1px solid #343737; background: #101212; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">COMPONENTS</span>
+<div style="display: flex; gap: 16px; align-items: flex-start">
+<div style="display: flex; flex-direction: column; gap: 6px; align-items: center">
+<div style="width: 64px; height: 64px; background: #bc321e; display: flex; align-items: center; justify-content: center; clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 22 22" fill="#ffffff"><path d="M7 4 L18 11 L7 18 Z"></path></svg></div>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #b2b3b1">START</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; align-items: center">
+<div style="width: 62px; height: 62px; background: #161919; border: 1px solid #ef593d; display: flex; align-items: center; justify-content: center; clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 22 22" fill="#ef593d"><rect x="5" y="4" width="4" height="14"></rect><rect x="13" y="4" width="4" height="14"></rect></svg></div>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #b2b3b1">PAUSE</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; align-items: center">
+<div style="width: 62px; height: 62px; background: #161919; border: 1px solid #ef593d; box-shadow: 0 0 0 2px #0b0c0c, 0 0 0 4px #ef593d; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 22 22" fill="#ef593d"><rect x="5" y="4" width="4" height="14"></rect><rect x="13" y="4" width="4" height="14"></rect></svg></div>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #b2b3b1">FOCUS</span>
+</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; border: 1px solid #343737; align-self: flex-start">
+<span style="height: 24px; display: flex; align-items: center; padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; background: #161919; box-shadow: inset 0 -2px 0 #ef593d">RECENT</span>
+<span style="height: 24px; display: flex; align-items: center; padding: 0 10px; border-left: 1px solid #343737; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #b2b3b1">LONGEST</span>
+</div>
+<div style="display: flex; gap: 10px">
+<span style="display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 10px; border: 1px solid #343737; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; color: #b2b3b1"><span style="width: 6px; height: 6px; border-radius: 50%; background: #ef593d; box-shadow: 0 0 8px 2px rgba(239,89,61,.5)"></span>TRACKING</span>
+<span style="display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 10px; border: 1px solid #343737; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; color: #b2b3b1"><span style="width: 6px; height: 6px; border-radius: 50%; border: 1px solid #8f918f"></span>PAUSED</span>
+</div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; border: 1px solid #343737">
+<div style="height: 28px; display: grid; grid-template-columns: 34px 88px minmax(0, 1fr) 86px; align-items: center; column-gap: 10px; padding: 0 10px; background: rgba(239,89,61,.06)">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">TDY</span><span style="font-size: 13px; font-weight: 600; color: #ef593d">Oct 31, 2026</span><div style="height: 6px; background: #1f2323"><div style="width: 23%; height: 6px; background: #ef593d"></div></div><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right; color: #ef593d">02:14:07</span>
+</div>
+<div style="height: 28px; display: grid; grid-template-columns: 34px 88px minmax(0, 1fr) 86px; align-items: center; column-gap: 10px; padding: 0 10px; border-top: 1px solid #343737">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">TUE</span><span style="font-size: 13px; font-weight: 600">Oct 27, 2026</span><div style="height: 6px; background: #1f2323"><div style="width: 100%; height: 6px; background: #eeece9"></div></div><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right">09:48:03</span>
+</div>
+<div style="height: 28px; display: grid; grid-template-columns: 34px 88px minmax(0, 1fr) 86px; align-items: center; column-gap: 10px; padding: 0 10px; border-top: 1px solid #343737">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">MON</span><span style="font-size: 13px; font-weight: 600">Oct 26, 2026</span><div style="height: 6px; background: #1f2323"><div style="width: 44%; height: 6px; background: #b2b3b1"></div></div><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right">04:20:55</span>
+</div>
+</div>
+<span style="font-size: 12px; line-height: 1.5; color: #8f918f">Session rows: today = accent bar + accent date; longest day = full off-white bar; others muted. Bars scale to the longest day. Panels: 12px 45° chamfer on opposing corners, 1px line border. Hit targets ≥32px at base size, so ≥44px at the 1.33× default most hosts open.</span>
+</div>
+
+<div style="border: 1px solid #343737; background: #101212; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">MOTION</span>
+<div style="display: flex; flex-direction: column; font-size: 13px">
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0; border-bottom: 1px solid #343737; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #8f918f"><span>ELEMENT</span><span>BEHAVIOUR</span><span style="text-align: right">TIMING</span></div>
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0; border-bottom: 1px solid #343737"><span style="font-weight: 600">Seconds ring</span><span style="color: #b2b3b1">Accent arc = position in the current minute (real value)</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px">1 Hz step</span></div>
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0; border-bottom: 1px solid #343737"><span style="font-weight: 600">Minute ring</span><span style="color: #b2b3b1">Off-white arc = position in the current hour</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px">1 Hz step</span></div>
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0; border-bottom: 1px solid #343737"><span style="font-weight: 600">Inscription / hexagon</span><span style="color: #b2b3b1">Greek ring turns clockwise, Saturn hexagram turns against it; both freeze on pause</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px">120 s / 72 s</span></div>
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0; border-bottom: 1px solid #343737"><span style="font-weight: 600">Header glint</span><span style="color: #b2b3b1">Single light travels the header rule toward the inscription (no ticks)</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px">11 s cycle</span></div>
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0; border-bottom: 1px solid #343737"><span style="font-weight: 600">Status LED</span><span style="color: #b2b3b1">Breathing glow while tracking; hollow + still when paused</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px">2.4 s</span></div>
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0; border-bottom: 1px solid #343737"><span style="font-weight: 600">Start / pause</span><span style="color: #b2b3b1">Press scale .96 → state swap; wordmark pixel-glitch once when tracking starts</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px">80 / 340 ms</span></div>
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0; border-bottom: 1px solid #343737"><span style="font-weight: 600">Sort switch</span><span style="color: #b2b3b1">Label decodes glyph-by-glyph; rows re-order with 40 ms stagger</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px">180 / 340 ms</span></div>
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0; border-bottom: 1px solid #343737"><span style="font-weight: 600">Menu → sheet</span><span style="color: #b2b3b1">Rule draws from menu button, scrim fades, sheet rises 12 px; exit mirrors</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px">340 / 760 ms</span></div>
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 92px; column-gap: 12px; padding: 7px 0"><span style="font-weight: 600">Theme swap</span><span style="color: #b2b3b1">Cross-fade colours, panels settle with 80 ms reading-order offsets</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px">340 ms</span></div>
+</div>
+<span style="font-size: 12px; line-height: 1.5; color: #8f918f">Success effects run only after the file write actually succeeds; failures show plain text, never glitch. Ambient layers stop whenever the editor is hidden.</span>
+</div>
+</div>
+
+<div style="border: 1px solid #343737; background: #101212; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">MYTHIC LAYER</span>
+<span style="font-size: 12px; color: #8f918f">Always secondary: Greek and glyphs sit beside English labels, never replace them, and are hidden from screen readers.</span>
+</div>
+<div style="display: grid; grid-template-columns: 200px repeat(3, minmax(0, 1fr)); gap: 24px">
+
+<div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<svg aria-hidden="true" width="112" height="112" viewBox="0 0 64 64">
+<path d="M32 4 A28 28 0 1 1 18.5 7.5" fill="none" stroke="#b2b3b1" stroke-width="2.2" stroke-linecap="round"></path>
+<path d="M18.5 7.5 L23.5 2.8 L25.2 9.6 Z" fill="#ef593d"></path>
+<path d="M32 4 A28 28 0 1 1 18.5 7.5" fill="none" stroke="#101212" stroke-width="0.6" stroke-dasharray="1.5 3"></path>
+<g transform="translate(21 21)">
+<path d="M11 1.5 L19.2 6.25 L19.2 15.75 L11 20.5 L2.8 15.75 L2.8 6.25 Z" fill="none" stroke="#b2b3b1" stroke-width="0.9"></path>
+<path d="M6.2 8.4 A6 6 0 0 1 15.8 9.4" fill="none" stroke="#ef593d" stroke-width="1.5"></path>
+<path d="M11 6.6 L11 16.4 M8.6 12.2 L13.4 12.2" fill="none" stroke="#eeece9" stroke-width="1.1"></path>
+<circle cx="11" cy="16.4" r="1.1" fill="#eeece9"></circle>
+</g>
+</svg>
+<span style="font-size: 13px; font-weight: 600">Harpe sigil + ouroboros</span>
+<span style="font-size: 12px; line-height: 1.5; color: #8f918f">Hexagon (Saturn's polar hexagon), Kronos's sickle as the accent arc, and a Saturn-glyph stem. The ouroboros ring is About-only; the header uses the bare sigil at 24 px.</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: #8f918f">THREE TIMES · LABEL MAP</span>
+<div style="display: flex; flex-direction: column; border: 1px solid #343737">
+<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); padding: 9px 12px; border-bottom: 1px solid #343737"><span style="font-weight: 600; letter-spacing: 0.24em; color: #ef593d">ΧΡΟΝΟΣ</span><span style="font-size: 13px; color: #b2b3b1">Measured time → Project time</span></div>
+<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); padding: 9px 12px; border-bottom: 1px solid #343737"><span style="font-weight: 600; letter-spacing: 0.24em">ΚΑΙΡΟΣ</span><span style="font-size: 13px; color: #b2b3b1">The moment → This run</span></div>
+<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); padding: 9px 12px; border-bottom: 1px solid #343737"><span style="font-weight: 600; letter-spacing: 0.24em">ΑΙΩΝ</span><span style="font-size: 13px; color: #b2b3b1">The eternal → the turning ring</span></div>
+<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); padding: 9px 12px; border-bottom: 1px solid #343737"><span style="font-weight: 600; letter-spacing: 0.24em">ΜΝΗΜΗ</span><span style="font-size: 13px; color: #b2b3b1">Memory → Back up</span></div>
+<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); padding: 9px 12px"><span style="font-weight: 600; letter-spacing: 0.24em">ΑΝΑΜΝΗΣΙΣ</span><span style="font-size: 13px; color: #b2b3b1">Recollection → Restore</span></div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: #8f918f">PLANETARY DAYS · SESSION ROWS</span>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid #343737">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0; border-right: 1px solid #343737"><span style="font-family: 'Noto Sans Symbols', 'Apple Symbols', sans-serif; font-size: 22px; color: #b2b3b1">☉︎</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">SUN</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0; border-right: 1px solid #343737"><span style="font-family: 'Noto Sans Symbols', 'Apple Symbols', sans-serif; font-size: 22px; color: #b2b3b1">☽︎</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">MON</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0; border-right: 1px solid #343737"><span style="font-family: 'Noto Sans Symbols', 'Apple Symbols', sans-serif; font-size: 22px; color: #b2b3b1">♂︎</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">TUE</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0; border-right: 1px solid #343737"><span style="font-family: 'Noto Sans Symbols', 'Apple Symbols', sans-serif; font-size: 22px; color: #b2b3b1">☿︎</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">WED</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0; border-right: 1px solid #343737"><span style="font-family: 'Noto Sans Symbols', 'Apple Symbols', sans-serif; font-size: 22px; color: #b2b3b1">♃︎</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">THU</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0; border-right: 1px solid #343737"><span style="font-family: 'Noto Sans Symbols', 'Apple Symbols', sans-serif; font-size: 22px; color: #b2b3b1">♀︎</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8f918f">FRI</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0; background: rgba(239,89,61,.08)"><span style="font-family: 'Noto Sans Symbols', 'Apple Symbols', sans-serif; font-size: 22px; color: #ef593d">♄︎</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #ef593d">SAT</span></div>
+</div>
+<span style="font-size: 12px; line-height: 1.5; color: #8f918f">Each weekday keeps the planet it is named after; Saturday is Saturn's (Kronos's) day. Today's glyph takes the accent. In JUCE, draw the glyphs as paths so no host font is needed.</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: #8f918f">DIAL ANATOMY</span>
+<div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.45; color: #b2b3b1">
+<span><span style="color: #ef593d; font-weight: 600">r 74</span> seconds arc with a diamond at its tip</span>
+<span><span style="color: #eeece9; font-weight: 600">r 65</span> inscription: ΧΡΟΝΟΣ · ΚΑΙΡΟΣ · ΑΙΩΝ · ΕΝ ΤΟ ΠΑΝ</span>
+<span><span style="color: #eeece9; font-weight: 600">r 57</span> minute-of-hour arc</span>
+<span><span style="color: #eeece9; font-weight: 600">r 50</span> hexagram in Saturn's hexagon, counter-rotating</span>
+<span><span style="color: #eeece9; font-weight: 600">core</span> start / pause button</span>
+</div>
+<span style="font-size: 12px; line-height: 1.5; color: #8f918f">Engravings stay at 40–50% opacity in muted or faint tones, and only the hexagon edge picks up the accent. The readout stays clean.</span>
+</div>
+
+</div>
+</div>
+
+<div style="border: 1px solid #343737; background: #101212; padding: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">LAYOUT</span>
+<span style="font-size: 13px; line-height: 1.55; color: #b2b3b1">Base 600 × 450, fixed 4:3, resizable 400 × 300 → 1200 × 900 by uniform scale. Header 10–46 · Readout panel 56–244 · Sessions 256–434 · 16 px gutters. Session list scrolls natively; arrow buttons removed.</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">JUCE BUILD NOTES</span>
+<span style="font-size: 13px; line-height: 1.55; color: #b2b3b1">Draw panels, dial and icons with juce::Path (≈38 per-theme SVGs and Grit.jpg retire). Colours live in LookAndFeel colour IDs per theme. 30 Hz repaint only while visible and tracking; 1 Hz otherwise. New stats derive from timePerDate.</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">KEEP / DROP</span>
+<span style="font-size: 13px; line-height: 1.55; color: #b2b3b1">Keep: total time, start/pause, per-day log, sort by recency/length, themes, backup, restore, about. Add: today, this run, daily average, longest day, restore confirmation. Drop: blue palette, bevels, hex mesh, ruler marks.</span>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1420}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

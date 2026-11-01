@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kronos — plugin window</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Noto+Sans+Symbols&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#ef593d}a:hover{color:#ff7a5f}
+@keyframes kr-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes kr-spin-rev{from{transform:rotate(360deg)}to{transform:rotate(0deg)}}
+@keyframes kr-breathe{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes kr-glint{0%{transform:translateX(-40px);opacity:0}12%{opacity:1}40%{opacity:1}55%{transform:translateX(420px);opacity:0}100%{transform:translateX(420px);opacity:0}}
+@keyframes kr-led{0%,100%{box-shadow:0 0 0 0 rgba(239,89,61,0)}50%{box-shadow:0 0 8px 2px rgba(239,89,61,.55)}}
+.kr-list::-webkit-scrollbar{width:6px}
+.kr-list::-webkit-scrollbar-thumb{background:rgba(178,179,177,.28)}
+.kr-list::-webkit-scrollbar-track{background:transparent}
+.kr-btn{cursor:pointer}
+.kr-btn:focus-visible{outline:2px solid #ef593d;outline-offset:2px}
+.kr-row:hover{background:rgba(239,89,61,.06)}
+@media (prefers-reduced-motion: reduce){.kr-amb{animation:none !important}}
+</style>
+</helmet>
+<div style="width: 600px; height: 450px; position: relative; overflow: hidden; box-sizing: border-box; background: {{t.bg}}; color: {{t.text}}; font-family: 'Source Sans 3', system-ui, sans-serif">
+
+<svg aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: {{t.weaveOpacity}}">
+<defs>
+<pattern id="kr-weft" width="28" height="16" patternUnits="userSpaceOnUse">
+<path d="M0 8 L7 2 L14 8 L21 2 L28 8" fill="none" stroke="{{t.weave}}" stroke-width="0.8"></path>
+<path d="M0 16 L7 10 L14 16 L21 10 L28 16" fill="none" stroke="{{t.weave}}" stroke-width="0.8"></path>
+<path d="M7 2 L7 10 M21 2 L21 10" fill="none" stroke="{{t.weave}}" stroke-width="0.5"></path>
+</pattern>
+</defs>
+<rect width="100%" height="100%" fill="url(#kr-weft)"></rect>
+</svg>
+
+<header style="position: absolute; left: 16px; right: 16px; top: 10px; height: 36px; display: flex; align-items: center; gap: 12px">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 22 22" style="flex-shrink: 0">
+<path d="M11 1.5 L19.2 6.25 L19.2 15.75 L11 20.5 L2.8 15.75 L2.8 6.25 Z" fill="none" stroke="{{t.muted}}" stroke-width="0.9"></path>
+<path d="M6.2 8.4 A6 6 0 0 1 15.8 9.4" fill="none" stroke="{{t.accent}}" stroke-width="1.5"></path>
+<path d="M11 6.6 L11 16.4 M8.6 12.2 L13.4 12.2" fill="none" stroke="{{t.text}}" stroke-width="1.1"></path>
+<circle cx="11" cy="16.4" r="1.1" fill="{{t.text}}"></circle>
+</svg>
+<div style="font-size: 15px; font-weight: 700; letter-spacing: 0.34em; line-height: 1">KRONOS</div>
+<div aria-hidden="true" style="flex-grow: 1; height: 1px; position: relative; overflow: hidden; background: {{t.line}}">
+<div class="kr-amb" style="position: absolute; top: 0; left: 0; width: 40px; height: 1px; background: linear-gradient(90deg, transparent, {{t.accent}}, transparent); animation: kr-glint 11s ease-in-out infinite; animation-play-state: {{playState}}"></div>
+</div>
+<span aria-hidden="true" style="font-size: 9px; letter-spacing: 0.42em; color: {{t.faint}}; white-space: nowrap">ΧΡΟΝΟΣ · ΚΑΙΡΟΣ · ΑΙΩΝ</span>
+<div aria-hidden="true" style="width: 18px; height: 1px; background: {{t.line}}"></div>
+<div role="status" style="display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 10px; border: 1px solid {{t.line}}; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; color: {{t.muted}}">
+<span class="kr-amb" style="width: 6px; height: 6px; border-radius: 50%; background: {{ledFill}}; border: 1px solid {{ledEdge}}; animation: kr-led 2.4s ease-in-out infinite; animation-play-state: {{playState}}"></span>
+<span>{{statusText}}</span>
+</div>
+<button class="kr-btn" aria-label="{{themeLabel}}" onClick="{{toggleTheme}}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid {{t.line}}; color: {{t.muted}}; padding: 0">
+<sc-if value="{{isDark}}" hint-placeholder-val="{{ true }}">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="1.3" fill="currentColor"></circle></svg>
+</sc-if>
+<sc-if value="{{isLight}}" hint-placeholder-val="{{ false }}">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"></path></svg>
+</sc-if>
+</button>
+<button class="kr-btn" aria-label="Menu" aria-expanded="{{menuOpen}}" onClick="{{toggleMenu}}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: {{menuBg}}; border: 1px solid {{t.line}}; color: {{t.muted}}; padding: 0">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 4.5h10M3 8h10M3 11.5h6"></path></svg>
+</button>
+</header>
+
+<section aria-label="Project time" style="position: absolute; left: 16px; top: 56px; width: 568px; height: 188px; background: {{t.line}}; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)">
+<div style="position: absolute; inset: 1px; background: {{t.surf}}; clip-path: polygon(11.5px 0, 100% 0, 100% calc(100% - 11.5px), calc(100% - 11.5px) 100%, 0 100%, 0 11.5px)">
+
+<div style="position: absolute; left: 18px; top: 13px; width: 160px; height: 160px">
+<svg aria-hidden="true" width="160" height="160" viewBox="0 0 160 160" style="position: absolute; inset: 0">
+<circle cx="80" cy="80" r="74" fill="none" stroke="{{t.track}}" stroke-width="3"></circle>
+<circle cx="80" cy="80" r="74" fill="none" stroke="{{t.accent}}" stroke-width="3" stroke-linecap="butt" transform="rotate(-90 80 80)" style="stroke-dasharray: {{secDash}}"></circle>
+<rect x="-2.6" y="-2.6" width="5.2" height="5.2" fill="{{t.accent}}" transform="{{tipTransform}}"></rect>
+<circle cx="80" cy="80" r="57" fill="none" stroke="{{t.track}}" stroke-width="1"></circle>
+<circle cx="80" cy="80" r="57" fill="none" stroke="{{t.text}}" stroke-width="1.4" transform="rotate(-90 80 80)" style="stroke-dasharray: {{minDash}}; opacity: 0.7"></circle>
+</svg>
+<svg class="kr-amb" aria-hidden="true" width="160" height="160" viewBox="0 0 160 160" style="position: absolute; inset: 0; animation: kr-spin 120s linear infinite; animation-play-state: {{playState}}">
+<defs><path id="kr-inscr" d="M80 14.5 a65.5 65.5 0 1 1 0 131 a65.5 65.5 0 1 1 0 -131"></path></defs>
+<text style="font-family: 'Source Sans 3', sans-serif; font-size: 6.4px; font-weight: 600; letter-spacing: 1.6px" fill="{{t.faint}}"><textPath href="#kr-inscr" textLength="408" lengthAdjust="spacing">ΧΡΟΝΟΣ · ΚΑΙΡΟΣ · ΑΙΩΝ · ΕΝ ΤΟ ΠΑΝ · ΧΡΟΝΟΣ · ΚΑΙΡΟΣ · ΑΙΩΝ · ΕΝ ΤΟ ΠΑΝ ·</textPath></text>
+</svg>
+<svg class="kr-amb" aria-hidden="true" width="160" height="160" viewBox="0 0 160 160" style="position: absolute; inset: 0; animation: kr-spin-rev 72s linear infinite; animation-play-state: {{playState}}">
+<path d="M80 30 L123.3 105 L36.7 105 Z" fill="none" stroke="{{t.muted}}" stroke-width="0.7" opacity="0.45"></path>
+<path d="M80 130 L36.7 55 L123.3 55 Z" fill="none" stroke="{{t.muted}}" stroke-width="0.7" opacity="0.45"></path>
+<path d="M80 30 L123.3 55 L123.3 105 L80 130 L36.7 105 L36.7 55 Z" fill="none" stroke="{{t.accent}}" stroke-width="0.8" opacity="0.5"></path>
+<circle cx="80" cy="30" r="1.6" fill="{{t.accent}}"></circle>
+<circle cx="123.3" cy="105" r="1.2" fill="{{t.muted}}"></circle>
+<circle cx="36.7" cy="105" r="1.2" fill="{{t.muted}}"></circle>
+</svg>
+<button class="kr-btn" aria-label="{{playLabel}}" aria-pressed="{{tracking}}" onClick="{{toggleTrack}}" style="position: absolute; left: 44px; top: 44px; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid {{playEdge}}; background: {{playBg}}; color: {{playInk}}; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)">
+<sc-if value="{{tracking}}" hint-placeholder-val="{{ true }}">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="currentColor"><rect x="5" y="4" width="4" height="14"></rect><rect x="13" y="4" width="4" height="14"></rect></svg>
+</sc-if>
+<sc-if value="{{paused}}" hint-placeholder-val="{{ false }}">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="currentColor"><path d="M7 4 L18 11 L7 18 Z"></path></svg>
+</sc-if>
+</button>
+</div>
+
+<div style="position: absolute; left: 202px; right: 22px; top: 18px; display: flex; flex-direction: column">
+<div style="display: flex; justify-content: space-between; align-items: baseline; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: {{t.muted}}">
+<span><span style="font-family: 'Source Sans 3', sans-serif; font-weight: 600; letter-spacing: 0.3em; color: {{t.accentText}}">ΧΡΟΝΟΣ</span>  PROJECT TIME</span>
+<span><span style="font-family: 'Source Sans 3', sans-serif; font-weight: 600; letter-spacing: 0.3em; color: {{t.faint}}">ΚΑΙΡΟΣ</span>  THIS RUN <span style="color: {{t.text}}">{{runText}}</span></span>
+</div>
+<div aria-live="off" style="display: flex; align-items: flex-start; gap: 4px; margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 300; font-variant-numeric: tabular-nums">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 54px; line-height: 1; letter-spacing: -0.02em">{{hh}}</span>
+<span style="font-size: 9px; letter-spacing: 0.2em; color: {{t.faint}}; font-weight: 400">HRS</span>
+</div>
+<span style="font-size: 54px; line-height: 1; color: {{t.faint}}">:</span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 54px; line-height: 1; letter-spacing: -0.02em">{{mm}}</span>
+<span style="font-size: 9px; letter-spacing: 0.2em; color: {{t.faint}}; font-weight: 400">MIN</span>
+</div>
+<span style="font-size: 54px; line-height: 1; color: {{t.faint}}">:</span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 54px; line-height: 1; letter-spacing: -0.02em; color: {{secInk}}">{{ss}}</span>
+<span style="font-size: 9px; letter-spacing: 0.2em; color: {{t.faint}}; font-weight: 400">SEC</span>
+</div>
+</div>
+<div style="height: 1px; background: {{t.line}}; margin-top: 16px"></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: {{t.muted}}">TODAY</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; color: {{t.accentText}}">{{todayText}}</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: {{t.muted}}">DAILY AVG</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 15px">{{avgText}}</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: {{t.muted}}">LONGEST DAY</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 15px">{{bestText}}</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-label="Sessions" style="position: absolute; left: 16px; top: 256px; width: 568px; height: 178px; background: {{t.line}}; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))">
+<div style="position: absolute; inset: 1px; background: {{t.surf}}; clip-path: polygon(0 0, calc(100% - 11.5px) 0, 100% 11.5px, 100% 100%, 11.5px 100%, 0 calc(100% - 11.5px)); display: flex; flex-direction: column">
+<div style="height: 38px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 18px; border-bottom: 1px solid {{t.line}}">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.2em">SESSIONS</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: {{t.faint}}">{{daysText}}</span>
+<div style="flex-grow: 1"></div>
+<div role="group" aria-label="Sort sessions" style="display: flex; border: 1px solid {{t.line}}">
+<button class="kr-btn" aria-pressed="{{sortRecent}}" onClick="{{sortByRecent}}" style="height: 24px; padding: 0 10px; border: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; background: {{recentBg}}; color: {{recentInk}}; box-shadow: inset 0 -2px 0 {{recentRule}}">RECENT</button>
+<button class="kr-btn" aria-pressed="{{sortLongest}}" onClick="{{sortByLongest}}" style="height: 24px; padding: 0 10px; border: 0; border-left: 1px solid {{t.line}}; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; background: {{longestBg}}; color: {{longestInk}}; box-shadow: inset 0 -2px 0 {{longestRule}}">LONGEST</button>
+</div>
+</div>
+<div class="kr-list" style="flex-grow: 1; overflow-y: auto; padding: 4px 8px 6px 8px">
+<sc-for list="{{rows}}" as="row" hint-placeholder-count="5">
+<div class="kr-row" style="height: 27px; display: grid; grid-template-columns: 52px 88px minmax(0, 1fr) 86px; align-items: center; column-gap: 10px; padding: 0 10px">
+<span style="display: flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: {{t.faint}}"><span aria-hidden="true" style="width: 14px; text-align: center; font-family: 'Noto Sans Symbols', 'Apple Symbols', 'Segoe UI Symbol', sans-serif; font-size: 13px; line-height: 1; color: {{row.glyphInk}}">{{row.glyph}}</span>{{row.dow}}</span>
+<span style="font-size: 13px; font-weight: 600; color: {{row.dateInk}}">{{row.date}}</span>
+<div style="height: 6px; background: {{t.track}}; position: relative">
+<div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{row.pct}}; background: {{row.barFill}}"></div>
+</div>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; text-align: right; color: {{row.timeInk}}">{{row.time}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{ false }}">
+<div role="menu" aria-label="Kronos menu" style="position: absolute; top: 48px; right: 16px; width: 176px; background: {{t.raised}}; border: 1px solid {{t.line}}; padding: 4px; display: flex; flex-direction: column; box-shadow: 0 12px 32px rgba(0,0,0,.35)">
+<button class="kr-btn" role="menuitem" onClick="{{openBackup}}" style="height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; background: transparent; color: {{t.text}}; font-family: 'Source Sans 3', sans-serif; font-size: 13px; text-align: left">
+<svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="{{t.muted}}" stroke-width="1.2"><path d="M7 2v7M4 6l3 3 3-3M2 11.5h10"></path></svg><span style="flex-grow: 1">Back up…</span><span aria-hidden="true" style="font-size: 9px; letter-spacing: 0.24em; color: {{t.faint}}">ΜΝΗΜΗ</span></button>
+<button class="kr-btn" role="menuitem" onClick="{{openRestore}}" style="height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; background: transparent; color: {{t.text}}; font-family: 'Source Sans 3', sans-serif; font-size: 13px; text-align: left">
+<svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="{{t.muted}}" stroke-width="1.2"><path d="M7 11V4M4 7l3-3 3 3M2 2.5h10"></path></svg><span style="flex-grow: 1">Restore…</span><span aria-hidden="true" style="font-size: 9px; letter-spacing: 0.24em; color: {{t.faint}}">ΑΝΑΜΝΗΣΙΣ</span></button>
+<div style="height: 1px; background: {{t.line}}; margin: 4px 6px"></div>
+<button class="kr-btn" role="menuitem" onClick="{{openAbout}}" style="height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; background: transparent; color: {{t.text}}; font-family: 'Source Sans 3', sans-serif; font-size: 13px; text-align: left">
+<svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="{{t.muted}}" stroke-width="1.2"><circle cx="7" cy="7" r="5.5"></circle><path d="M7 6.5v3.5M7 4.2v.1"></path></svg><span style="flex-grow: 1">About Kronos</span><span aria-hidden="true" style="font-size: 9px; letter-spacing: 0.24em; color: {{t.faint}}">ΠΕΡΙ</span></button>
+</div>
+</sc-if>
+
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: {{t.scrim}}; display: flex; align-items: center; justify-content: center">
+<div role="dialog" aria-modal="true" aria-label="{{sheetTitle}}" style="width: 440px; position: relative; background: {{t.line}}; padding: 1px; clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)">
+<div style="background: {{t.raised}}; padding: 22px 24px 20px 24px; display: flex; flex-direction: column; gap: 14px; clip-path: polygon(13.5px 0, 100% 0, 100% calc(100% - 13.5px), calc(100% - 13.5px) 100%, 0 100%, 0 13.5px)">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="width: 18px; height: 2px; background: {{t.accent}}"></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: {{t.muted}}">{{sheetKicker}}</span>
+<div style="flex-grow: 1"></div>
+<button class="kr-btn" aria-label="Close" onClick="{{closeSheet}}" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid {{t.line}}; background: transparent; color: {{t.muted}}; padding: 0">
+<svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 2l8 8M10 2l-8 8"></path></svg>
+</button>
+</div>
+
+<sc-if value="{{isBackup}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 22px; font-weight: 600">Back up session data</h2>
+<p style="margin: 0; font-size: 13px; line-height: 1.45; color: {{t.muted}}">Saves this project’s full time log as a .kronos file you can restore into any session.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="kr-proj" style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: {{t.muted}}">PROJECT NAME</label>
+<input id="kr-proj" value="MY PROJECT" style="height: 38px; box-sizing: border-box; padding: 0 12px; border: 1px solid {{t.line}}; border-bottom: 2px solid {{t.accent}}; background: {{t.surf}}; color: {{t.text}}; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.06em">
+</div>
+<div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: {{t.faint}}">
+<span>MY PROJECT_2026-10-31.kronos</span>
+<span>{{totalText}} · {{daysText}}</span>
+</div>
+<div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 2px">
+<button class="kr-btn" onClick="{{closeSheet}}" style="height: 36px; padding: 0 16px; border: 1px solid {{t.line}}; background: transparent; color: {{t.text}}; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600">Cancel</button>
+<button class="kr-btn" onClick="{{saveBackup}}" style="height: 36px; padding: 0 18px; border: 0; background: #bc321e; color: #ffffff; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.04em">Save backup</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isBackupDone}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 12px">
+<svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="{{t.accent}}" stroke-width="1.6"><circle cx="14" cy="14" r="12"></circle><path d="M8.5 14.5l3.5 3.5 7.5-8"></path></svg>
+<h2 style="margin: 0; font-size: 22px; font-weight: 600">Backup saved</h2>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; background: {{t.surf}}; border: 1px solid {{t.line}}; font-family: 'JetBrains Mono', monospace; font-size: 12px">
+<span>MY PROJECT_2026-10-31.kronos</span>
+<span style="color: {{t.faint}}">~/Documents/Kronos/Backups</span>
+</div>
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<button class="kr-btn" style="height: 36px; padding: 0 16px; border: 1px solid {{t.line}}; background: transparent; color: {{t.text}}; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600">Show in folder</button>
+<button class="kr-btn" onClick="{{closeSheet}}" style="height: 36px; padding: 0 18px; border: 0; background: #bc321e; color: #ffffff; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600">Done</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isRestore}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 22px; font-weight: 600">Restore session data</h2>
+<div role="radiogroup" aria-label="Backups" style="display: flex; flex-direction: column; border: 1px solid {{t.line}}">
+<sc-for list="{{backups}}" as="b" hint-placeholder-count="3">
+<button class="kr-btn" role="radio" aria-checked="{{b.on}}" onClick="{{b.pick}}" style="height: 40px; display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; padding: 0 12px; border: 0; border-bottom: 1px solid {{t.line}}; background: {{b.bg}}; color: {{t.text}}; text-align: left">
+<span style="width: 10px; height: 10px; border: 1px solid {{b.ring}}; background: {{b.dot}}"></span>
+<span style="display: flex; flex-direction: column"><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px">{{b.file}}</span><span style="font-size: 11px; color: {{t.faint}}">{{b.when}}</span></span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: {{t.muted}}">{{b.total}}</span>
+</button>
+</sc-for>
+</div>
+<div style="display: flex; justify-content: space-between; gap: 8px">
+<button class="kr-btn" style="height: 36px; padding: 0 14px; border: 1px solid {{t.line}}; background: transparent; color: {{t.text}}; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600">Browse…</button>
+<div style="display: flex; gap: 8px">
+<button class="kr-btn" onClick="{{closeSheet}}" style="height: 36px; padding: 0 16px; border: 1px solid {{t.line}}; background: transparent; color: {{t.text}}; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600">Cancel</button>
+<button class="kr-btn" onClick="{{restoreNext}}" style="height: 36px; padding: 0 18px; border: 0; background: #bc321e; color: #ffffff; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600">Restore</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isRestoreConfirm}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 22px; font-weight: 600">Replace this project’s log?</h2>
+<p style="margin: 0; font-size: 13px; line-height: 1.45; color: {{t.muted}}">The current log is overwritten. Back it up first if you may want it again.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: {{t.line}}; border: 1px solid {{t.line}}">
+<div style="background: {{t.surf}}; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: {{t.muted}}">CURRENT</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 16px">{{totalText}}</span>
+<span style="font-size: 11px; color: {{t.faint}}">{{daysText}}</span>
+</div>
+<div style="background: {{t.surf}}; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: {{t.accentText}}">FROM BACKUP</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 16px">{{pickedTotal}}</span>
+<span style="font-size: 11px; color: {{t.faint}}">{{pickedFile}}</span>
+</div>
+</div>
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<button class="kr-btn" autofocus onClick="{{closeSheet}}" style="height: 36px; padding: 0 16px; border: 1px solid {{t.text}}; background: transparent; color: {{t.text}}; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600">Keep current</button>
+<button class="kr-btn" onClick="{{closeSheet}}" style="height: 36px; padding: 0 18px; border: 0; background: #bc321e; color: #ffffff; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600">Replace log</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isAbout}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 14px">
+<svg aria-hidden="true" width="64" height="64" viewBox="0 0 64 64">
+<path d="M32 4 A28 28 0 1 1 18.5 7.5" fill="none" stroke="{{t.muted}}" stroke-width="2.2" stroke-linecap="round"></path>
+<path d="M18.5 7.5 L23.5 2.8 L25.2 9.6 Z" fill="{{t.accent}}"></path>
+<path d="M32 4 A28 28 0 1 1 18.5 7.5" fill="none" stroke="{{t.bg}}" stroke-width="0.6" stroke-dasharray="1.5 3"></path>
+<g transform="translate(21 21)">
+<path d="M11 1.5 L19.2 6.25 L19.2 15.75 L11 20.5 L2.8 15.75 L2.8 6.25 Z" fill="none" stroke="{{t.muted}}" stroke-width="0.9"></path>
+<path d="M6.2 8.4 A6 6 0 0 1 15.8 9.4" fill="none" stroke="{{t.accent}}" stroke-width="1.5"></path>
+<path d="M11 6.6 L11 16.4 M8.6 12.2 L13.4 12.2" fill="none" stroke="{{t.text}}" stroke-width="1.1"></path>
+<circle cx="11" cy="16.4" r="1.1" fill="{{t.text}}"></circle>
+</g>
+</svg>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 26px; font-weight: 700; letter-spacing: 0.3em; line-height: 1">KRONOS</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: {{t.faint}}">v1.0.4 · VST3 · AU</span>
+</div>
+</div>
+<div style="display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-top: 1px solid {{t.line}}; border-bottom: 1px solid {{t.line}}">
+<span style="font-size: 13px; font-weight: 600; letter-spacing: 0.3em; color: {{t.accentText}}">ΕΝ ΤΟ ΠΑΝ</span>
+<span style="font-size: 12px; font-style: italic; color: {{t.faint}}">the all is one — inscription of the ouroboros</span>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: {{t.muted}}">Time tracking for your DAW sessions. Created by Jacob Leone (Jack.Lion).</p>
+<nav aria-label="Jack.Lion links" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: {{t.line}}; border: 1px solid {{t.line}}">
+<a href="https://jacklion.xyz" style="height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: {{t.surf}}; color: {{t.text}}; text-decoration: none; font-size: 13px; font-weight: 600">Website <span style="color: {{t.accentText}}">↗</span></a>
+<a href="https://jacklion.gumroad.com" style="height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: {{t.surf}}; color: {{t.text}}; text-decoration: none; font-size: 13px; font-weight: 600">More plugins <span style="color: {{t.accentText}}">↗</span></a>
+<a href="https://discord.gg/EFQq7BX" style="height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: {{t.surf}}; color: {{t.text}}; text-decoration: none; font-size: 13px; font-weight: 600">Discord <span style="color: {{t.accentText}}">↗</span></a>
+<a href="https://www.instagram.com/jack.lion" style="height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: {{t.surf}}; color: {{t.text}}; text-decoration: none; font-size: 13px; font-weight: 600">Instagram <span style="color: {{t.accentText}}">↗</span></a>
+</nav>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: {{t.faint}}">GPL v3 · JACK.LION</span>
+</div>
+</sc-if>
+
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"tracking":{"editor":"boolean","default":true},"sheet":{"editor":"enum","options":["none","menu","backup","backup-done","restore","restore-confirm","about"],"default":"none"},"$preview":{"width":600,"height":450}}'>
+const KR_THEMES = {
+  dark: { bg:'#0b0c0c', surf:'#101212', raised:'#161919', line:'#343737', text:'#eeece9', muted:'#b2b3b1', faint:'#8f918f', accent:'#ef593d', accentText:'#ef593d', track:'#1f2323', weave:'#eeece9', weaveOpacity:'0.05', scrim:'rgba(5,6,6,0.74)' },
+  light: { bg:'#e9e7e3', surf:'#f5f4f1', raised:'#fbfaf8', line:'#cbc8c2', text:'#151616', muted:'#4c4e50', faint:'#5f6265', accent:'#d2452b', accentText:'#a82c19', track:'#e0ddd7', weave:'#151616', weaveOpacity:'0.07', scrim:'rgba(233,231,227,0.72)' }
+};
+const KR_DAYS = [
+  { d:'2026-10-31', dow:'SAT', date:'Oct 31, 2026', s:8047, live:true },
+  { d:'2026-10-30', dow:'FRI', date:'Oct 30, 2026', s:22360 },
+  { d:'2026-10-29', dow:'THU', date:'Oct 29, 2026', s:11112 },
+  { d:'2026-10-27', dow:'TUE', date:'Oct 27, 2026', s:35283 },
+  { d:'2026-10-26', dow:'MON', date:'Oct 26, 2026', s:15655 },
+  { d:'2026-10-24', dow:'SAT', date:'Oct 24, 2026', s:25351 },
+  { d:'2026-10-23', dow:'FRI', date:'Oct 23, 2026', s:6250 },
+  { d:'2026-10-21', dow:'WED', date:'Oct 21, 2026', s:19800 },
+  { d:'2026-10-20', dow:'TUE', date:'Oct 20, 2026', s:8324 }
+];
+const KR_BACKUPS = [
+  { id:'a', file:'MY PROJECT_2026-10-24.kronos', when:'Oct 24, 2026 · 23:12', total:'142:10:00' },
+  { id:'b', file:'MY PROJECT_2026-10-02.kronos', when:'Oct 2, 2026 · 01:47', total:'96:44:31' },
+  { id:'c', file:'ALBUM MIX_2026-09-18.kronos', when:'Sep 18, 2026 · 19:05', total:'61:02:18' }
+];
+const KR_PLANETS = { SUN:'☉︎', MON:'☽︎', TUE:'♂︎', WED:'☿︎', THU:'♃︎', FRI:'♀︎', SAT:'♄︎' };
+function krPad(n){ return String(n).padStart(2,'0'); }
+function krHMS(sec){ const h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=sec%60; return krPad(h)+':'+krPad(m)+':'+krPad(s); }
+class Component extends DCLogic {
+  componentDidMount(){
+    this.iv = setInterval(() => { if (this.isTracking()) this.setState({ tick: ((this.state && this.state.tick) || 0) + 1 }); }, 1000);
+  }
+  componentWillUnmount(){ clearInterval(this.iv); }
+  st(){ return this.state || {}; }
+  isTracking(){ const s=this.st(); return s.tracking !== undefined ? s.tracking : (this.props.tracking ?? true); }
+  renderVals() {
+    const s = this.st();
+    const themeName = s.theme || this.props.theme || 'dark';
+    const t = KR_THEMES[themeName] || KR_THEMES.dark;
+    const tracking = this.isTracking();
+    const sheetProp = this.props.sheet || 'none';
+    const sheet = s.sheet !== undefined ? s.sheet : (sheetProp === 'menu' ? 'none' : sheetProp);
+    const menuOpen = s.menu !== undefined ? s.menu : sheetProp === 'menu';
+    const sort = s.sort || 'recent';
+    const tick = s.tick || 0;
+    const total = 648098 + tick;
+    const today = 8047 + tick;
+    const run = 2538 + tick;
+    const daysLogged = 27;
+    const days = KR_DAYS.map(x => x.live ? Object.assign({}, x, { s: today }) : x);
+    const max = Math.max.apply(null, days.map(x => x.s));
+    const ordered = sort === 'recent' ? days : days.slice().sort((a,b) => b.s - a.s);
+    const rows = ordered.map(x => {
+      const isLive = x.live && tracking;
+      const isBest = x.s === max;
+      return {
+        glyph: KR_PLANETS[x.dow] || '', glyphInk: x.live ? t.accent : t.muted,
+        dow: x.live ? 'TDY' : x.dow, date: x.date, time: krHMS(x.s),
+        pct: (Math.max(2, x.s / max * 100)).toFixed(1) + '%',
+        barFill: x.live ? t.accent : (isBest ? t.text : t.muted),
+        dateInk: x.live ? t.accentText : t.text,
+        timeInk: isLive ? t.accentText : t.text
+      };
+    });
+    const C1 = 2 * Math.PI * 74, C2 = 2 * Math.PI * 64;
+    const secFrac = (total % 60) / 60, minFrac = (total % 3600) / 3600;
+    const pickedId = s.picked || 'a';
+    const picked = KR_BACKUPS.find(b => b.id === pickedId) || KR_BACKUPS[0];
+    const tipA = secFrac * 2 * Math.PI - Math.PI / 2;
+    const tipTransform = 'translate(' + (80 + 74 * Math.cos(tipA)).toFixed(2) + ' ' + (80 + 74 * Math.sin(tipA)).toFixed(2) + ') rotate(45)';
+    const kickers = { backup:'BACKUP · ΜΝΗΜΗ', 'backup-done':'BACKUP · ΜΝΗΜΗ', restore:'RESTORE · ΑΝΑΜΝΗΣΙΣ', 'restore-confirm':'RESTORE · ΑΝΑΜΝΗΣΙΣ', about:'ABOUT · ΠΕΡΙ' };
+    const titles = { backup:'Back up session data', 'backup-done':'Backup saved', restore:'Restore session data', 'restore-confirm':'Replace this project’s log?', about:'About Kronos' };
+    return {
+      t, isDark: themeName === 'dark', isLight: themeName === 'light',
+      themeLabel: themeName === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
+      tracking, paused: !tracking,
+      playState: tracking ? 'running' : 'paused',
+      statusText: tracking ? 'TRACKING' : 'PAUSED',
+      ledFill: tracking ? t.accent : 'transparent', ledEdge: tracking ? t.accent : t.faint,
+      playLabel: tracking ? 'Pause tracking' : 'Start tracking',
+      playBg: tracking ? t.raised : '#bc321e', playEdge: tracking ? t.accent : '#bc321e', playInk: tracking ? t.accent : '#ffffff',
+      secInk: tracking ? t.accentText : t.text,
+      hh: String(Math.floor(total / 3600)), mm: krPad(Math.floor(total % 3600 / 60)), ss: krPad(total % 60),
+      tipTransform,
+      secDash: (C1 * secFrac).toFixed(1) + ' ' + C1.toFixed(1),
+      minDash: (C2 * minFrac).toFixed(1) + ' ' + C2.toFixed(1),
+      runText: krHMS(run), todayText: krHMS(today), avgText: krHMS(Math.floor(total / daysLogged)), bestText: krHMS(max),
+      totalText: krHMS(total), daysText: daysLogged + ' DAYS',
+      rows,
+      sortRecent: sort === 'recent', sortLongest: sort === 'longest',
+      recentBg: sort === 'recent' ? t.raised : 'transparent', recentInk: sort === 'recent' ? t.text : t.muted, recentRule: sort === 'recent' ? t.accent : 'transparent',
+      longestBg: sort === 'longest' ? t.raised : 'transparent', longestInk: sort === 'longest' ? t.text : t.muted, longestRule: sort === 'longest' ? t.accent : 'transparent',
+      menuOpen, menuBg: menuOpen ? t.raised : 'transparent',
+      sheetOpen: sheet !== 'none', sheetKicker: kickers[sheet] || '', sheetTitle: titles[sheet] || '',
+      isBackup: sheet === 'backup', isBackupDone: sheet === 'backup-done', isRestore: sheet === 'restore', isRestoreConfirm: sheet === 'restore-confirm', isAbout: sheet === 'about',
+      backups: KR_BACKUPS.map(b => ({ ...b, on: b.id === pickedId, bg: b.id === pickedId ? t.surf : 'transparent', ring: b.id === pickedId ? t.accent : t.faint, dot: b.id === pickedId ? t.accent : 'transparent', pick: () => this.setState({ picked: b.id }) })),
+      pickedTotal: picked.total, pickedFile: picked.file,
+      toggleTrack: () => this.setState({ tracking: !tracking }),
+      toggleTheme: () => this.setState({ theme: themeName === 'dark' ? 'light' : 'dark' }),
+      toggleMenu: () => this.setState({ menu: !menuOpen }),
+      sortByRecent: () => this.setState({ sort: 'recent' }),
+      sortByLongest: () => this.setState({ sort: 'longest' }),
+      openBackup: () => this.setState({ menu: false, sheet: 'backup' }),
+      openRestore: () => this.setState({ menu: false, sheet: 'restore' }),
+      openAbout: () => this.setState({ menu: false, sheet: 'about' }),
+      closeSheet: () => this.setState({ sheet: 'none' }),
+      saveBackup: () => this.setState({ sheet: 'backup-done' }),
+      restoreNext: () => this.setState({ sheet: 'restore-confirm' })
+    };
+  }
+}
+</script>
+</body>
+</html>
