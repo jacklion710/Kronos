@@ -99,6 +99,8 @@ public:
 
     void refresh(bool sortOrderMayHaveChanged);
     void showSortMode(bool animate);
+    void scrollToRow(int row) { list.scrollToEnsureRowIsOnscreen(row); }
+    float getRowReveal(int row) const;
 
     KronosButton recentButton { "Sort by most recent", KronosButton::Style::segment };
     KronosButton longestButton { "Sort by longest day", KronosButton::Style::segment };
@@ -111,10 +113,12 @@ private:
     juce::Component* refreshComponentForRow(int row, bool isSelected, juce::Component* existing) override;
 
     KronosAudioProcessor& processor;
-    juce::ListBox list;
+    KronosListBox list;
     juce::Array<juce::Time> dates;
     juce::int64 longestDay = 0;
     int daysLogged = 0;
+    juce::String todayKey;
+    juce::uint32 lastStateRevision = 0;
     Tween reorder;
 };
 

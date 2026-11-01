@@ -80,6 +80,11 @@ void KronosLookAndFeel::setDarkMode(bool isDark)
     setColour(juce::TextEditor::highlightColourId, juce::Colour(theme.accent).withAlpha(0.3f));
     setColour(juce::TextEditor::highlightedTextColourId, juce::Colour(theme.text));
     setColour(juce::CaretComponent::caretColourId, juce::Colour(theme.accent));
+    setColour(juce::PopupMenu::backgroundColourId, juce::Colour(theme.raised));
+    setColour(juce::PopupMenu::textColourId, juce::Colour(theme.text));
+    setColour(juce::PopupMenu::headerTextColourId, juce::Colour(theme.muted));
+    setColour(juce::PopupMenu::highlightedBackgroundColourId, juce::Colour(theme.accent).withAlpha(0.2f));
+    setColour(juce::PopupMenu::highlightedTextColourId, juce::Colour(theme.text));
 }
 
 juce::Font KronosLookAndFeel::font(Face face, float size, float tracking)

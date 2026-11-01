@@ -32,6 +32,17 @@ BackupComponent::BackupComponent(KronosAudioProcessor& p) : audioProcessor(p)
     setStage(Stage::entering);
 }
 
+void BackupComponent::lookAndFeelChanged()
+{
+    // Text that is already in the field keeps its colour unless told otherwise
+    projectNameEditor.applyColourToAllText(findColour(KLF::textColourId), true);
+}
+
+void BackupComponent::parentHierarchyChanged()
+{
+    lookAndFeelChanged();
+}
+
 juce::String BackupComponent::getKicker() const
 {
     return juce::String(juce::CharPointer_UTF8("BACKUP \xc2\xb7 \xce\x9c\xce\x9d\xce\x97\xce\x9c\xce\x97"));

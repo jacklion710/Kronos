@@ -9,11 +9,14 @@ Where the handoff, the spec and the prototype disagree, the hard rules win, then
 | Light theme CTA | Prototype hard-codes `#BC321E` | `#A82C19` | The colour rule limits light to `#D2452B` and `#A82C19` |
 | Minute arc | Prototype divides by a radius 64 circumference on a radius 57 ring, so it fills early | True fraction of the hour | "The arcs must show real values" |
 | Dial inscription | Prototype uses full-strength faint | 50% opacity | Engravings stay at 40-50% |
+| Hexagram nodes | Prototype uses an opaque accent dot and opaque muted dots | Muted at 45% | Only the hexagon edge uses the accent |
 | Hit targets | RECENT/LONGEST are 24px high, Close is 28px | Drawn at those sizes inside 32px targets | Targets must be at least 32px |
 | Link hover | Prototype CSS uses `#FF7A5F` | A mix of existing tokens | Colours stay within the token sets |
 | About version | Prototype shows v1.0.4 | The real build version | No invented readouts |
 | Backup file | Prototype shows `MY PROJECT_2026-10-31.kronos` in `~/Documents/Kronos/Backups` | `MY PROJECT.kronos` in the existing Application Support folder | "Keep the existing backup/restore file logic" |
 | Overwriting a backup | Not in the prototype | A confirm stage in the Backup sheet | Existing behaviour, kept with the file logic |
+
+The 40-50% rule is read as applying to the dial, which is where the spec states it. The header inscription and the Greek labels keep the prototype's colours.
 
 ## Simplified from the spec
 
@@ -41,4 +44,5 @@ The handoff asks for screenshots of the standalone app. These are rendered off-s
 ## Not verified
 
 - No click, hover, focus ring, animation or live resize was checked in a real window. Hit testing and control behaviour are covered by unit tests at 400, 600 and 1200 wide.
+- A host that hides its window without minimising it may keep the ambient layers running, because `isShowing()` only sees JUCE's visibility flags and minimised state. No host has been tested for this.
 - `Builds/VisualStudio2022` was edited by hand because a Projucer re-save removes a custom post-build step and rewrites paths. The Windows build has not been run.

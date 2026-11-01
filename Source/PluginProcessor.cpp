@@ -570,6 +570,7 @@ bool KronosAudioProcessor::applyState(const void* data, int sizeInBytes, bool re
 
     invalidateAllSortCaches();
     markTrackingDataDirty();
+    ++stateRevision;
     return true;
 }
 
@@ -2066,6 +2067,10 @@ public:
             expectEquals(summary.daysLogged, 2);
             expectEquals(processor.getTotalTimeInSeconds(), static_cast<juce::int64>(0));
 
+            const auto revision = processor.getStateRevision();
+            processor.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+            expect(processor.getStateRevision() != revision, "Loading state should tell the editor to redraw.");
+
             const char garbage[] = "not-a-backup";
             expect(!KronosAudioProcessor::summariseBackup(garbage, static_cast<int>(sizeof(garbage))).isValid,
                    "Garbage must not summarise.");
@@ -2458,6 +2463,70 @@ private:
             press(Control::menu);
             press(Control::backupItem);
             expect(dynamic_cast<BackupComponent*>(editor->getOpenSheet()) != nullptr, "Back up should open its sheet.");
+
+            auto* sheet = editor->getOpenSheet();
+            sheet->onClose();
+            expect(!sheet->isEnabled(), "A sheet that is closing must not take input.");
+        }
+
+        scenario("Every session stays visible when a long list is scrolled");
+        {
+            FakeClock clock(juce::Time(2026, 3, 1, 12, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            juce::Array<juce::Time> dates;
+            juce::Array<std::pair<juce::String, juce::int64>> times;
+            for (int day = 1; day <= 40; ++day)
+            {
+                const auto date = clock.now() - juce::RelativeTime::days(day);
+                dates.add(date);
+                times.add({ date.formatted("%Y-%m-%d"), 3600 });
+            }
+
+            auto state = buildStateWithTrackingData(processor, 40 * 3600, dates, times);
+            processor.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+
+            std::unique_ptr<juce::AudioProcessorEditor> base(processor.createEditor());
+            auto* editor = dynamic_cast<KronosAudioProcessorEditor*>(base.get());
+            editor->setMotionEnabled(false);
+            editor->setVisible(true);
+
+            for (const auto row : { 0, 15, 39 })
+            {
+                editor->scrollSessionsToRow(row);
+                const auto image = editor->createComponentSnapshot({ 30, 300, 540, 130 }, true, 1.0f);
+
+                int inkPixels = 0;
+                for (int y = 0; y < image.getHeight(); ++y)
+                    for (int x = 0; x < image.getWidth(); ++x)
+                        if (image.getPixelAt(x, y).getBrightness() > 0.5f)
+                            ++inkPixels;
+
+                expect(inkPixels > 500, "Rows around " + juce::String(row) + " drew only " + juce::String(inkPixels) + " bright pixels.");
+            }
+        }
+
+        scenario("The default backup name is readable in the light theme");
+        {
+            FakeClock clock(juce::Time(2026, 3, 2, 12, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            processor.setDarkMode(false);
+
+            std::unique_ptr<juce::AudioProcessorEditor> base(processor.createEditor());
+            auto* editor = dynamic_cast<KronosAudioProcessorEditor*>(base.get());
+            editor->setVisible(true);
+            editor->openSheet(KronosAudioProcessorEditor::Sheet::backup, false);
+
+            auto* sheet = editor->getOpenSheet();
+            const auto image = sheet->createComponentSnapshot({ 8, 110, 300, 26 }, true, 1.0f);
+
+            int darkPixels = 0;
+            for (int y = 0; y < image.getHeight(); ++y)
+                for (int x = 0; x < image.getWidth(); ++x)
+                    if (image.getPixelAt(x, y).getBrightness() < 0.4f)
+                        ++darkPixels;
+
+            expect(darkPixels > 50, "The name field drew only " + juce::String(darkPixels) + " dark pixels.");
         }
 
         scenario("The editor follows tracking, theme and sort state");

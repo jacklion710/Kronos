@@ -35,6 +35,7 @@ public:
 
     void openSheet(Sheet sheet, bool animate = true);
     void setMenuOpen(bool shouldBeOpen);
+    void scrollSessionsToRow(int row) { sessions.scrollToRow(row); }
 
     // Stills need every animation at rest.
     void setMotionEnabled(bool shouldAnimate) { motionEnabled = shouldAnimate; }
@@ -80,6 +81,8 @@ private:
     int ticksSinceRefresh = 0;
     bool wasTracking = false;
     bool motionEnabled = true;
+    bool menuOpenedByKeyboard = false;
+    juce::int64 lastSheetTotal = -1;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KronosAudioProcessorEditor)
 };

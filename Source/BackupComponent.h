@@ -24,6 +24,8 @@ public:
 
     void paint(juce::Graphics&) override;
     void resized() override;
+    void lookAndFeelChanged() override;
+    void parentHierarchyChanged() override;
 
     Stage getStage() const { return stage; }
     juce::String getErrorText() const { return errorText; }

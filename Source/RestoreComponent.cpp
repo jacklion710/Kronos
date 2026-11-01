@@ -31,7 +31,7 @@ RestoreComponent::RestoreComponent(KronosAudioProcessor& p) : audioProcessor(p)
         if (juce::isPositiveAndBelow(row, backups.size()))
             beginConfirmation(backups.getReference(row).file);
     };
-    keepButton.onActivated = [this] { cancelOrClose(); };
+    keepButton.onActivated = [this] { if (onClose) onClose(); };
     replaceButton.onActivated = [this] { confirmReplace(); };
 
     refreshBackupList();

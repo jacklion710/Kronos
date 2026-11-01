@@ -45,6 +45,8 @@ public:
                        bool isScrollbarVertical, int thumbStartPosition, int thumbSize,
                        bool isMouseOver, bool isMouseDown) override;
 
+    juce::Font getPopupMenuFont() override { return font(Face::sansRegular, 13.0f); }
+
     void drawCornerResizer(juce::Graphics&, int width, int height, bool isMouseOver, bool isMouseDragging) override;
     void fillTextEditorBackground(juce::Graphics&, int width, int height, juce::TextEditor&) override;
     void drawTextEditorOutline(juce::Graphics&, int width, int height, juce::TextEditor&) override;

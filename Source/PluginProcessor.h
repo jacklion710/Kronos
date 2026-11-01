@@ -85,6 +85,8 @@ public:
     juce::int64 getLongestDaySeconds() const;
     juce::int64 getTodaySeconds() const;
     bool isToday(const juce::Time& date) const;
+    juce::String getTodayKey() const { return makeDateKey(getCurrentTime()); }
+    juce::uint32 getStateRevision() const { return stateRevision.load(); }
     juce::int64 getCurrentRunSeconds() const;
     juce::int64 getDailyAverageSeconds() const;
     int getDaysLogged() const;
@@ -136,6 +138,7 @@ private:
     bool isAccumulating = false;
     juce::int64 carriedMilliseconds = 0;
     juce::int64 runStartTotalSeconds = 0;
+    std::atomic<juce::uint32> stateRevision { 0 };
     
     // Array to store session dates
     juce::Array<juce::Time> sessionDates;

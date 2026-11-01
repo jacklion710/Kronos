@@ -404,6 +404,17 @@ void KronosButton::paintButton(juce::Graphics& g, bool, bool)
 }
 
 //==============================================================================
+void KronosListBox::paintOverChildren(juce::Graphics& g)
+{
+    juce::ListBox::paintOverChildren(g);
+
+    if (hasKeyboardFocus(true))
+    {
+        g.setColour(findColour(KLF::accentColourId));
+        g.drawRect(getLocalBounds().toFloat(), 2.0f);
+    }
+}
+
 ChamferPanel::ChamferPanel(bool cutsTopRightCorner) : cutsTopRight(cutsTopRightCorner)
 {
 }
@@ -447,6 +458,7 @@ void KronosSheetHost::open(std::unique_ptr<KronosSheet> sheet, bool animate)
 
     currentSheet = std::move(sheet);
     closing = false;
+    frame.setEnabled(true);
 
     currentSheet->onClose = [this] { close(); };
     currentSheet->onLayoutChanged = [this] { layoutFrame(); frame.repaint(); };
@@ -477,7 +489,9 @@ void KronosSheetHost::close()
     if (currentSheet == nullptr || closing)
         return;
 
+    // Nothing in a departing sheet may act: Save after Cancel would still write
     closing = true;
+    frame.setEnabled(false);
     arrival.onChange = [this]
     {
         applyMotion();
@@ -490,6 +504,7 @@ void KronosSheetHost::close()
                     return;
 
                 safeThis->closing = false;
+                safeThis->frame.setEnabled(true);
                 safeThis->frame.removeChildComponent(safeThis->currentSheet.get());
                 safeThis->currentSheet.reset();
                 safeThis->setVisible(false);
@@ -536,7 +551,9 @@ bool KronosSheetHost::keyPressed(const juce::KeyPress& key)
 {
     if (key == juce::KeyPress::escapeKey && currentSheet != nullptr)
     {
-        currentSheet->cancelOrClose();
+        if (!closing)
+            currentSheet->cancelOrClose();
+
         return true;
     }
 

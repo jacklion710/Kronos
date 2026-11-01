@@ -53,7 +53,7 @@ private:
 
     KronosAudioProcessor& audioProcessor;
 
-    juce::ListBox backupListBox;
+    KronosListBox backupListBox;
     KronosButton browseButton { "Browse", KronosButton::Style::secondary };
     KronosButton cancelButton { "Cancel", KronosButton::Style::secondary };
     KronosButton restoreButton { "Restore", KronosButton::Style::primary };

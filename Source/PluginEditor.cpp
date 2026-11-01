@@ -67,10 +67,23 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     menu.backupItem.onActivated = [this] { openSheet(Sheet::backup); };
     menu.restoreItem.onActivated = [this] { openSheet(Sheet::restore); };
     menu.aboutItem.onActivated = [this] { openSheet(Sheet::about); };
-    menu.onDismiss = [this] { setMenuOpen(false); header.menuButton.grabKeyboardFocus(); };
+    menu.onDismiss = [this]
+    {
+        setMenuOpen(false);
+
+        if (menuOpenedByKeyboard)
+            header.menuButton.grabKeyboardFocus();
+    };
     menuDismiss.onDismiss = [this] { setMenuOpen(false); };
 
-    sheetHost.onClosed = [this] { refreshNow(); header.menuButton.grabKeyboardFocus(); };
+    sheetHost.onClosed = [this]
+    {
+        refreshNow();
+
+        // A mouse user keeps their host's keyboard focus, so Space stays with the transport
+        if (menuOpenedByKeyboard)
+            header.menuButton.grabKeyboardFocus();
+    };
 
     using SortMode = KronosAudioProcessor::DateSortMode;
     sessions.recentButton.onActivated = [this] { audioProcessor.setDateSortMode(SortMode::MostRecent); };
@@ -193,6 +206,15 @@ void KronosAudioProcessorEditor::updateReadouts()
 
     readout.setValues(values);
     sessions.refresh(false);
+
+    // Open sheets show the live total
+    if (values.total != lastSheetTotal)
+    {
+        lastSheetTotal = values.total;
+
+        if (auto* sheet = sheetHost.getSheet())
+            sheet->repaint();
+    }
 }
 
 void KronosAudioProcessorEditor::refreshNow()
@@ -235,8 +257,12 @@ void KronosAudioProcessorEditor::setMenuOpen(bool shouldBeOpen)
         menuDismiss.toFront(false);
         menu.toFront(false);
 
-        if (header.menuButton.hasKeyboardFocus(false))
+        menuOpenedByKeyboard = header.menuButton.hasKeyboardFocus(false);
+
+        if (menuOpenedByKeyboard)
             menu.focusFirstItem();
+        else
+            menu.grabKeyboardFocus(); // so Escape still closes it
     }
 }
 

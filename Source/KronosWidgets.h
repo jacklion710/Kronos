@@ -88,6 +88,16 @@ private:
     juce::Random decodeNoise { 11 };
 };
 
+// A list that shows the accent outline while it holds keyboard focus.
+class KronosListBox : public juce::ListBox
+{
+public:
+    void paintOverChildren(juce::Graphics&) override;
+    void focusGained(FocusChangeType) override { repaint(); }
+    void focusLost(FocusChangeType) override { repaint(); }
+    void focusOfChildComponentChanged(FocusChangeType) override { repaint(); }
+};
+
 class ChamferPanel : public juce::Component
 {
 public:

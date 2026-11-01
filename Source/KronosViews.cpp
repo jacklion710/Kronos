@@ -370,9 +370,9 @@ void DialComponent::paint(juce::Graphics& g)
         g.fillEllipse(centre.x - radius, centre.y - radius, radius * 2.0f, radius * 2.0f);
     };
 
-    node(80.0f, 30.0f, 1.6f, accent);
-    node(123.3f, 105.0f, 1.2f, muted);
-    node(36.7f, 105.0f, 1.2f, muted);
+    node(80.0f, 30.0f, 1.6f, muted.withAlpha(0.45f));
+    node(123.3f, 105.0f, 1.2f, muted.withAlpha(0.45f));
+    node(36.7f, 105.0f, 1.2f, muted.withAlpha(0.45f));
 }
 
 //==============================================================================
@@ -523,6 +523,7 @@ public:
     explicit Row(SessionsPanel& ownerPanel) : owner(ownerPanel)
     {
         setInterceptsMouseClicks(true, false);
+        setMouseClickGrabsKeyboardFocus(false);
         hover.onChange = [this] { repaint(); };
     }
 
@@ -553,9 +554,10 @@ public:
         const auto accent = findColour(KLF::accentColourId);
         const auto accentText = findColour(KLF::accentTextColourId);
 
-        // Rows re-order with a 40ms stagger after a sort change
-        const auto reveal = juce::jlimit(0.0f, 1.0f, (owner.reorder.get() * 340.0f - static_cast<float>(index) * 40.0f) / 180.0f + 1.0f);
-        g.beginTransparencyLayer(reveal);
+        const auto reveal = owner.getRowReveal(index);
+
+        if (reveal < 1.0f)
+            g.beginTransparencyLayer(reveal);
 
         g.setColour(accent.withAlpha(0.06f * hover.get()));
         g.fillAll();
@@ -598,7 +600,8 @@ public:
                    juce::Rectangle<float>(width - padding - timeWidth, 0.0f, timeWidth, height),
                    juce::Justification::centredRight, false);
 
-        g.endTransparencyLayer();
+        if (reveal < 1.0f)
+            g.endTransparencyLayer();
     }
 
 private:
@@ -614,7 +617,7 @@ SessionsPanel::SessionsPanel(KronosAudioProcessor& processorToUse)
     list.setModel(this);
     list.setRowHeight(27);
     list.setMultipleSelectionEnabled(false);
-    list.setWantsKeyboardFocus(true);
+    list.setMouseClickGrabsKeyboardFocus(false);
     list.setTitle("Session history");
     list.getViewport()->setScrollBarThickness(6);
     addAndMakeVisible(list);
@@ -668,8 +671,30 @@ void SessionsPanel::paint(juce::Graphics& g)
     g.fillRect(static_cast<float>(longestButton.getX()), segments.getY(), 1.0f, segments.getHeight());
 }
 
+float SessionsPanel::getRowReveal(int row) const
+{
+    const auto progress = reorder.get();
+
+    if (progress >= 1.0f)
+        return 1.0f;
+
+    // Rows fade in with a 40ms stagger, counted from the top of the visible list
+    const auto visibleRow = juce::jlimit(0, 4, row - list.getRowContainingPosition(4, 4));
+    return juce::jlimit(0.0f, 1.0f, (progress * 340.0f - static_cast<float>(visibleRow) * 40.0f) / 180.0f);
+}
+
 void SessionsPanel::refresh(bool sortOrderMayHaveChanged)
 {
+    const auto newToday = processor.getTodayKey();
+    const auto newRevision = processor.getStateRevision();
+
+    if (newToday != todayKey || newRevision != lastStateRevision)
+    {
+        todayKey = newToday;
+        lastStateRevision = newRevision;
+        sortOrderMayHaveChanged = true; // every row may be different now
+    }
+
     const auto newLongest = processor.getLongestDaySeconds();
     const auto newDays = processor.getDaysLogged();
     const auto scaleChanged = newLongest != longestDay;
@@ -742,6 +767,7 @@ juce::Component* SessionsPanel::refreshComponentForRow(int row, bool, juce::Comp
 MenuPanel::MenuPanel()
 {
     setFocusContainerType(FocusContainerType::keyboardFocusContainer);
+    setWantsKeyboardFocus(true);
 
     backupItem.setButtonText(juce::String(juce::CharPointer_UTF8("Back up\xe2\x80\xa6")));
     backupItem.setIcon(KronosArt::backupIcon(), 14.0f, 14.0f, 1.2f);
