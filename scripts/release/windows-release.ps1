@@ -170,6 +170,11 @@ try {
 
         & $renderUserGuideScript -SourceMarkdown $UserGuideSource -OutputDir $guideStage -ProductName $ProductName
 
+        # The OFL requires the licence to travel with the embedded fonts.
+        $fontLicenseStage = Join-Path $guideStage "Font Licenses"
+        New-Item -ItemType Directory -Path $fontLicenseStage -Force | Out-Null
+        Copy-Item -Path (Join-Path $SolutionDir "Resources\fonts\*-OFL.txt") -Destination $fontLicenseStage -Force
+
         if ([string]::IsNullOrWhiteSpace($InnoCompilerPath)) {
             if (-not [string]::IsNullOrWhiteSpace($env:KRONOS_INNO_COMPILER)) {
                 $InnoCompilerPath = $env:KRONOS_INNO_COMPILER

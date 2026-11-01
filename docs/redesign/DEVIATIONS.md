@@ -40,9 +40,9 @@ Jacob reviewed the About sheet on 2026-11-01. Discord is removed, Website points
 
 ## Fonts
 
-- **Source Sans 3 Bold is Latin only.** No full Bold was on this machine, so this is the web build's Latin subset converted to TTF. With no Greek left in the UI nothing depends on the missing glyphs, but swap in Adobe's release TTF before shipping.
+- **Source Sans 3:** Regular, Semibold and Bold are Adobe's release TTFs from `3.052R`.
 - **JetBrains Mono** weights 300, 400 and 500 are static instances made from the variable font.
-- **OFL:** the licence texts are in `Resources/fonts`. The installers must include them when the fonts ship.
+- **OFL:** the licence texts are in `Resources/fonts`, and the macOS and Windows installers place them in a `Font Licenses` folder with the User Guide, which is selected by default.
 
 ## Needs a decision
 

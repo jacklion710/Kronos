@@ -106,6 +106,10 @@ sign_bundle "${AU_SOURCE}"
 
 "${SCRIPT_DIR}/render-user-guide.sh" "${USER_GUIDE_SOURCE}" "${GUIDE_PAYLOAD_DIR}"
 
+# The OFL requires the licence to travel with the embedded fonts.
+mkdir -p "${GUIDE_PAYLOAD_DIR}/Font Licenses"
+cp "${REPO_ROOT}"/Resources/fonts/*-OFL.txt "${GUIDE_PAYLOAD_DIR}/Font Licenses/"
+
 pkgbuild \
   --component "${VST3_SOURCE}" \
   --identifier "${PKG_IDENTIFIER}.vst3" \
