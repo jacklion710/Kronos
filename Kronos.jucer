@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="eOcOaW" name="Kronos" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="0" jucerFormatVersion="1"
-              companyName="Jack.Lion" companyWebsite="https://jacklion.com"
+              companyName="Jack.Lion" companyWebsite="https://jacklionaudio.com"
               companyEmail="jack.lion710@gmail.com" pluginFormats="buildAU,buildStandalone,buildVST3"
               pluginCode="KRNS" cppLanguageStandard="20" pluginVST3Category="Tools"
               version="1.1.0">

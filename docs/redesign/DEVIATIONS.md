@@ -13,6 +13,10 @@ Jacob reviewed the build on 2026-11-01 and removed all Greek words, because no o
 - The sort label decode uses punctuation in place of Greek letters.
 - The sigil, ouroboros, hexagram and planetary day symbols stay because they are not words.
 
+## Founder change: About
+
+Jacob reviewed the About sheet on 2026-11-01. Discord is removed, Website points to jacklionaudio.com, and Aznadel is credited for the V1 design. The three remaining links share one row. SoundCloud stays removed, as in the prototype.
+
 ## Resolved conflicts in the design
 
 | Item | Design says | Built | Why |
@@ -42,7 +46,6 @@ Jacob reviewed the build on 2026-11-01 and removed all Greek words, because no o
 
 ## Needs a decision
 
-- **Credits:** the old About panel credited Aznadel for graphics and linked SoundCloud. The prototype drops both, so they are gone here. The README still has the credit.
 - **CPU at 30 Hz:** tracking with the window open costs about 10.8% of one core on this i9, mostly Core Animation. Paused costs about 1.2%, and a closed editor costs neither. `ambientFrameRate` in `PluginEditor.cpp` is the one line to change if 15 Hz looks smooth enough.
 
 ## Screenshots

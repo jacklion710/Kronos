@@ -141,16 +141,15 @@ Open the menu and choose `About Kronos` for the version, credits and links.
 
 ## Support
 
-- Website: https://jacklion.xyz
+- Website: https://jacklionaudio.com
 - Email: jack.lion710@gmail.com
 - Instagram: [@jack.lion](https://www.instagram.com/jack.lion)
-- Discord: [Join my community](https://discord.gg/EFQq7BX)
 - Gumroad: [More plugins](https://jacklion.gumroad.com)
 
 ## Credits
 
 - Created by Jacob Leone (Jack.Lion)
-- Graphics by [Aznadel](https://linktr.ee/aznadel)
+- V1 design by [Aznadel](https://linktr.ee/aznadel)
 
 ---
 

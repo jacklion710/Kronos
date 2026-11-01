@@ -157,13 +157,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release/windows-cut-
 ## Credits
 
 Created by Jacob Leone (Jack.Lion)
-Graphics by Aznadel
+V1 design by Aznadel
 
 ## Links
 
-- Website: [\[Jack.Lion Official Website\]](https://jacklion.xyz)
+- Website: [\[Jack.Lion Official Website\]](https://jacklionaudio.com)
 - Instagram: [\[@jack.lion\]](https://www.instagram.com/jack.lion)
-- Discord: [\[Join my community\]](https://discord.gg/EFQq7BX)
 - Gumroad: [\[More plugins\]](https://jacklion.gumroad.com)
 - Tech Portfolio: [\[Jacob Leones Tech Portfolio\]](https://jacobleone.tech)
 
@@ -190,7 +189,6 @@ Graphics by Aznadel
 #### Getting Help
 
 - Check existing Issues and Pull Requests before creating new ones
-- Join my Discord community for deeper discussions and questions
 - Review the documentation in the Kronos Manual
 
 I appreciate all contributions that help make Kronos better!

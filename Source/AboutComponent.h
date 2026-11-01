@@ -10,7 +10,7 @@ public:
 
     juce::String getKicker() const override;
     juce::String getSheetTitle() const override { return "About Kronos"; }
-    int getPreferredHeight() const override { return 252; }
+    int getPreferredHeight() const override { return 224; }
     void focusDefaultControl() override;
 
     void paint(juce::Graphics&) override;
@@ -19,7 +19,6 @@ public:
 private:
     KronosButton websiteLink { "Website", KronosButton::Style::link };
     KronosButton pluginsLink { "More plugins", KronosButton::Style::link };
-    KronosButton discordLink { "Discord", KronosButton::Style::link };
     KronosButton instagramLink { "Instagram", KronosButton::Style::link };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AboutComponent)
