@@ -22,6 +22,15 @@ Windows code-signing is intentionally disabled for now. Installers and binaries 
     - `C:\Program Files\Inno Setup 5\ISCC.exe`
   - or set `KRONOS_INNO_COMPILER` to custom path
 
+## After pulling changes to embedded resources
+
+`JuceLibraryCode` is not in git, so a Windows machine keeps its own generated `BinaryData.cpp`. When fonts or other resources change, regenerate it before building, then restore the tracked project files, because a Projucer save removes the custom post-build steps:
+
+```powershell
+& "<path to Projucer.exe>" --resave Kronos.jucer
+git restore Builds/VisualStudio2022/Kronos_SharedCode.vcxproj Builds/VisualStudio2022/Kronos_StandalonePlugin.vcxproj Builds/VisualStudio2022/Kronos_VST3.vcxproj Builds/VisualStudio2022/Kronos_VST3ManifestHelper.vcxproj
+```
+
 ## IDE auto-packaging behavior
 
 Release post-build hooks are wired in:
@@ -48,13 +57,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release/windows-rele
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release/windows-cut-release.ps1 `
-  -Version "1.1.0-beta.1"
+  -Version "2.0.0-beta.1"
 ```
 
 This wrapper:
 
 - validates version format (`x.y.z` or `x.y.z-beta.N`)
-- updates project/plugin version metadata to core semver (`1.1.0` in this example)
+- updates project/plugin version metadata to core semver (`2.0.0` in this example)
 - builds `Kronos - VST3` and `Kronos - Standalone Plugin` in `Release|x64`
 - runs the embedded JUCE test gate (`scripts/run_tests_windows.ps1 -Configuration Release`) using the same in-plugin test suite as macOS
 - runs installer packaging and writes checksums

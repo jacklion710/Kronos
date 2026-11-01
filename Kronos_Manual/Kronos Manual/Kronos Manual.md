@@ -1,4 +1,4 @@
-## User Manual v1.1.0
+## User Manual v2.0.0
 
 <p align="center">
   <img src="./manual_screenshots/Kronos%20Sketch%20Poster.png" alt="Kronos Cover" width="80%" height="80%">
@@ -7,6 +7,14 @@
 ## Overview
 
 Kronos is a time tracking plugin for your DAW. It tracks how long you work on sessions, stores historical totals, and keeps your session history available between launches.
+
+## New in 2.0.0
+
+- A redesigned interface, with the dial, session list and Backup, Restore and About sheets all rebuilt.
+- Fixes the 1.1.0 hang, where the host could freeze within a second of tracking starting.
+- Tracked time now matches real time over long sessions, including across daylight saving and time zone changes.
+- A gap of more than 5 minutes, such as your computer sleeping, no longer counts as work.
+- The window opens faster and uses much less memory.
 
 ## New in 1.1.0
 
@@ -153,4 +161,4 @@ Open the menu and choose `About Kronos` for the version, credits and links.
 
 ---
 
-Note: This manual reflects version 1.1.0 of Kronos.
+Note: This manual reflects version 2.0.0 of Kronos.
