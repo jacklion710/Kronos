@@ -67,6 +67,17 @@ public:
     juce::int64 getTotalTimeInSeconds() const;
     bool isTracking() const;
 
+    // Auto only adds time while the user is active. isTracking() is still the
+    // start and pause switch; isCounting() is whether time is being added.
+    enum class TrackingMode {
+        Manual,
+        Auto
+    };
+
+    TrackingMode getTrackingMode() const;
+    void setTrackingMode(TrackingMode mode);
+    bool isCounting() const;
+
     void timerCallback() override;
 
     const juce::Array<juce::Time>& getSessionDates() const { return sessionDates; }
@@ -118,6 +129,14 @@ public:
     void setTracking(bool shouldTrack);
     juce::Array<juce::Time> getSortedDates() const;
     void setNowProviderForTests(std::function<juce::Time()> nowProvider);
+
+    struct UserActivity
+    {
+        bool hostInFront = false;
+        double secondsSinceInput = 0.0;
+    };
+
+    void setActivitySourceForTests(std::function<UserActivity()> activitySource);
     static int runEmbeddedTests();
 
     void addDummyDates();
@@ -132,10 +151,21 @@ private:
     // clock changed, so it is treated as an interruption rather than work.
     static constexpr juce::int64 maximumCreditableGapMs = 5 * 60 * 1000;
 
+    // Auto mode allows this long without input, for thinking and listening.
+    static constexpr double autoIdleWindowSeconds = 5.0 * 60.0;
+
+    // A host can stop processing without reporting that the transport stopped.
+    static constexpr juce::uint32 transportHoldMs = 2000;
+
+    // Written on the audio thread.
+    std::atomic<bool> transportRolling { false };
+    std::atomic<juce::uint32> lastBlockMs { 0 };
+
     // Guards the tracking data below. Hosts may save from any thread. Never
     // hold this across a parameter change, which can call back into the host.
     mutable juce::CriticalSection trackingLock;
     bool isAccumulating = false;
+    bool waitingForActivity = false;
     juce::int64 carriedMilliseconds = 0;
     juce::int64 runStartTotalSeconds = 0;
     std::atomic<juce::uint32> stateRevision { 0 };
@@ -151,7 +181,8 @@ private:
     juce::int64 getPendingSeconds(const juce::Time& now) const;
     void beginAccumulating(const juce::Time& now);
     void creditElapsedTime(const juce::Time& now);
-    void synchroniseWithTrackingParameter(const juce::Time& now);
+    void synchroniseWithTrackingParameter(const juce::Time& now, bool userIsActive);
+    bool isUserActive() const;
     void markTrackingDataDirty();
     void invalidateAllSortCaches();
 
@@ -163,6 +194,7 @@ private:
 
     bool showBarsEnabled = false;
     std::function<juce::Time()> nowProviderForTests;
+    std::function<UserActivity()> activitySourceForTests;
 
     mutable juce::Array<juce::Time> cachedMostRecentDates;
     mutable juce::Array<juce::Time> cachedMostTimeDates;

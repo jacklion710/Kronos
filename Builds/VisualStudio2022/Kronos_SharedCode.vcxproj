@@ -143,6 +143,7 @@
     <ClCompile Include="..\..\Source\BackupComponent.cpp"/>
     <ClCompile Include="..\..\Source\RestoreComponent.cpp"/>
     <ClCompile Include="..\..\Source\LookAndFeel.cpp"/>
+    <ClCompile Include="..\..\Source\KronosActivity.cpp"/>
     <ClCompile Include="..\..\Source\KronosWidgets.cpp"/>
     <ClCompile Include="..\..\Source\KronosViews.cpp"/>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
@@ -2451,6 +2452,7 @@
     <ClInclude Include="..\..\Source\BackupComponent.h"/>
     <ClInclude Include="..\..\Source\RestoreComponent.h"/>
     <ClInclude Include="..\..\Source\LookAndFeel.h"/>
+    <ClInclude Include="..\..\Source\KronosActivity.h"/>
     <ClInclude Include="..\..\Source\KronosWidgets.h"/>
     <ClInclude Include="..\..\Source\KronosViews.h"/>
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>

@@ -14,6 +14,7 @@ Kronos is a time tracking plugin for your DAW. It tracks how long you work on se
 - Fixes the 1.1.0 hang, where the host could freeze within a second of tracking starting.
 - Tracked time now matches real time over long sessions, including across daylight saving and time zone changes.
 - A gap of more than 5 minutes, such as your computer sleeping, no longer counts as work.
+- A new Auto mode only counts time while you are working in your DAW.
 - The window opens faster and uses much less memory.
 
 ## New in 1.1.0
@@ -26,6 +27,7 @@ Kronos is a time tracking plugin for your DAW. It tracks how long you work on se
 ## Features
 
 - Real-time session tracking
+- Manual and Auto tracking modes
 - Unlimited daily session history
 - Dark/Light theme support
 - Session sorting by date or duration
@@ -80,9 +82,9 @@ The window has a header, a readout panel and a sessions panel. It scales as one 
 
 ### Header
 
-- **Status chip**: shows `TRACKING` or `PAUSED`.
+- **Status chip**: shows `TRACKING`, `PAUSED` or, in Auto mode, `IDLE`.
 - **Theme toggle**: switches between the dark (default) and light themes.
-- **Menu**: opens Back up, Restore and About.
+- **Menu**: opens the tracking mode, Back up, Restore and About.
 
 ### Readout Panel
 
@@ -104,6 +106,21 @@ The window has a header, a readout panel and a sessions panel. It scales as one 
 <p align="center">
   <img src="./manual_screenshots/Kronos%20v2%20Light%20Menu.png" alt="Kronos in the light theme with the menu open" width="80%">
 </p>
+
+### Tracking Modes
+
+Open the menu to switch between `MANUAL` and `AUTO`. The mode is saved with the project, and new projects start on `MANUAL`.
+
+- **Manual** counts from Start until Pause, whatever you are doing.
+- **Auto** only counts while you are working. Time counts when your DAW is the app in front and you have used the mouse or keyboard in the last 5 minutes, or when the transport is playing or recording. Otherwise the status chip shows `IDLE` until you come back.
+
+Start/Pause still works in Auto. While paused, nothing counts.
+
+DAWs do not report what you are doing, so Auto works it out from those signals, and it can miss some things:
+
+- Playing a MIDI keyboard does not count as input, so with the transport stopped it goes idle after 5 minutes.
+- Time in another app does not count unless the transport is playing, even if it is part of your work.
+- A DAW that runs plugins in a separate process can look as if it is not in front, so Auto would only count during playback. Use Manual in that DAW.
 
 ### Data Backup and Restoration
 

@@ -108,6 +108,15 @@ void HeaderBar::setTracking(bool isTracking, bool animate, bool playStartGlitch)
     }
 }
 
+void HeaderBar::setIdle(bool isIdle)
+{
+    if (idle != isIdle)
+    {
+        idle = isIdle;
+        repaint(chipArea.getSmallestIntegerContainer());
+    }
+}
+
 void HeaderBar::advance(double seconds)
 {
     glintPhase = std::fmod(glintPhase + seconds / glintPeriod, 1.0);
@@ -229,7 +238,7 @@ void HeaderBar::paint(juce::Graphics& g)
     g.drawText("TRACKING", labelArea, juce::Justification::centred, false);
 
     g.setColour(muted.withMultipliedAlpha(1.0f - trackingAmount));
-    g.drawText("PAUSED", labelArea, juce::Justification::centred, false);
+    g.drawText(idle ? "IDLE" : "PAUSED", labelArea, juce::Justification::centred, false);
 }
 
 //==============================================================================
@@ -454,7 +463,7 @@ void ReadoutPanel::paint(juce::Graphics& g)
     drawColon();
     drawGroup(minutes, "MIN", text);
     drawColon();
-    drawGroup(seconds, "SEC", values.tracking ? accentText : text);
+    drawGroup(seconds, "SEC", values.counting ? accentText : text);
 
     // Stats row
     const auto ruleY = unitsTop + 11.0f + 16.0f;
@@ -734,6 +743,9 @@ MenuPanel::MenuPanel()
     setFocusContainerType(FocusContainerType::keyboardFocusContainer);
     setWantsKeyboardFocus(true);
 
+    manualButton.setButtonText("MANUAL");
+    autoButton.setButtonText("AUTO");
+
     backupItem.setButtonText(juce::String(juce::CharPointer_UTF8("Back up\xe2\x80\xa6")));
     backupItem.setIcon(KronosArt::backupIcon(), 14.0f, 14.0f, 1.2f);
 
@@ -743,14 +755,33 @@ MenuPanel::MenuPanel()
     aboutItem.setButtonText("About Kronos");
     aboutItem.setIcon(KronosArt::aboutIcon(), 14.0f, 14.0f, 1.2f);
 
+    addAndMakeVisible(manualButton);
+    addAndMakeVisible(autoButton);
     addAndMakeVisible(backupItem);
     addAndMakeVisible(restoreItem);
     addAndMakeVisible(aboutItem);
 }
 
+void MenuPanel::setAutoMode(bool isAuto)
+{
+    manualButton.setActive(! isAuto);
+    autoButton.setActive(isAuto);
+}
+
 void MenuPanel::resized()
 {
+    const auto font = KLF::font(KLF::Face::monoRegular, 10.0f, 0.14f);
+    const auto manualWidth = juce::roundToInt(font.getStringWidthFloat("MANUAL")) + 18;
+    const auto autoWidth = juce::roundToInt(font.getStringWidthFloat("AUTO")) + 18;
+
     auto area = getLocalBounds().reduced(5);
+
+    auto modeRow = area.removeFromTop(32);
+    modeRow.removeFromRight(6);
+    autoButton.setBounds(modeRow.removeFromRight(autoWidth));
+    manualButton.setBounds(modeRow.removeFromRight(manualWidth));
+    area.removeFromTop(9);
+
     backupItem.setBounds(area.removeFromTop(34));
     restoreItem.setBounds(area.removeFromTop(34));
     area.removeFromTop(9);
@@ -765,7 +796,18 @@ void MenuPanel::paint(juce::Graphics& g)
     g.fillRect(bounds);
     g.setColour(findColour(KLF::lineColourId));
     g.drawRect(bounds, 1.0f);
+    g.fillRect(11.0f, static_cast<float>(manualButton.getBottom()) + 4.0f, bounds.getWidth() - 22.0f, 1.0f);
     g.fillRect(11.0f, static_cast<float>(restoreItem.getBottom()) + 4.0f, bounds.getWidth() - 22.0f, 1.0f);
+
+    // The two segments share one outline, as the sort control's do
+    const auto segments = manualButton.getBounds().getUnion(autoButton.getBounds()).reduced(0, 3).toFloat().expanded(1.0f, 0.0f);
+    g.drawRect(segments, 1.0f);
+    g.fillRect(static_cast<float>(autoButton.getX()), segments.getY(), 1.0f, segments.getHeight());
+
+    g.setColour(findColour(KLF::mutedColourId));
+    g.setFont(KLF::font(KLF::Face::monoRegular, 10.0f, 0.18f));
+    g.drawText("MODE", juce::Rectangle<float>(13.0f, static_cast<float>(manualButton.getY()), 40.0f, 32.0f),
+               juce::Justification::centredLeft, false);
 }
 
 bool MenuPanel::keyPressed(const juce::KeyPress& key)
@@ -783,5 +825,5 @@ bool MenuPanel::keyPressed(const juce::KeyPress& key)
 
 void MenuPanel::focusFirstItem()
 {
-    backupItem.grabKeyboardFocus();
+    manualButton.grabKeyboardFocus();
 }

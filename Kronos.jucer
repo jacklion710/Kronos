@@ -28,6 +28,8 @@
             file="Source/RestoreComponent.cpp"/>
       <FILE id="pdYedH" name="RestoreComponent.h" compile="0" resource="0"
             file="Source/RestoreComponent.h"/>
+      <FILE id="k3Act1" name="KronosActivity.cpp" compile="1" resource="0" file="Source/KronosActivity.cpp"/>
+      <FILE id="k3Act2" name="KronosActivity.h" compile="0" resource="0" file="Source/KronosActivity.h"/>
       <FILE id="k2Src1" name="KronosWidgets.cpp" compile="1" resource="0" file="Source/KronosWidgets.cpp"/>
       <FILE id="k2Src2" name="KronosWidgets.h" compile="0" resource="0" file="Source/KronosWidgets.h"/>
       <FILE id="k2Src3" name="KronosViews.cpp" compile="1" resource="0" file="Source/KronosViews.cpp"/>

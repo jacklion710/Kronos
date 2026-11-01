@@ -13,6 +13,7 @@ Kronos is a simple yet powerful time tracking plugin for your DAW. Keep track of
 ## Features
 
 - Real-time session tracking
+- Manual and Auto tracking modes, where Auto only counts while you are working in your DAW
 - Unlimited session history
 - Dark/Light theme support
 - Session sorting by date or duration
@@ -131,6 +132,7 @@ The plugin is built using JUCE framework and follows a standard audio plugin arc
 - `LookAndFeel` - Theme tokens, fonts and shared drawing
 - `KronosWidgets` - Path-drawn art, buttons, chamfered panels and the sheet host
 - `KronosViews` - Header, dial, readout, sessions list and menu
+- `KronosActivity` - Time since the last mouse or keyboard input, from the operating system
 - `AboutComponent` - About window with links and information
 - `BackupComponent` - Backup window for saving `.kronos` log files with project time data
 - `RestoreComponent` - Restore window for loading `.kronos` log files into the project time

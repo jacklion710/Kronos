@@ -13,6 +13,7 @@
 #include "BackupComponent.h"
 #include "RestoreComponent.h"
 #include "KronosViews.h"
+#include "KronosActivity.h"
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
@@ -106,9 +107,18 @@ KronosAudioProcessor::KronosAudioProcessor(std::function<juce::Time()> nowProvid
         juce::AudioParameterChoiceAttributes().withAutomatable(false)
     );
 
+    auto trackingModeParam = std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID("trackingMode", 2),  // Added after the first release
+        "Tracking Mode",
+        juce::StringArray {"Manual", "Auto"},
+        0,
+        juce::AudioParameterChoiceAttributes().withAutomatable(false)
+    );
+
     layout.add(std::move(trackingParam));
     layout.add(std::move(darkModeParam));
     layout.add(std::move(dateSortModeParam));
+    layout.add(std::move(trackingModeParam));
 
     // Then create the parameters with the layout
     parameters = std::make_unique<juce::AudioProcessorValueTreeState>(*this, nullptr, "Parameters", std::move(layout));
@@ -136,6 +146,7 @@ KronosAudioProcessor::KronosAudioProcessor(std::function<juce::Time()> nowProvid
     parameters->addParameterListener("tracking", this);
     parameters->addParameterListener("darkMode", this);
     parameters->addParameterListener("dateSortMode", this);
+    parameters->addParameterListener("trackingMode", this);
 
     if (isEnvEnabled("KRONOS_RUN_TESTS")
         && juce::JUCEApplicationBase::isStandaloneApp()
@@ -163,6 +174,7 @@ KronosAudioProcessor::~KronosAudioProcessor()
         parameters->removeParameterListener("tracking", this);
         parameters->removeParameterListener("darkMode", this);
         parameters->removeParameterListener("dateSortMode", this);
+        parameters->removeParameterListener("trackingMode", this);
     }
 }
 
@@ -196,6 +208,8 @@ void KronosAudioProcessor::stopTracking()
                 carriedMilliseconds = juce::jmax<juce::int64>(0, now.toMilliseconds() - startTime.toMilliseconds());
                 isAccumulating = false;
             }
+
+            waitingForActivity = false;
         }
 
         setTracking(false);  // Use the parameter system
@@ -399,6 +413,12 @@ void KronosAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // Process the audio...
+
+    if (auto* playHead = getPlayHead())
+        if (const auto position = playHead->getPosition())
+            transportRolling = position->getIsPlaying() || position->getIsRecording();
+
+    lastBlockMs = juce::Time::getMillisecondCounter();
 }
 
 //==============================================================================
@@ -568,6 +588,7 @@ bool KronosAudioProcessor::applyState(const void* data, int sizeInBytes, bool re
     carriedMilliseconds = 0;
     runStartTotalSeconds = totalTimeInSeconds;
     isAccumulating = isTracking();
+    waitingForActivity = false;
 
     invalidateAllSortCaches();
     markTrackingDataDirty();
@@ -584,25 +605,56 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 void KronosAudioProcessor::timerCallback()
 {
+    const auto userIsActive = isUserActive();
+
     const juce::ScopedLock lock(trackingLock);
-    synchroniseWithTrackingParameter(getCurrentTime());
+    synchroniseWithTrackingParameter(getCurrentTime(), userIsActive);
 }
 
-void KronosAudioProcessor::synchroniseWithTrackingParameter(const juce::Time& now)
+bool KronosAudioProcessor::isUserActive() const
+{
+    if (getTrackingMode() == TrackingMode::Manual)
+        return true;
+
+    if (transportRolling && juce::Time::getMillisecondCounter() - lastBlockMs <= transportHoldMs)
+        return true;
+
+    // Hosts do not report what the user is doing, so this is inferred
+    const auto activity = activitySourceForTests
+                            ? activitySourceForTests()
+                            : UserActivity { juce::Process::isForegroundProcess(),
+                                             KronosActivity::getSecondsSinceLastUserInput() };
+
+    return activity.hostInFront && activity.secondsSinceInput <= autoIdleWindowSeconds;
+}
+
+void KronosAudioProcessor::synchroniseWithTrackingParameter(const juce::Time& now, bool userIsActive)
 {
     // The parameter can change without startTracking()/stopTracking() running,
     // for example from a host control surface or a restored state.
-    const auto shouldAccumulate = isTracking();
+    const auto wantsTracking = isTracking();
+    const auto shouldAccumulate = wantsTracking && userIsActive;
 
     if (isAccumulating)
     {
         creditElapsedTime(now);
         isAccumulating = shouldAccumulate;
+
+        // Going idle keeps the part second, as pausing does
+        if (wantsTracking && ! userIsActive)
+        {
+            carriedMilliseconds = juce::jmax<juce::int64>(0, now.toMilliseconds() - startTime.toMilliseconds());
+            waitingForActivity = true;
+        }
     }
     else if (shouldAccumulate)
     {
         ensureDateEntryExists(now, true);
         beginAccumulating(now);
+    }
+    else if (! wantsTracking)
+    {
+        waitingForActivity = false;
     }
 }
 
@@ -610,7 +662,12 @@ void KronosAudioProcessor::beginAccumulating(const juce::Time& now)
 {
     startTime = juce::Time(now.toMilliseconds() - carriedMilliseconds);
     carriedMilliseconds = 0;
-    runStartTotalSeconds = totalTimeInSeconds;
+
+    // Coming back from idle carries on the same run
+    if (! waitingForActivity)
+        runStartTotalSeconds = totalTimeInSeconds;
+
+    waitingForActivity = false;
     isAccumulating = true;
 }
 
@@ -770,6 +827,31 @@ void KronosAudioProcessor::setTracking(bool shouldTrack)
 bool KronosAudioProcessor::isTracking() const
 {
     return parameters->getRawParameterValue("tracking")->load() >= 0.5f;
+}
+
+KronosAudioProcessor::TrackingMode KronosAudioProcessor::getTrackingMode() const
+{
+    return parameters->getRawParameterValue("trackingMode")->load() >= 0.5f ? TrackingMode::Auto
+                                                                            : TrackingMode::Manual;
+}
+
+void KronosAudioProcessor::setTrackingMode(TrackingMode mode)
+{
+    auto* param = parameters->getParameter("trackingMode");
+    if (param != nullptr)
+        param->setValueNotifyingHost(mode == TrackingMode::Auto ? 1.0f : 0.0f);
+}
+
+bool KronosAudioProcessor::isCounting() const
+{
+    if (! isTracking())
+        return false;
+
+    if (getTrackingMode() == TrackingMode::Manual)
+        return true;
+
+    const juce::ScopedLock lock(trackingLock);
+    return isAccumulating;
 }
 
 bool KronosAudioProcessor::isDarkMode() const
@@ -937,6 +1019,11 @@ juce::Time KronosAudioProcessor::getCurrentTime() const
 void KronosAudioProcessor::setNowProviderForTests(std::function<juce::Time()> nowProvider)
 {
     nowProviderForTests = std::move(nowProvider);
+}
+
+void KronosAudioProcessor::setActivitySourceForTests(std::function<UserActivity()> activitySource)
+{
+    activitySourceForTests = std::move(activitySource);
 }
 
 #if JUCE_UNIT_TESTS
@@ -2114,6 +2201,7 @@ public:
         runTimeZoneScenarios();
         runSerialisationGrowthScenario();
         runConcurrentSaveScenario();
+        runAutoModeScenarios();
         runEditorPerformanceScenario();
         runSheetScenarios();
         runSnapshotsIfRequested();
@@ -2409,7 +2497,8 @@ private:
                     expect(hits(control), "Main control missed at width " + juce::String(width));
 
                 editor->setMenuOpen(true);
-                for (const auto control : { Control::backupItem, Control::restoreItem, Control::aboutItem })
+                for (const auto control : { Control::modeManual, Control::modeAuto, Control::backupItem,
+                                            Control::restoreItem, Control::aboutItem })
                     expect(hits(control), "Menu item missed at width " + juce::String(width));
                 editor->setMenuOpen(false);
             }
@@ -2418,7 +2507,8 @@ private:
             editor->setSize(600, 450);
             editor->setMenuOpen(true);
             for (const auto control : { Control::play, Control::theme, Control::menu, Control::sortRecent,
-                                        Control::sortLongest, Control::backupItem, Control::restoreItem, Control::aboutItem })
+                                        Control::sortLongest, Control::modeManual, Control::modeAuto,
+                                        Control::backupItem, Control::restoreItem, Control::aboutItem })
             {
                 auto& button = editor->getControl(control);
                 expect(button.getHeight() >= 32 && button.getWidth() >= 32, "Hit target under 32px: " + button.getTitle());
@@ -2460,6 +2550,26 @@ private:
             expect(processor.getDateSortMode() == KronosAudioProcessor::DateSortMode::MostTime, "Longest should sort by time.");
             press(Control::sortRecent);
             expect(processor.getDateSortMode() == KronosAudioProcessor::DateSortMode::MostRecent, "Recent should sort by date.");
+
+            using TrackingMode = KronosAudioProcessor::TrackingMode;
+            processor.setActivitySourceForTests([] { return KronosAudioProcessor::UserActivity { false, 9999.0 }; });
+            expect(processor.getTrackingMode() == TrackingMode::Manual, "Manual is the default mode.");
+            press(Control::modeAuto);
+            expect(processor.getTrackingMode() == TrackingMode::Auto, "Auto should switch the mode.");
+
+            press(Control::play);
+            clock.advanceSeconds(1);
+            processor.timerCallback();
+            editor->refreshNow();
+            expect(editor->isShowingIdle(), "Auto with no user should show as idle.");
+            expect(processor.isTracking() && !processor.isCounting(), "Idle stays started but adds no time.");
+
+            press(Control::play);
+            editor->refreshNow();
+            expect(!editor->isShowingIdle(), "Paused is not idle.");
+
+            press(Control::modeManual);
+            expect(processor.getTrackingMode() == TrackingMode::Manual, "Manual should switch the mode.");
 
             press(Control::menu);
             press(Control::backupItem);
@@ -2658,6 +2768,16 @@ private:
         editor->setMenuOpen(false);
         processor.setDarkMode(true);
 
+        processor.setActivitySourceForTests([] { return KronosAudioProcessor::UserActivity { false, 9999.0 }; });
+        processor.setTrackingMode(KronosAudioProcessor::TrackingMode::Auto);
+        processor.timerCallback();
+        capture("auto-idle");
+        editor->setMenuOpen(true);
+        capture("auto-menu");
+        editor->setMenuOpen(false);
+        processor.setTrackingMode(KronosAudioProcessor::TrackingMode::Manual);
+        processor.timerCallback();
+
         editor->openSheet(Sheet::backup, false);
         capture("backup");
 
@@ -2678,6 +2798,307 @@ private:
         pausedEditor->setVisible(true);
         editor = pausedEditor;
         capture("paused");
+    }
+
+    void runAutoModeScenarios()
+    {
+        using TrackingMode = KronosAudioProcessor::TrackingMode;
+
+        struct FakeUser
+        {
+            bool inFront = true;
+            double idleSeconds = 0.0;
+
+            KronosAudioProcessor::UserActivity read() const { return { inFront, idleSeconds }; }
+        };
+
+        struct FakePlayHead : public juce::AudioPlayHead
+        {
+            bool playing = false, recording = false;
+
+            juce::Optional<PositionInfo> getPosition() const override
+            {
+                PositionInfo info;
+                info.setIsPlaying(playing);
+                info.setIsRecording(recording);
+                return info;
+            }
+        };
+
+        scenario("The real activity signals answer without a fake user");
+        {
+            FakeClock clock(juce::Time(2026, 3, 1, 9, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+            const auto secondsSinceInput = KronosActivity::getSecondsSinceLastUserInput();
+            emitTestIO("Output: secondsSinceInput=" + juce::String(secondsSinceInput)
+                     + ", inFront=" + juce::String((int) juce::Process::isForegroundProcess()));
+            expect(secondsSinceInput >= 0.0, "Idle time cannot be negative.");
+
+            processor.setTrackingMode(TrackingMode::Auto);
+            processor.startTracking();
+            clock.advanceSeconds(1);
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 1);
+        }
+
+        scenario("Manual mode ignores what the user is doing");
+        {
+            FakeClock clock(juce::Time(2026, 3, 1, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            processor.setActivitySourceForTests([] { return KronosAudioProcessor::UserActivity { false, 9999.0 }; });
+
+            processor.startTracking();
+
+            for (int tick = 0; tick < 100; ++tick)
+            {
+                clock.advanceSeconds(1);
+                processor.timerCallback();
+            }
+
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 100);
+            expect(processor.isCounting(), "Manual should keep counting.");
+        }
+
+        scenario("Auto mode counts work, allows the idle window, then waits for the user");
+        {
+            FakeClock clock(juce::Time(2026, 3, 2, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            FakeUser user;
+            processor.setActivitySourceForTests([&user] { return user.read(); });
+
+            const auto work = [&](int seconds)
+            {
+                for (int tick = 0; tick < seconds; ++tick)
+                {
+                    clock.advanceSeconds(1);
+                    user.idleSeconds = 0.0;
+                    processor.timerCallback();
+                }
+            };
+
+            const auto walkAway = [&](int seconds)
+            {
+                for (int tick = 0; tick < seconds; ++tick)
+                {
+                    clock.advanceSeconds(1);
+                    user.idleSeconds += 1.0;
+                    processor.timerCallback();
+                }
+            };
+
+            processor.setTrackingMode(TrackingMode::Auto);
+            processor.startTracking();
+
+            work(600);
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 600);
+            expect(processor.isCounting(), "An active user should be counted.");
+
+            // 300 seconds of grace, plus the tick that notices the window has passed
+            walkAway(1200);
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 901);
+            expect(processor.isTracking() && !processor.isCounting(), "An absent user should be idle, not paused.");
+
+            work(10);
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 910);
+            expect(processor.isCounting(), "Input should resume counting.");
+            expectEquals(processor.getCurrentRunSeconds(), (juce::int64) 910, "Idle should not end the run.");
+
+            processor.stopTracking();
+            work(10);
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 910, "Pause wins over activity.");
+            expect(!processor.isCounting(), "Paused never counts.");
+
+            processor.startTracking();
+            expectEquals(processor.getCurrentRunSeconds(), (juce::int64) 0, "Pausing should end the run.");
+        }
+
+        scenario("Leaving the host stops the clock at once and keeps the part second");
+        {
+            FakeClock clock(juce::Time(2026, 3, 3, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            FakeUser user;
+            processor.setActivitySourceForTests([&user] { return user.read(); });
+
+            processor.setTrackingMode(TrackingMode::Auto);
+            processor.startTracking();
+
+            clock.advanceMilliseconds(1500);
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 1);
+
+            user.inFront = false;
+            clock.advanceMilliseconds(1200);
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 2);
+            expect(!processor.isCounting(), "Another app in front should stop the clock.");
+
+            clock.advanceSeconds(3600);
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 2, "Time elsewhere must not count.");
+
+            user.inFront = true;
+            processor.timerCallback();
+            clock.advanceMilliseconds(300);
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 3, "The 0.7s remainder should carry over.");
+        }
+
+        scenario("The transport counts as activity until the host stops reporting it");
+        {
+            FakeClock clock(juce::Time(2026, 3, 4, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            FakeUser user { false, 9999.0 };
+            FakePlayHead playHead;
+            juce::AudioBuffer<float> buffer(2, 16);
+            juce::MidiBuffer midi;
+
+            processor.setActivitySourceForTests([&user] { return user.read(); });
+            processor.setPlayHead(&playHead);
+            processor.setTrackingMode(TrackingMode::Auto);
+            processor.startTracking();
+
+            playHead.playing = true;
+
+            for (int tick = 0; tick < 120; ++tick)
+            {
+                processor.processBlock(buffer, midi);
+                clock.advanceSeconds(1);
+                processor.timerCallback();
+            }
+
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 120);
+
+            playHead.playing = false;
+            processor.processBlock(buffer, midi);
+            clock.advanceSeconds(1);
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 121);
+            expect(!processor.isCounting(), "A stopped transport with no user should be idle.");
+
+            playHead.recording = true;
+            processor.processBlock(buffer, midi);
+            processor.timerCallback();
+            clock.advanceSeconds(1);
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 122, "Recording should count.");
+
+            // No more blocks: the last report goes stale rather than counting forever
+            juce::Thread::sleep(2100);
+            clock.advanceSeconds(1);
+            processor.timerCallback();
+            expect(!processor.isCounting(), "A host that stops processing should not count forever.");
+
+            processor.setPlayHead(nullptr);
+        }
+
+        scenario("Switching mode never credits the time spent idle");
+        {
+            FakeClock clock(juce::Time(2026, 3, 5, 10, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            processor.setActivitySourceForTests([] { return KronosAudioProcessor::UserActivity { false, 9999.0 }; });
+
+            processor.setTrackingMode(TrackingMode::Auto);
+            processor.startTracking();
+            processor.timerCallback();
+            expect(!processor.isCounting(), "Nobody is here.");
+
+            clock.advanceSeconds(120);
+            processor.timerCallback();
+            processor.setTrackingMode(TrackingMode::Manual);
+            expect(processor.isCounting(), "Manual counts as soon as it is selected.");
+
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 0);
+
+            clock.advanceSeconds(5);
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 5);
+
+            processor.setTrackingMode(TrackingMode::Auto);
+            clock.advanceSeconds(1);
+            processor.timerCallback();
+            expectEquals(processor.getTotalTimeInSeconds(), (juce::int64) 6, "The tick that goes idle credits its own second.");
+            expect(!processor.isCounting(), "Auto should notice straight away.");
+        }
+
+        scenario("The mode is saved with the project and old projects stay on Manual");
+        {
+            FakeClock clock(juce::Time(2026, 3, 6, 10, 0, 0, 0, true));
+            KronosAudioProcessor saved([&clock]() { return clock.now(); });
+            saved.setTrackingMode(TrackingMode::Auto);
+
+            juce::MemoryBlock data;
+            saved.getStateInformation(data);
+
+            KronosAudioProcessor restored([&clock]() { return clock.now(); });
+            restored.setStateInformation(data.getData(), static_cast<int>(data.getSize()));
+            expect(restored.getTrackingMode() == TrackingMode::Auto, "The mode should survive a save.");
+
+            auto state = saved.parameters->copyState();
+            for (int i = state.getNumChildren(); --i >= 0;)
+                if (state.getChild(i).getProperty("id") == "trackingMode")
+                    state.removeChild(i, nullptr);
+
+            juce::MemoryBlock oldProject;
+            std::unique_ptr<juce::XmlElement> xml(state.createXml());
+            KronosAudioProcessor::copyXmlToBinary(*xml, oldProject);
+
+            KronosAudioProcessor upgraded([&clock]() { return clock.now(); });
+            upgraded.setStateInformation(oldProject.getData(), static_cast<int>(oldProject.getSize()));
+            expect(upgraded.getTrackingMode() == TrackingMode::Manual, "An old project should keep counting as it did.");
+        }
+
+        scenario("Auto mode matches the oracle over a simulated fortnight of comings and goings");
+        {
+            FakeClock clock(juce::Time(2026, 3, 7, 9, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            FakeUser user;
+            juce::Random random(41);
+            TrackedTimeOracle oracle;
+
+            processor.setActivitySourceForTests([&user] { return user.read(); });
+            processor.setTrackingMode(TrackingMode::Auto);
+            processor.startTracking();
+
+            enum class Phase { working, away, elsewhere };
+            auto phase = Phase::working;
+            auto phaseTicksLeft = 0;
+            auto wasActive = true;
+
+            for (int tick = 0; tick < 14 * 86400; ++tick)
+            {
+                if (--phaseTicksLeft <= 0)
+                {
+                    phase = static_cast<Phase>(random.nextInt(3));
+                    phaseTicksLeft = 60 + random.nextInt(2400);
+                }
+
+                const auto before = clock.now();
+                const auto stepMs = 900 + random.nextInt(201);
+                clock.advanceMilliseconds(stepMs);
+
+                user.inFront = phase != Phase::elsewhere;
+                user.idleSeconds = phase == Phase::away ? user.idleSeconds + stepMs / 1000.0 : 0.0;
+
+                if (wasActive)
+                    oracle.addInterval(before, clock.now());
+
+                wasActive = user.inFront && user.idleSeconds <= 300.0;
+                processor.timerCallback();
+            }
+
+            juce::String worst;
+            emitTestIO("Output: tracked=" + juce::String(processor.getTotalTimeInSeconds())
+                     + ", oracle=" + juce::String(oracle.getTotalSeconds()));
+            expect(oracle.getTotalSeconds() > 86400, "The run should have counted plenty of time.");
+            expect(std::abs(processor.getTotalTimeInSeconds() - oracle.getTotalSeconds()) <= 1, "Auto should match the oracle.");
+
+            // The part second kept across idle puts credits up to 1s early, on top of
+            // the 1s rounding at midnight. That only moves time between adjacent days.
+            expectEquals(oracle.countDaysOffBy(processor, 2, worst), 0, worst);
+            expectEquals(sumOfDays(processor), processor.getTotalTimeInSeconds());
+        }
     }
 
     void runEditorPerformanceScenario()

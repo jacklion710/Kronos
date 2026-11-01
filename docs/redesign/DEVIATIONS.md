@@ -17,6 +17,10 @@ Jacob reviewed the build on 2026-11-01 and removed all Greek words, because no o
 
 Jacob reviewed the About sheet on 2026-11-01. Discord is removed, Website points to jacklionaudio.com, and Aznadel is credited for the V1 design. The three remaining links share one row. SoundCloud stays removed, as in the prototype.
 
+## Founder change: tracking modes
+
+Jacob asked for tracking that follows active DAW use, as a mode users can switch. The menu gained a `MANUAL` / `AUTO` control, the status chip gained `IDLE`, and the menu grew to 166px high. The design has neither.
+
 ## Resolved conflicts in the design
 
 | Item | Design says | Built | Why |

@@ -23,6 +23,8 @@ public:
     void resized() override;
 
     void setTracking(bool isTracking, bool animate, bool playStartGlitch);
+    void setIdle(bool isIdle);
+    bool isIdle() const { return idle; }
     void setDark(bool isDark);
     void setMenuOpen(bool isOpen);
     void advance(double seconds);
@@ -36,7 +38,7 @@ public:
 private:
     void drawWordmark(juce::Graphics&);
 
-    bool tracking = false;
+    bool tracking = false, idle = false;
     double glintPhase = 0.0, ledPhase = 0.0;
     Tween glitch, statusBlend;
     juce::Rectangle<float> ruleArea, chipArea, wordmarkArea;
@@ -75,12 +77,13 @@ public:
     struct Values
     {
         juce::int64 total = 0, run = 0, today = 0, average = 0, longest = 0;
-        bool tracking = false;
+        bool tracking = false, counting = false;
 
         bool operator!=(const Values& other) const
         {
             return total != other.total || run != other.run || today != other.today
-                || average != other.average || longest != other.longest || tracking != other.tracking;
+                || average != other.average || longest != other.longest || tracking != other.tracking
+                || counting != other.counting;
         }
     };
 
@@ -134,7 +137,10 @@ public:
     void resized() override;
     bool keyPressed(const juce::KeyPress&) override;
     void focusFirstItem();
+    void setAutoMode(bool isAuto);
 
+    KronosButton manualButton { "Manual tracking", KronosButton::Style::segment };
+    KronosButton autoButton { "Auto tracking", KronosButton::Style::segment };
     KronosButton backupItem { "Back up", KronosButton::Style::menuItem };
     KronosButton restoreItem { "Restore", KronosButton::Style::menuItem };
     KronosButton aboutItem { "About Kronos", KronosButton::Style::menuItem };

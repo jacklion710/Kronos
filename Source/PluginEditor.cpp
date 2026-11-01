@@ -48,7 +48,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     readout.setBounds(16, 56, 568, 188);
     sessions.setBounds(16, 256, 568, 178);
     menuDismiss.setBounds(content.getLocalBounds());
-    menu.setBounds(baseWidth - 16 - 176, 48, 176, 125);
+    menu.setBounds(baseWidth - 16 - 176, 48, 176, 166);
     sheetHost.setBounds(content.getLocalBounds());
 
     readout.dial.playButton.onActivated = [this]
@@ -64,6 +64,9 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     header.themeButton.onActivated = [this] { audioProcessor.setDarkMode(!audioProcessor.isDarkMode()); };
     header.menuButton.onActivated = [this] { setMenuOpen(!menu.isVisible()); };
 
+    using TrackingMode = KronosAudioProcessor::TrackingMode;
+    menu.manualButton.onActivated = [this] { audioProcessor.setTrackingMode(TrackingMode::Manual); };
+    menu.autoButton.onActivated = [this] { audioProcessor.setTrackingMode(TrackingMode::Auto); };
     menu.backupItem.onActivated = [this] { openSheet(Sheet::backup); };
     menu.restoreItem.onActivated = [this] { openSheet(Sheet::restore); };
     menu.aboutItem.onActivated = [this] { openSheet(Sheet::about); };
@@ -99,8 +102,10 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     };
 
     header.setDark(audioProcessor.isDarkMode());
+    menu.setAutoMode(audioProcessor.getTrackingMode() == TrackingMode::Auto);
     wasTracking = audioProcessor.isTracking();
-    header.setTracking(wasTracking, false, false);
+    wasCounting = audioProcessor.isCounting();
+    header.setTracking(wasCounting, false, false);
     sessions.showSortMode(false);
     refreshNow();
 
@@ -108,6 +113,7 @@ KronosAudioProcessorEditor::KronosAudioProcessorEditor (KronosAudioProcessor& p)
     audioProcessor.parameters->addParameterListener("tracking", this);
     audioProcessor.parameters->addParameterListener("darkMode", this);
     audioProcessor.parameters->addParameterListener("dateSortMode", this);
+    audioProcessor.parameters->addParameterListener("trackingMode", this);
 
     setSize(baseWidth, baseHeight);
     lastTickTime = juce::Time::getMillisecondCounterHiRes();
@@ -122,6 +128,7 @@ KronosAudioProcessorEditor::~KronosAudioProcessorEditor()
     audioProcessor.parameters->removeParameterListener("tracking", this);
     audioProcessor.parameters->removeParameterListener("darkMode", this);
     audioProcessor.parameters->removeParameterListener("dateSortMode", this);
+    audioProcessor.parameters->removeParameterListener("trackingMode", this);
 
     setLookAndFeel(nullptr);
 }
@@ -157,7 +164,7 @@ void KronosAudioProcessorEditor::parentHierarchyChanged()
 
 bool KronosAudioProcessorEditor::shouldAnimate() const
 {
-    return audioProcessor.isTracking() && isShowing();
+    return audioProcessor.isCounting() && isShowing();
 }
 
 void KronosAudioProcessorEditor::updateFrameRate()
@@ -190,7 +197,12 @@ void KronosAudioProcessorEditor::timerCallback()
     if (currentFrameRate == restingFrameRate || ++ticksSinceRefresh >= ambientFrameRate / 3)
     {
         ticksSinceRefresh = 0;
-        updateReadouts();
+
+        // Auto mode goes idle and comes back without any parameter changing
+        if (audioProcessor.isCounting() != wasCounting)
+            refreshNow();
+        else
+            updateReadouts();
     }
 }
 
@@ -203,6 +215,7 @@ void KronosAudioProcessorEditor::updateReadouts()
     values.average = audioProcessor.getDailyAverageSeconds();
     values.longest = audioProcessor.getLongestDaySeconds();
     values.tracking = audioProcessor.isTracking();
+    values.counting = audioProcessor.isCounting();
 
     readout.setValues(values);
     sessions.refresh(false);
@@ -220,9 +233,12 @@ void KronosAudioProcessorEditor::updateReadouts()
 void KronosAudioProcessorEditor::refreshNow()
 {
     const auto tracking = audioProcessor.isTracking();
+    const auto counting = audioProcessor.isCounting();
 
-    header.setTracking(tracking, motionEnabled && isShowing(), motionEnabled && tracking && !wasTracking);
+    header.setIdle(tracking && !counting);
+    header.setTracking(counting, motionEnabled && isShowing(), motionEnabled && tracking && !wasTracking);
     wasTracking = tracking;
+    wasCounting = counting;
 
     updateReadouts();
     sessions.refresh(true);
@@ -238,6 +254,8 @@ juce::Button& KronosAudioProcessorEditor::getControl(Control control)
         case Control::menu:        return header.menuButton;
         case Control::sortRecent:  return sessions.recentButton;
         case Control::sortLongest: return sessions.longestButton;
+        case Control::modeManual:  return menu.manualButton;
+        case Control::modeAuto:    return menu.autoButton;
         case Control::backupItem:  return menu.backupItem;
         case Control::restoreItem: return menu.restoreItem;
         case Control::aboutItem:   return menu.aboutItem;
@@ -303,6 +321,11 @@ void KronosAudioProcessorEditor::applyParameterChange(const juce::String& parame
         applyTheme(audioProcessor.isDarkMode());
     else if (parameterID == "dateSortMode")
         sessions.showSortMode(motionEnabled && isShowing());
+    else if (parameterID == "trackingMode")
+    {
+        menu.setAutoMode(audioProcessor.getTrackingMode() == KronosAudioProcessor::TrackingMode::Auto);
+        refreshNow();
+    }
 }
 
 void KronosAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float)

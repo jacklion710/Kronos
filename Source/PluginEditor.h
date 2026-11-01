@@ -41,8 +41,9 @@ public:
     void setMotionEnabled(bool shouldAnimate) { motionEnabled = shouldAnimate; }
     KronosSheet* getOpenSheet() const { return sheetHost.getSheet(); }
 
-    enum class Control { play, theme, menu, sortRecent, sortLongest, backupItem, restoreItem, aboutItem };
+    enum class Control { play, theme, menu, sortRecent, sortLongest, modeManual, modeAuto, backupItem, restoreItem, aboutItem };
     juce::Button& getControl(Control control);
+    bool isShowingIdle() const { return header.isIdle(); }
 
     // Brings the display up to date immediately rather than on the next tick.
     void refreshNow();
@@ -80,6 +81,7 @@ private:
     int currentFrameRate = 0;
     int ticksSinceRefresh = 0;
     bool wasTracking = false;
+    bool wasCounting = false;
     bool motionEnabled = true;
     bool menuOpenedByKeyboard = false;
     juce::int64 lastSheetTotal = -1;
