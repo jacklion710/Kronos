@@ -22,7 +22,8 @@ Kronos is a time tracking plugin for your DAW. It tracks how long you work on se
 - Dark/Light theme support
 - Session sorting by date or duration
 - Persistent data storage
-- Data backup and restoration
+- Data backup and restoration with a compare step before replacing
+- Today, this run, daily average and longest day stats
 - Resizable interface
 
 ## Installation
@@ -64,91 +65,62 @@ Kronos installers include selectable plugin format components and bundled user g
 ## Kronos UI
 
 <p align="center">
-  <img src="./manual_screenshots/Kronos%20Overview.png" alt="Kronos Overview">
+  <img src="./manual_screenshots/Kronos%20v2%20Dark.png" alt="Kronos in the dark theme, tracking" width="80%">
 </p>
 
-### Main Time Display
+The window has a header, a readout panel and a sessions panel. It scales as one piece from 400 x 300 to 1200 x 900, keeping its 4:3 shape.
+
+### Header
+
+- **Status chip**: shows `TRACKING` or `PAUSED`.
+- **Theme toggle**: switches between the dark (default) and light themes.
+- **Menu**: opens Back up, Restore and About.
+
+### Readout Panel
+
+- **Dial**: the outer arc shows the position in the current minute and the inner arc the position in the current hour, both from your real project time. The Greek ring and hexagram are decorative. They turn only while tracking and stop when paused.
+- **Start/Pause**: the button in the centre of the dial.
+- **Project time**: everything tracked in this project, as hours, minutes and seconds.
+- **This run**: time since tracking last started.
+- **Today**: time tracked on the current calendar day.
+- **Daily avg**: project time divided by the number of days that have tracked time.
+- **Longest day**: the most time tracked on a single day.
+
+The Greek words and planetary symbols are decoration. Every control and value has an English label.
+
+### Sessions Panel
+
+- Lists every day with tracked time, and scrolls with your trackpad, mouse wheel or the scrollbar.
+- `RECENT` sorts newest first. `LONGEST` sorts by tracked time.
+- Each row shows the weekday, date, a bar scaled to your longest day, and the duration.
+- Today is marked `TDY` in the accent colour, and your longest day has the brightest bar.
 
 <p align="center">
-  <img src="./manual_screenshots/Kronos%20Main%20Time%20Display.png" alt="Main Time Display">
-</p>
-
-The main display shows total tracked session time in `HH:MM:SS`.
-
-### Controls
-
-#### Play/Pause Button
-
-<p align="center">
-  <img src="./manual_screenshots/Kronos%20Tracking%20Button.png" alt="Tracking Button">
-</p>
-
-- `Play`: Start tracking time
-- `Pause`: Pause tracking time
-
-#### Theme Toggle
-
-<p align="center">
-  <img src="./manual_screenshots/Kronos%20Color%20Theme%20Dark.png" alt="Dark Theme">
-  <img src="./manual_screenshots/Kronos%20Color%20Theme%20Light.png" alt="Light Theme">
-</p>
-
-- Dark mode (default)
-
-<p align="center">
-  <img src="./manual_screenshots/Kronos%20Screenshot%20Dark.png" alt="Dark Mode">
-</p>
-
-- Light mode
-
-<p align="center">
-  <img src="./manual_screenshots/Kronos%20Screenshot%20Light.png" alt="Light Mode">
-</p>
-
-#### Sort Button
-
-The sort control to the left of session history supports:
-
-- `Most Recent` (default): newest sessions first
-- `Most Time`: highest tracked-time sessions first
-
-### Previous Sessions Panel
-
-<p align="center">
-  <img src="./manual_screenshots/Kronos%20Previous%20Sessions.png" alt="Previous Sessions">
-</p>
-
-- Shows unlimited previous sessions
-- Displays date and duration for each session
-- Sorts by recency or tracked duration
-- Uses bars to indicate relative session lengths
-- Supports list scrolling with up/down arrows
-
-### About Panel
-
-Use the top-right `...` menu and choose `About` to open the about panel with version and credits.
-
-<p align="center">
-  <img src="./manual_screenshots/Kronos%20About.png" alt="About Button">
-  <img src="./manual_screenshots/Kronos%20About%20Panel.png" alt="About Panel">
+  <img src="./manual_screenshots/Kronos%20v2%20Light%20Menu.png" alt="Kronos in the light theme with the menu open" width="80%">
 </p>
 
 ### Data Backup and Restoration
 
-Use the top-right `...` menu:
+Open the menu in the top right corner.
 
-- `Backup` creates a `.kronos` backup file.
-- `Restore` loads a `.kronos` backup file.
+**Back up** saves this project's full time log as a `.kronos` file. Enter a project name and check the file name shown beneath it. If that name already exists, Kronos asks before overwriting it. The saved screen only appears once the file has really been written. If saving fails, Kronos says why instead.
+
+**Restore** lists your saved backups with their totals. Choose one, or use `Browse...` to pick a file elsewhere, then compare your current log with the backup before deciding. `Keep current` is selected by default, and `Replace log` overwrites this project's log.
 
 Default backup locations:
 
 - macOS: `/Users/<YourUsername>/Library/Application Support/KronosTimeTracker/Backups`
 - Windows: `C:\Users\<YourUsername>\AppData\Roaming\KronosTimeTracker\Backups`
 
+### About
+
+Open the menu and choose `About Kronos` for the version, credits and links.
+
 ## Tips
 
 - A new session bucket is created automatically per day.
 - Reopening on the same day keeps accumulating that day's total.
+- Time while your computer is asleep is not counted.
 - Pause tracking when taking breaks.
 - Save backups regularly.
 - Resize the window from corners; aspect ratio is preserved.

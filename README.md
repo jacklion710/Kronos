@@ -5,7 +5,7 @@ V1.1.0
 **Official release coming March 1st 2025!**
 
 <p align="center">
-  <img src="./Kronos_Manual/Kronos%20Manual/manual_screenshots/Kronos%20Screenshot%20Dark.png" alt="Kronos UI">
+  <img src="./Kronos_Manual/Kronos%20Manual/manual_screenshots/Kronos%20v2%20Dark.png" alt="Kronos UI">
 </p>
 
 Kronos is a simple yet powerful time tracking plugin for your DAW. Keep track of how much time you spend on your music production sessions with an elegant, easy-to-use interface.
@@ -20,6 +20,9 @@ Kronos is a simple yet powerful time tracking plugin for your DAW. Keep track of
 - Data backup and restoration
 - Resizable interface
 - Visual time bars for session comparison
+- Today, this run, daily average and longest day stats
+- Live dial showing the current minute and hour
+- Backup restore with a compare step before replacing your log
 
 ## Installation
 
@@ -115,7 +118,8 @@ Release packaging enforces this gate on both platforms:
 ## Project Structure
 
 - `/Source` - Core plugin implementation
-- `/Resources` - Assets (SVGs, fonts, etc.)
+- `/Resources/fonts` - Embedded Source Sans 3 and JetBrains Mono, with their OFL licences
+- `/docs/redesign` - The v2 design handoff, spec and screenshots
 - `/JuceLibraryCode` - JUCE framework code
 
 ## Development
@@ -124,7 +128,9 @@ The plugin is built using JUCE framework and follows a standard audio plugin arc
 
 - `PluginProcessor` - Handles core functionality and state management
 - `PluginEditor` - Manages the UI and user interactions
-- `LookAndFeel` - Custom styling and theme implementation
+- `LookAndFeel` - Theme tokens, fonts and shared drawing
+- `KronosWidgets` - Path-drawn art, buttons, chamfered panels and the sheet host
+- `KronosViews` - Header, dial, readout, sessions list and menu
 - `AboutComponent` - About window with links and information
 - `BackupComponent` - Backup window for saving `.kronos` log files with project time data
 - `RestoreComponent` - Restore window for loading `.kronos` log files into the project time
