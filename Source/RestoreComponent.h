@@ -1,79 +1,72 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "KronosWidgets.h"
 #include "PluginProcessor.h"
 
 /**
- * RestoreComponent - Modal dialog for restoring plugin state data
- * 
- * Allows users to select a previous backup to restore, which will
- * overwrite the current plugin state.
+ * RestoreComponent - Sheet for restoring plugin state data
+ *
+ * Pick a backup, then compare it with the current log before replacing it.
  */
-class RestoreComponent : public juce::Component,
-                         public juce::ListBoxModel,
-                         public juce::Timer
+class RestoreComponent : public KronosSheet,
+                         private juce::ListBoxModel
 {
 public:
-    // Constructor takes a reference to the processor to access plugin state
-    RestoreComponent(KronosAudioProcessor&);
-    ~RestoreComponent() override;
+    enum class Stage { choosing, confirming };
 
-    // JUCE Component overrides
+    explicit RestoreComponent(KronosAudioProcessor&);
+
+    juce::String getKicker() const override;
+    juce::String getSheetTitle() const override;
+    int getPreferredHeight() const override;
+    void focusDefaultControl() override;
+    void cancelOrClose() override;
+
     void paint(juce::Graphics&) override;
     void resized() override;
-    void timerCallback() override;
 
-    // Close button for the modal dialog
-    juce::TextButton closeButton;
+    Stage getStage() const { return stage; }
+    juce::String getErrorText() const { return errorText; }
 
-    // ListBoxModel implementation
-    int getNumRows() override;
-    void paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
+    // Reads a backup and moves to the confirm step if it is valid.
+    bool beginConfirmation(const juce::File& file);
+    bool confirmReplace();
+
+private:
+    struct Backup
+    {
+        juce::File file;
+        KronosAudioProcessor::BackupSummary summary;
+    };
+
+    int getNumRows() override { return backups.size(); }
+    void paintListBoxItem(int rowNumber, juce::Graphics&, int width, int height, bool rowIsSelected) override;
     void selectedRowsChanged(int lastRowSelected) override;
     void listBoxItemDoubleClicked(int row, const juce::MouseEvent&) override;
 
-private:
-    // Reference to the audio processor
+    void setStage(Stage newStage);
+    void refreshBackupList();
+    juce::String getBackupDirectory() const;
+    void browseForBackup();
+    void showError(const juce::String& message);
+
     KronosAudioProcessor& audioProcessor;
-    
-    // UI Elements
-    juce::Label titleLabel;
-    juce::Label instructionLabel;
+
     juce::ListBox backupListBox;
-    juce::TextButton restoreButton;
-    juce::TextButton browseButton;
-    
-    // Confirmation UI elements
-    juce::TextButton confirmButton;
-    juce::TextButton cancelButton;
-    
-    // State management
-    bool isConfirmationMode;
-    bool isSuccessMode;
-    juce::String confirmationMessage;
-    juce::String statusMessage;
+    KronosButton browseButton { "Browse", KronosButton::Style::secondary };
+    KronosButton cancelButton { "Cancel", KronosButton::Style::secondary };
+    KronosButton restoreButton { "Restore", KronosButton::Style::primary };
+    KronosButton keepButton { "Keep current", KronosButton::Style::emphasised };
+    KronosButton replaceButton { "Replace log", KronosButton::Style::primary };
+
+    Stage stage = Stage::choosing;
+    juce::String errorText;
+    juce::Array<Backup> backups;
     juce::File pendingRestoreFile;
     juce::MemoryBlock pendingRestoreData;
+    KronosAudioProcessor::BackupSummary pendingSummary;
     std::unique_ptr<juce::FileChooser> fileChooser;
-    
-    // Data storage
-    juce::Array<juce::File> backupFiles;
-    
-    // Methods
-    void refreshBackupList();
-    void performRestore();
-    juce::String getBackupDirectory();
-    void browseForBackup();
-    void initiateRestore();
-    void confirmRestore();
-    void cancelConfirmation();
-    void resetConfirmationState();
-    void performRestore(const juce::File& file, const juce::MemoryBlock& data);
-    void showSuccessMessage(const juce::String& message);
-    void showErrorMessage(const juce::String& message);
-    
-    // The LookAndFeel instance to use
-    juce::LookAndFeel_V4 lookAndFeel;
-    
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RestoreComponent)
-}; 
+};

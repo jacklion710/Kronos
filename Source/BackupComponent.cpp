@@ -1,235 +1,114 @@
 #include "BackupComponent.h"
 
-// Custom LookAndFeel implementation for backup component
-class BackupLookAndFeel : public juce::LookAndFeel_V4
-{
-public:
-    juce::Font getTextButtonFont(juce::TextButton& button, int buttonHeight) override
-    {
-        // Special handling for close button
-        if (button.getButtonText() == "x") {
-            // Use a larger font for the close button - matching AboutComponent
-            return juce::Font(juce::Font::getDefaultSansSerifFontName(), 20.0f, juce::Font::plain);
-        }
-        // Original behavior for other buttons
-        return juce::Font("ASTERA", 18.0f, juce::Font::plain);
-    }
-};
+using KLF = KronosLookAndFeel;
 
-/**
- * Constructor - Initialize UI components and set up styling
- * 
- * @param p Reference to the audio processor for accessing plugin state
- */
-BackupComponent::BackupComponent(KronosAudioProcessor& p)
-    : audioProcessor(p), isConfirmationMode(false), confirmationMessage("")
+BackupComponent::BackupComponent(KronosAudioProcessor& p) : audioProcessor(p)
 {
-    // Close button setup
-    closeButton.setButtonText("x");
-    closeButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
-    closeButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
-    addAndMakeVisible(closeButton);
-
-    // Set up the component with custom look and feel (only for backup button)
-    customLookAndFeel = std::make_unique<BackupLookAndFeel>();
-    setLookAndFeel(customLookAndFeel.get());
-    
-    // Configure and add title label
-    titleLabel.setText("Backup Session Data", juce::dontSendNotification);
-    titleLabel.setFont(juce::Font("ASTERA", 24.0f, juce::Font::bold));
-    titleLabel.setJustificationType(juce::Justification::centred);
-    titleLabel.setColour(juce::Label::textColourId, juce::Colour(0xE6, 0xE6, 0xFF));
-    addAndMakeVisible(titleLabel);
-    
-    // Configure instruction label
-    instructionLabel.setText("Enter a project name for this backup:", juce::dontSendNotification);
-    instructionLabel.setFont(juce::Font("ASTERA", 16.0f, juce::Font::plain));
-    instructionLabel.setJustificationType(juce::Justification::centred);
-    instructionLabel.setColour(juce::Label::textColourId, juce::Colour(0xE6, 0xE6, 0xFF));
-    addAndMakeVisible(instructionLabel);
-    
-    // Configure and add project name editor
+    projectNameEditor.setTitle("Project name");
     projectNameEditor.setMultiLine(false);
     projectNameEditor.setReturnKeyStartsNewLine(false);
-    projectNameEditor.setReadOnly(false);
     projectNameEditor.setScrollbarsShown(false);
-    projectNameEditor.setCaretVisible(true);
-    projectNameEditor.setPopupMenuEnabled(true);
-    projectNameEditor.setFont(juce::Font(juce::Font::getDefaultMonospacedFontName(), 18.0f, juce::Font::plain));
-    projectNameEditor.setColour(juce::TextEditor::backgroundColourId, juce::Colour(0x30303030));
-    projectNameEditor.setColour(juce::TextEditor::textColourId, juce::Colour(0xFFE6E6FF));
-    projectNameEditor.setColour(juce::TextEditor::outlineColourId, juce::Colour(0xFF505050));
-    projectNameEditor.setColour(juce::TextEditor::focusedOutlineColourId, juce::Colour(0xFF909090));
-    projectNameEditor.setJustification(juce::Justification::centred);
+    projectNameEditor.setFont(KLF::font(KLF::Face::monoRegular, 13.0f, 0.06f));
+    projectNameEditor.setIndents(12, 10);
+    projectNameEditor.setBorder(juce::BorderSize<int>(0));
     projectNameEditor.setText("MY PROJECT", juce::dontSendNotification);
+    projectNameEditor.onTextChange = [this] { errorText.clear(); repaint(); };
+    projectNameEditor.onReturnKey = [this] { initiateBackup(); };
+    projectNameEditor.onEscapeKey = [this] { cancelOrClose(); };
     addAndMakeVisible(projectNameEditor);
-    
-    // Configure and add backup button
-    backupButton.setButtonText("Create Backup");
-    backupButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xFF404080));
-    backupButton.setColour(juce::TextButton::textColourOffId, juce::Colour(0xFFE6E6FF));
-    backupButton.onClick = [this] { initiateBackup(); };
-    addAndMakeVisible(backupButton);
 
-    // Configure confirmation buttons (initially invisible)
-    confirmButton.setButtonText("Overwrite");
-    confirmButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xFF404080));
-    confirmButton.setColour(juce::TextButton::textColourOffId, juce::Colour(0xFFE6E6FF));
-    confirmButton.onClick = [this] { confirmBackup(); };
-    addAndMakeVisible(confirmButton);
-    confirmButton.setVisible(false);
+    for (auto* button : { &cancelButton, &saveButton, &overwriteButton, &revealButton, &doneButton })
+    {
+        button->setButtonText(button->getName());
+        addChildComponent(*button);
+    }
 
-    cancelButton.setButtonText("Cancel");
-    cancelButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xFF404080));
-    cancelButton.setColour(juce::TextButton::textColourOffId, juce::Colour(0xFFE6E6FF));
-    cancelButton.onClick = [this] { cancelConfirmation(); };
-    addAndMakeVisible(cancelButton);
-    cancelButton.setVisible(false);
+    cancelButton.onActivated = [this] { cancelOrClose(); };
+    saveButton.onActivated = [this] { initiateBackup(); };
+    overwriteButton.onActivated = [this] { saveBackup(getBackupFile()); };
+    revealButton.onActivated = [this] { savedFile.revealToUser(); };
+    doneButton.onActivated = [this] { if (onClose) onClose(); };
+
+    setStage(Stage::entering);
 }
 
-/**
- * Destructor - Clean up resources
- */
-BackupComponent::~BackupComponent()
+juce::String BackupComponent::getKicker() const
 {
-    setLookAndFeel(nullptr);
+    return juce::String(juce::CharPointer_UTF8("BACKUP \xc2\xb7 \xce\x9c\xce\x9d\xce\x97\xce\x9c\xce\x97"));
 }
 
-/**
- * Paint method - Draw the component background and styling
- * 
- * @param g Graphics context to use for drawing
- */
-void BackupComponent::paint(juce::Graphics& g)
+juce::String BackupComponent::getSheetTitle() const
 {
-    // Calculate scale factor
-    float widthScale = getWidth() / 600.0f;
-    float heightScale = getHeight() / 450.0f;
-    float scale = juce::jmin(widthScale, heightScale);
-
-    // Background
-    g.fillAll(juce::Colour(0xFF1A1A1A));
-    
-    // Text color
-    g.setColour(juce::Colours::white);
-    
-    auto asteraFont = juce::Font("ASTERA", 24.0f * scale, juce::Font::plain);
-    auto contentBounds = getLocalBounds().reduced(20 * scale);
-    
-    // Title
-    g.setFont(asteraFont);
-    g.drawText(isConfirmationMode ? "CONFIRM BACKUP" : "BACKUP SESSION DATA", 
-               contentBounds.removeFromTop(40 * scale), juce::Justification::centred, true);
-    
-    contentBounds.removeFromTop(30 * scale);
-
-    if (isConfirmationMode)
-    {
-        // Draw confirmation message
-        g.setFont(asteraFont.withHeight(16.0f * scale));
-        auto messageArea = contentBounds;
-        messageArea.removeFromTop(60 * scale); // Add some space after title, but not too much
-        messageArea.setHeight(120 * scale); // Set a fixed height for the message area
-        g.drawFittedText(confirmationMessage,
-                        messageArea,
-                        juce::Justification::centred,
-                        3);
-    }
-    else
-    {
-        // Project name instruction
-        g.setFont(asteraFont.withHeight(20.0f * scale));
-        g.drawText("ENTER A PROJECT NAME FOR THIS BACKUP:", 
-                   contentBounds.removeFromTop(30 * scale), 
-                   juce::Justification::centred, true);
-        
-        contentBounds.removeFromTop(50 * scale);
-        contentBounds.removeFromTop(60 * scale);
-    }
-    
-    // Draw metallic border
-    float borderThickness = 2.0f * scale;
-    juce::ColourGradient borderGradient(
-        juce::Colour(180, 180, 180),
-        getLocalBounds().getTopLeft().toFloat(),
-        juce::Colour(100, 100, 100),
-        getLocalBounds().getBottomRight().toFloat(),
-        false);
-    
-    auto borderBounds = getLocalBounds().toFloat();
-    g.setGradientFill(borderGradient);
-    g.drawRect(borderBounds, borderThickness);
+    return stage == Stage::saved ? "Backup saved" : "Back up session data";
 }
 
-/**
- * Resize method - Position components based on size
- */
-void BackupComponent::resized()
+int BackupComponent::getPreferredHeight() const
 {
-    // Calculate scale factor based on parent size
-    float widthScale = getWidth() / 600.0f;
-    float heightScale = getHeight() / 450.0f;
-    float scale = juce::jmin(widthScale, heightScale);
-
-    // Position close button relative to parent bounds with scaling
-    closeButton.setBounds(getWidth() - (25 * scale), 5 * scale, 20 * scale, 20 * scale);
-    
-    if (isConfirmationMode)
+    switch (stage)
     {
-        // Hide normal UI elements
-        projectNameEditor.setVisible(false);
-        backupButton.setVisible(false);
-
-        // Position confirmation buttons
-        int buttonWidth = 200 * scale;
-        int buttonHeight = 60 * scale;
-        int buttonSpacing = 20 * scale;
-        int totalWidth = (buttonWidth * 2) + buttonSpacing;
-        int startX = (getWidth() - totalWidth) / 2;
-        int buttonY = getHeight() - buttonHeight - (60 * scale);
-
-        confirmButton.setBounds(startX, buttonY, buttonWidth, buttonHeight);
-        cancelButton.setBounds(startX + buttonWidth + buttonSpacing, buttonY, buttonWidth, buttonHeight);
-
-        confirmButton.setVisible(true);
-        cancelButton.setVisible(true);
+        case Stage::confirmingOverwrite: return 128;
+        case Stage::saved:               return 152;
+        case Stage::entering:            break;
     }
-    else
+
+    return errorText.isEmpty() ? 220 : 256;
+}
+
+void BackupComponent::focusDefaultControl()
+{
+    if (stage == Stage::entering && projectNameEditor.isShowing())
     {
-        // Show normal UI elements
-        projectNameEditor.setVisible(true);
-        backupButton.setVisible(true);
-        confirmButton.setVisible(false);
-        cancelButton.setVisible(false);
-
-        // Position project name input
-        int inputWidth = 480 * scale;
-        int inputHeight = 40 * scale;
-        int inputX = (getWidth() - inputWidth) / 2;
-        int inputY = 140 * scale;
-        
-        projectNameEditor.setBounds(inputX, inputY, inputWidth, inputHeight);
-        
-        // Position backup button
-        int buttonWidth = 200 * scale;
-        int buttonHeight = 60 * scale;
-        int buttonX = (getWidth() - buttonWidth) / 2;
-        int buttonY = getHeight() - buttonHeight - (60 * scale);
-        
-        backupButton.setBounds(buttonX, buttonY, buttonWidth, buttonHeight);
+        projectNameEditor.grabKeyboardFocus();
+        projectNameEditor.selectAll();
     }
+    else if (stage == Stage::saved && doneButton.isShowing())
+    {
+        doneButton.grabKeyboardFocus();
+    }
+    else if (stage == Stage::confirmingOverwrite && cancelButton.isShowing())
+    {
+        cancelButton.grabKeyboardFocus();
+    }
+}
+
+void BackupComponent::cancelOrClose()
+{
+    if (stage == Stage::confirmingOverwrite)
+        setStage(Stage::entering);
+    else if (onClose)
+        onClose();
+}
+
+void BackupComponent::setStage(Stage newStage)
+{
+    stage = newStage;
+
+    projectNameEditor.setVisible(stage == Stage::entering);
+    saveButton.setVisible(stage == Stage::entering);
+    cancelButton.setVisible(stage != Stage::saved);
+    overwriteButton.setVisible(stage == Stage::confirmingOverwrite);
+    revealButton.setVisible(stage == Stage::saved);
+    doneButton.setVisible(stage == Stage::saved);
+
+    resized();
+    repaint();
+
+    if (onLayoutChanged)
+        onLayoutChanged();
+
+    focusDefaultControl();
 }
 
 /**
  * Get the platform-specific backup directory path
- * 
+ *
  * @return A string with the full backup directory path
  */
-juce::String BackupComponent::getBackupDirectory()
+juce::String BackupComponent::getBackupDirectory() const
 {
     // Get appropriate directory for the platform
     juce::File backupDir;
-    
+
     #if JUCE_MAC
         backupDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
                     .getChildFile("Application Support/KronosTimeTracker/Backups");
@@ -240,105 +119,158 @@ juce::String BackupComponent::getBackupDirectory()
         backupDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
                     .getChildFile(".kronostimetracker/backups");
     #endif
-    
-    // Ensure directory exists
-    backupDir.createDirectory();
-    
+
     return backupDir.getFullPathName();
+}
+
+juce::String BackupComponent::getFileName() const
+{
+    // Sanitize the filename
+    juce::String sanitizedName;
+    const juce::String invalidChars = "\\/*?\"<>|:";
+
+    for (auto c : projectNameEditor.getText())
+        sanitizedName += invalidChars.containsChar(c) ? juce::juce_wchar('_') : c;
+
+    return (sanitizedName.isEmpty() ? juce::String("KronosBackup") : sanitizedName) + ".kronos";
+}
+
+juce::File BackupComponent::getBackupFile() const
+{
+    return juce::File(getBackupDirectory()).getChildFile(getFileName());
 }
 
 void BackupComponent::initiateBackup()
 {
-    // Get project name from the text editor
-    juce::String projectName = projectNameEditor.getText();
-    
-    // Sanitize the filename
-    juce::String sanitizedName = "";
-    const juce::String invalidChars = "\\/*?\"<>|:";
-    
-    for (auto c : projectName)
-    {
-        if (invalidChars.containsChar(c))
-            sanitizedName += '_';
-        else
-            sanitizedName += c;
-    }
-    
-    projectName = sanitizedName.isEmpty() ? "KronosBackup" : sanitizedName;
-    
-    // Create backup filename
-    juce::String filename = projectName + ".kronos";
-    
-    // Create full path
-    juce::File backupDir(getBackupDirectory());
-    juce::File backupFile = backupDir.getChildFile(filename);
-    
+    const auto backupFile = getBackupFile();
+
     if (backupFile.existsAsFile())
-    {
-        // Show confirmation UI
-        confirmationMessage = "A backup file named '" + filename + "' already exists.\n\n"
-                            "Do you want to overwrite it?";
-        pendingBackupFile = backupFile;
-        isConfirmationMode = true;
-        resized(); // Trigger UI update
-        repaint();
-    }
+        setStage(Stage::confirmingOverwrite);
     else
-    {
-        // Proceed with backup
         saveBackup(backupFile);
-    }
 }
 
-void BackupComponent::confirmBackup()
-{
-    if (pendingBackupFile != juce::File())
-    {
-        saveBackup(pendingBackupFile);
-        resetConfirmationState();
-    }
-}
-
-void BackupComponent::cancelConfirmation()
-{
-    resetConfirmationState();
-}
-
-void BackupComponent::resetConfirmationState()
-{
-    isConfirmationMode = false;
-    confirmationMessage = "";
-    pendingBackupFile = juce::File();
-    resized();
-    repaint();
-}
-
-void BackupComponent::saveBackup(const juce::File& backupFile)
+bool BackupComponent::saveBackup(const juce::File& backupFile)
 {
     juce::MemoryBlock memoryBlock;
     audioProcessor.getStateInformation(memoryBlock);
 
-    if (memoryBlock.getSize() == 0)
+    const auto directoryReady = backupFile.getParentDirectory().createDirectory().wasOk();
+
+    if (memoryBlock.getSize() > 0 && directoryReady
+        && backupFile.replaceWithData(memoryBlock.getData(), memoryBlock.getSize()))
     {
-        titleLabel.setText("Backup Failed", juce::dontSendNotification);
-        startTimer(2000);
-        return;
+        errorText.clear();
+        savedFile = backupFile;
+        setStage(Stage::saved);
+        return true;
     }
-    
-    if (backupFile.replaceWithData(memoryBlock.getData(), memoryBlock.getSize()))
+
+    errorText = "The backup could not be saved. Check that this folder is writable: "
+              + backupFile.getParentDirectory().getFullPathName();
+    setStage(Stage::entering);
+    return false;
+}
+
+void BackupComponent::resized()
+{
+    auto area = getLocalBounds();
+    auto footer = area.removeFromBottom(36);
+
+    if (stage == Stage::entering)
     {
-        titleLabel.setText("Backup Successful", juce::dontSendNotification);
-        startTimer(2000);
+        projectNameEditor.setBounds(0, 104, getWidth(), 38);
+
+        saveButton.setBounds(footer.removeFromRight(122));
+        footer.removeFromRight(8);
+        cancelButton.setBounds(footer.removeFromRight(84));
+    }
+    else if (stage == Stage::confirmingOverwrite)
+    {
+        overwriteButton.setBounds(footer.removeFromRight(112));
+        footer.removeFromRight(8);
+        cancelButton.setBounds(footer.removeFromRight(84));
     }
     else
     {
-        titleLabel.setText("Backup Failed", juce::dontSendNotification);
-        startTimer(2000);
+        doneButton.setBounds(footer.removeFromRight(84));
+        footer.removeFromRight(8);
+        revealButton.setBounds(footer.removeFromRight(130));
     }
 }
 
-void BackupComponent::timerCallback()
+void BackupComponent::paint(juce::Graphics& g)
 {
-    stopTimer();
-    setVisible(false);
+    const auto text = findColour(KLF::textColourId);
+    const auto muted = findColour(KLF::mutedColourId);
+    const auto faint = findColour(KLF::faintColourId);
+    const auto width = static_cast<float>(getWidth());
+    const auto titleFont = KLF::font(KLF::Face::sansSemibold, 22.0f);
+    const auto bodyFont = KLF::font(KLF::Face::sansRegular, 13.0f);
+    const auto monoSmall = KLF::font(KLF::Face::monoRegular, 11.0f);
+
+    if (stage == Stage::entering)
+    {
+        g.setColour(text);
+        g.setFont(titleFont);
+        g.drawText(getSheetTitle(), juce::Rectangle<float>(0.0f, 0.0f, width, 28.0f), juce::Justification::centredLeft, false);
+
+        drawParagraph(g, juce::String(juce::CharPointer_UTF8("Saves this project\xe2\x80\x99s full time log as a .kronos file you can restore into any session.")),
+                      bodyFont, muted, { 0.0f, 32.0f, width, 38.0f });
+
+        g.setColour(muted);
+        g.setFont(KLF::font(KLF::Face::sansSemibold, 11.0f, 0.12f));
+        g.drawText("PROJECT NAME", juce::Rectangle<float>(0.0f, 84.0f, width, 14.0f), juce::Justification::centredLeft, false);
+
+        g.setColour(faint);
+        g.setFont(monoSmall);
+        const auto summary = KronosArt::formatDuration(audioProcessor.getTotalTimeInSeconds())
+                           + juce::String(juce::CharPointer_UTF8(" \xc2\xb7 "))
+                           + KronosArt::formatDays(audioProcessor.getDaysLogged());
+        const auto summaryWidth = monoSmall.getStringWidthFloat(summary);
+        const juce::Rectangle<float> previewRow(0.0f, 152.0f, width, 14.0f);
+
+        g.drawText(summary, previewRow, juce::Justification::centredRight, false);
+        g.drawFittedText(getFileName(), previewRow.withTrimmedRight(summaryWidth + 12.0f).toNearestInt(),
+                         juce::Justification::centredLeft, 1, 1.0f);
+
+        if (errorText.isNotEmpty())
+            drawParagraph(g, errorText, KLF::font(KLF::Face::sansRegular, 12.0f), findColour(KLF::accentTextColourId),
+                          { 0.0f, 172.0f, width, 34.0f });
+    }
+    else if (stage == Stage::confirmingOverwrite)
+    {
+        g.setColour(text);
+        g.setFont(titleFont);
+        g.drawText("Replace the existing backup?", juce::Rectangle<float>(0.0f, 0.0f, width, 28.0f), juce::Justification::centredLeft, false);
+
+        drawParagraph(g, "A backup named " + getFileName() + " already exists. Overwriting replaces it.",
+                      bodyFont, muted, { 0.0f, 34.0f, width, 40.0f });
+    }
+    else
+    {
+        const auto iconArea = juce::Rectangle<float>(0.0f, 0.0f, 28.0f, 28.0f);
+        g.setColour(findColour(KLF::accentColourId));
+        g.strokePath(KronosArt::checkIcon(), juce::PathStrokeType(1.6f), KronosArt::fit(28.0f, iconArea));
+
+        g.setColour(text);
+        g.setFont(titleFont);
+        g.drawText(getSheetTitle(), juce::Rectangle<float>(40.0f, 0.0f, width - 40.0f, 28.0f), juce::Justification::centredLeft, false);
+
+        const juce::Rectangle<float> box(0.0f, 42.0f, width, 60.0f);
+        g.setColour(findColour(KLF::surfaceColourId));
+        g.fillRect(box);
+        g.setColour(findColour(KLF::lineColourId));
+        g.drawRect(box, 1.0f);
+
+        g.setColour(text);
+        g.setFont(KLF::font(KLF::Face::monoRegular, 12.0f));
+        g.drawFittedText(savedFile.getFileName(), juce::Rectangle<int>(14, 53, getWidth() - 28, 16),
+                         juce::Justification::centredLeft, 1, 1.0f);
+
+        g.setColour(faint);
+        g.setFont(monoSmall);
+        g.drawFittedText(savedFile.getParentDirectory().getFullPathName(), juce::Rectangle<int>(14, 75, getWidth() - 28, 16),
+                         juce::Justification::centredLeft, 1, 0.7f);
+    }
 }

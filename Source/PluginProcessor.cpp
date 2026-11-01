@@ -10,6 +10,8 @@
 #include "PluginEditor.h"
 #include <JuceHeader.h>
 #include "JucePluginDefines.h"
+#include "BackupComponent.h"
+#include "RestoreComponent.h"
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
@@ -2107,6 +2109,8 @@ public:
         runSerialisationGrowthScenario();
         runConcurrentSaveScenario();
         runEditorPerformanceScenario();
+        runSheetScenarios();
+        runSnapshotsIfRequested();
     }
 
 private:
@@ -2296,6 +2300,294 @@ private:
         expect(totalError <= 1, juce::String(zone) + " drifted by " + juce::String(totalError) + "s");
     }
    #endif
+
+    void runSheetScenarios()
+    {
+        scenario("Backup only reports success after the file is really written");
+        {
+            FakeClock clock(juce::Time(2026, 2, 24, 12, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            processor.startTracking();
+            clock.advanceSeconds(90);
+            processor.stopTracking();
+
+            BackupComponent sheet(processor);
+
+            const auto folder = juce::File::createTempFile("kronos-backup-test");
+            expect(folder.createDirectory().wasOk(), "Test folder should exist.");
+            const auto target = folder.getChildFile("sheet.kronos");
+
+            expect(sheet.saveBackup(target), "A writable path should save.");
+            expect(sheet.getStage() == BackupComponent::Stage::saved, "Success should show only after writing.");
+            expect(target.existsAsFile(), "The file should exist.");
+
+            juce::MemoryBlock written;
+            target.loadFileAsData(written);
+            expectEquals(KronosAudioProcessor::summariseBackup(written.getData(), static_cast<int>(written.getSize())).totalSeconds,
+                         static_cast<juce::int64>(90));
+
+            BackupComponent failing(processor);
+            const auto blocked = target.getChildFile("not-a-folder").getChildFile("x.kronos"); // a file is in the way
+
+            expect(!failing.saveBackup(blocked), "An unwritable path should fail.");
+            expect(failing.getStage() == BackupComponent::Stage::entering, "Failure must not show the success state.");
+            expect(failing.getErrorText().isNotEmpty(), "Failure should explain itself in plain text.");
+            expect(!blocked.existsAsFile(), "Nothing should have been written.");
+
+            folder.deleteRecursively();
+        }
+
+        scenario("Restore confirms before replacing and survives bad files");
+        {
+            FakeClock clock(juce::Time(2026, 2, 25, 12, 0, 0, 0, true));
+            KronosAudioProcessor source([&clock]() { return clock.now(); });
+            source.startTracking();
+            clock.advanceSeconds(200);
+            source.stopTracking();
+            clock.advanceSeconds(1);
+
+            juce::MemoryBlock saved;
+            source.getStateInformation(saved);
+
+            const auto folder = juce::File::createTempFile("kronos-restore-test");
+            expect(folder.createDirectory().wasOk(), "Test folder should exist.");
+            const auto good = folder.getChildFile("good.kronos");
+            const auto bad = folder.getChildFile("bad.kronos");
+            good.replaceWithData(saved.getData(), saved.getSize());
+            bad.replaceWithText("not a backup");
+
+            KronosAudioProcessor target([&clock]() { return clock.now(); });
+            RestoreComponent sheet(target);
+
+            expect(!sheet.beginConfirmation(bad), "A bad file must not reach the confirm step.");
+            expect(sheet.getStage() == RestoreComponent::Stage::choosing, "It should stay on the list.");
+            expect(sheet.getErrorText().isNotEmpty(), "A bad file should explain itself.");
+
+            expect(sheet.beginConfirmation(good), "A real backup should reach the confirm step.");
+            expect(sheet.getStage() == RestoreComponent::Stage::confirming, "Confirm should appear first.");
+            expectEquals(target.getTotalTimeInSeconds(), static_cast<juce::int64>(0), "Nothing changes before confirming.");
+
+            sheet.cancelOrClose();
+            expect(sheet.getStage() == RestoreComponent::Stage::choosing, "Keep current should go back.");
+            expectEquals(target.getTotalTimeInSeconds(), static_cast<juce::int64>(0), "Keep current must not restore.");
+
+            sheet.beginConfirmation(good);
+            expect(sheet.confirmReplace(), "Replace log should apply the backup.");
+            expectEquals(target.getTotalTimeInSeconds(), static_cast<juce::int64>(200));
+
+            folder.deleteRecursively();
+        }
+
+        scenario("Every control is reachable through the scale transform at every size");
+        {
+            FakeClock clock(juce::Time(2026, 2, 27, 12, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            std::unique_ptr<juce::AudioProcessorEditor> base(processor.createEditor());
+            auto* editor = dynamic_cast<KronosAudioProcessorEditor*>(base.get());
+            using Control = KronosAudioProcessorEditor::Control;
+            editor->setVisible(true); // hit testing skips hidden components
+
+            const auto hits = [&](Control control)
+            {
+                auto& button = editor->getControl(control);
+                const auto centre = editor->getLocalArea(&button, button.getLocalBounds()).getCentre();
+                return editor->getComponentAt(centre) == &button;
+            };
+
+            for (const auto width : { 400, 600, 1200 })
+            {
+                editor->setSize(width, width * 3 / 4);
+
+                for (const auto control : { Control::play, Control::theme, Control::menu,
+                                            Control::sortRecent, Control::sortLongest })
+                    expect(hits(control), "Main control missed at width " + juce::String(width));
+
+                editor->setMenuOpen(true);
+                for (const auto control : { Control::backupItem, Control::restoreItem, Control::aboutItem })
+                    expect(hits(control), "Menu item missed at width " + juce::String(width));
+                editor->setMenuOpen(false);
+            }
+
+            // Every control keeps a 32px target at the base size
+            editor->setSize(600, 450);
+            editor->setMenuOpen(true);
+            for (const auto control : { Control::play, Control::theme, Control::menu, Control::sortRecent,
+                                        Control::sortLongest, Control::backupItem, Control::restoreItem, Control::aboutItem })
+            {
+                auto& button = editor->getControl(control);
+                expect(button.getHeight() >= 32 && button.getWidth() >= 32, "Hit target under 32px: " + button.getTitle());
+            }
+            editor->setMenuOpen(false);
+
+            // The chamfered corner of the play button is not part of the control
+            auto& play = editor->getControl(Control::play);
+            expect(play.hitTest(36, 36), "The play button centre should be live.");
+            expect(!play.hitTest(1, 1), "The cut corner should not take clicks.");
+        }
+
+        scenario("Controls drive the processor");
+        {
+            FakeClock clock(juce::Time(2026, 2, 28, 12, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            std::unique_ptr<juce::AudioProcessorEditor> base(processor.createEditor());
+            auto* editor = dynamic_cast<KronosAudioProcessorEditor*>(base.get());
+            using Control = KronosAudioProcessorEditor::Control;
+
+            const auto press = [&](Control control)
+            {
+                if (auto* button = dynamic_cast<KronosButton*>(&editor->getControl(control)))
+                    button->onActivated();
+            };
+
+            expect(!processor.isTracking(), "Test mode starts paused.");
+            press(Control::play);
+            expect(processor.isTracking(), "Play should start tracking.");
+            press(Control::play);
+            expect(!processor.isTracking(), "Play should pause tracking.");
+
+            const auto wasDark = processor.isDarkMode();
+            press(Control::theme);
+            expect(processor.isDarkMode() != wasDark, "The theme button should flip the theme.");
+            press(Control::theme);
+
+            press(Control::sortLongest);
+            expect(processor.getDateSortMode() == KronosAudioProcessor::DateSortMode::MostTime, "Longest should sort by time.");
+            press(Control::sortRecent);
+            expect(processor.getDateSortMode() == KronosAudioProcessor::DateSortMode::MostRecent, "Recent should sort by date.");
+
+            press(Control::menu);
+            press(Control::backupItem);
+            expect(dynamic_cast<BackupComponent*>(editor->getOpenSheet()) != nullptr, "Back up should open its sheet.");
+        }
+
+        scenario("The editor follows tracking, theme and sort state");
+        {
+            FakeClock clock(juce::Time(2026, 2, 26, 12, 0, 0, 0, true));
+            KronosAudioProcessor processor([&clock]() { return clock.now(); });
+            std::unique_ptr<juce::AudioProcessorEditor> base(processor.createEditor());
+            auto* editor = dynamic_cast<KronosAudioProcessorEditor*>(base.get());
+            expect(editor != nullptr, "The editor should be the Kronos editor.");
+
+            processor.startTracking();
+            processor.setDateSortMode(KronosAudioProcessor::DateSortMode::MostTime);
+            processor.setDarkMode(false);
+            editor->refreshNow();
+
+            for (const auto sheet : { KronosAudioProcessorEditor::Sheet::backup,
+                                      KronosAudioProcessorEditor::Sheet::restore,
+                                      KronosAudioProcessorEditor::Sheet::about })
+            {
+                editor->openSheet(sheet, false);
+                expect(editor->getOpenSheet() != nullptr, "The sheet should open.");
+                expect(editor->getOpenSheet()->getKicker().isNotEmpty(), "The sheet should have a kicker.");
+            }
+
+            editor->setMenuOpen(true);
+            editor->setMenuOpen(false);
+            editor->setSize(1200, 900);
+            editor->setSize(400, 300);
+
+            juce::Image canvas(juce::Image::ARGB, 400, 300, true);
+            juce::Graphics g(canvas);
+            editor->paintEntireComponent(g, true);
+            expect(canvas.getPixelAt(200, 150).getAlpha() > 0, "The editor should paint at its smallest size.");
+        }
+    }
+
+    void runSnapshotsIfRequested()
+    {
+        const auto folder = juce::SystemStats::getEnvironmentVariable("KRONOS_SNAPSHOT_DIR", {});
+        if (folder.isEmpty())
+            return;
+
+        FakeClock clock(juce::Time(2026, 9, 31, 22, 14, 7, 0, true));
+        KronosAudioProcessor processor([&clock]() { return clock.now(); });
+
+        // The prototype's sample days, padded to its 27 logged days
+        const std::pair<int, juce::int64> history[] { { 1, 22360 }, { 2, 11112 }, { 4, 35283 }, { 5, 15655 }, { 7, 25351 },
+                                                      { 8, 6250 }, { 10, 19800 }, { 11, 8324 }, { 12, 14000 }, { 13, 26000 },
+                                                      { 15, 9100 }, { 16, 31000 }, { 18, 12400 }, { 19, 20500 }, { 20, 7300 },
+                                                      { 22, 16800 }, { 23, 27400 }, { 25, 10100 }, { 26, 23900 }, { 27, 18200 },
+                                                      { 29, 13300 }, { 30, 29000 }, { 32, 8800 }, { 33, 21700 }, { 34, 15200 },
+                                                      { 36, 32100 } };
+        juce::Array<juce::Time> dates;
+        juce::Array<std::pair<juce::String, juce::int64>> times;
+        juce::int64 total = 0;
+
+        for (const auto& [daysAgo, seconds] : history)
+        {
+            const auto date = clock.now() - juce::RelativeTime::days(daysAgo);
+            dates.add(date);
+            times.add({ date.formatted("%Y-%m-%d"), seconds });
+            total += seconds;
+        }
+
+        auto state = buildStateWithTrackingData(processor, total + 60000, dates, times);
+        processor.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+
+        processor.startTracking();
+        for (int tick = 0; tick < 95; ++tick)
+        {
+            clock.advanceSeconds(100);
+            processor.timerCallback();
+        }
+
+        const auto backupFile = juce::File(folder).getChildFile("snapshot-backup.kronos");
+        juce::MemoryBlock backup;
+        processor.getStateInformation(backup);
+        backupFile.replaceWithData(backup.getData(), backup.getSize());
+
+        std::unique_ptr<juce::AudioProcessorEditor> base(processor.createEditor());
+        auto* editor = dynamic_cast<KronosAudioProcessorEditor*>(base.get());
+        editor->setMotionEnabled(false);
+        editor->setVisible(true);
+
+        const auto capture = [&](const juce::String& name)
+        {
+            for (const auto width : { 600, 1200 })
+            {
+                editor->setSize(width, width * 3 / 4);
+                editor->refreshNow();
+
+                const auto image = editor->createComponentSnapshot(editor->getLocalBounds(), true, 1.0f);
+                juce::File file(juce::File(folder).getChildFile(name + "-" + juce::String(width) + ".png"));
+                file.deleteFile();
+                juce::FileOutputStream stream(file);
+                juce::PNGImageFormat().writeImageToStream(image, stream);
+            }
+        };
+
+        using Sheet = KronosAudioProcessorEditor::Sheet;
+
+        capture("dark-tracking");
+
+        processor.setDarkMode(false);
+        editor->setMenuOpen(true);
+        capture("light-menu");
+        editor->setMenuOpen(false);
+        processor.setDarkMode(true);
+
+        editor->openSheet(Sheet::backup, false);
+        capture("backup");
+
+        editor->openSheet(Sheet::restore, false);
+        if (auto* sheet = dynamic_cast<RestoreComponent*>(editor->getOpenSheet()))
+            sheet->beginConfirmation(backupFile);
+        capture("restore-confirm");
+
+        editor->openSheet(Sheet::about, false);
+        capture("about");
+
+        std::unique_ptr<juce::AudioProcessorEditor> pausedBase(nullptr);
+        base.reset();
+        processor.stopTracking();
+        pausedBase.reset(processor.createEditor());
+        auto* pausedEditor = dynamic_cast<KronosAudioProcessorEditor*>(pausedBase.get());
+        pausedEditor->setMotionEnabled(false);
+        pausedEditor->setVisible(true);
+        editor = pausedEditor;
+        capture("paused");
+    }
 
     void runEditorPerformanceScenario()
     {

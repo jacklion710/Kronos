@@ -1,356 +1,132 @@
 #include "LookAndFeel.h"
 #include "BinaryData.h"
 
-KronosLookAndFeel::KronosLookAndFeel()
+namespace
 {
-    // Load the ASTERA font from binary data
-    auto typeface = juce::Typeface::createSystemTypefaceFor(BinaryData::ASTERA_ttf, BinaryData::ASTERA_ttfSize);
-    
-    // Check to ensure font loaded
-    if (typeface != nullptr)
+struct Theme
+{
+    juce::uint32 ground, surface, raised, line, text, muted, faint, accent, accentText, cta, track, weave, scrim;
+};
+
+constexpr Theme darkTheme  { 0xff0b0c0c, 0xff101212, 0xff161919, 0xff343737, 0xffeeece9, 0xffb2b3b1, 0xff8f918f,
+                             0xffef593d, 0xffef593d, 0xffbc321e, 0xff1f2323, 0x0deeece9, 0xbd050606 };
+
+constexpr Theme lightTheme { 0xffe9e7e3, 0xfff5f4f1, 0xfffbfaf8, 0xffcbc8c2, 0xff151616, 0xff4c4e50, 0xff5f6265,
+                             0xffd2452b, 0xffa82c19, 0xffa82c19, 0xffe0ddd7, 0x12151616, 0xb8e9e7e3 };
+
+// Fonts are registered once per process and shared by every open editor.
+struct Typefaces
+{
+    juce::Typeface::Ptr sansRegular  = make(BinaryData::SourceSans3Regular_ttf,  BinaryData::SourceSans3Regular_ttfSize);
+    juce::Typeface::Ptr sansSemibold = make(BinaryData::SourceSans3Semibold_ttf, BinaryData::SourceSans3Semibold_ttfSize);
+    juce::Typeface::Ptr sansBold     = make(BinaryData::SourceSans3Bold_ttf,     BinaryData::SourceSans3Bold_ttfSize);
+    juce::Typeface::Ptr monoLight    = make(BinaryData::JetBrainsMonoLight_ttf,  BinaryData::JetBrainsMonoLight_ttfSize);
+    juce::Typeface::Ptr monoRegular  = make(BinaryData::JetBrainsMonoRegular_ttf, BinaryData::JetBrainsMonoRegular_ttfSize);
+    juce::Typeface::Ptr monoMedium   = make(BinaryData::JetBrainsMonoMedium_ttf, BinaryData::JetBrainsMonoMedium_ttfSize);
+
+    static juce::Typeface::Ptr make(const char* data, int size)
     {
-        asteraTypeface = typeface;
+        return juce::Typeface::createSystemTypefaceFor(data, static_cast<size_t>(size));
+    }
+};
+
+juce::Typeface::Ptr typefaceFor(KronosLookAndFeel::Face face)
+{
+    static const Typefaces typefaces;
+
+    switch (face)
+    {
+        case KronosLookAndFeel::Face::sansRegular:  return typefaces.sansRegular;
+        case KronosLookAndFeel::Face::sansSemibold: return typefaces.sansSemibold;
+        case KronosLookAndFeel::Face::sansBold:     return typefaces.sansBold;
+        case KronosLookAndFeel::Face::monoLight:    return typefaces.monoLight;
+        case KronosLookAndFeel::Face::monoRegular:  return typefaces.monoRegular;
+        case KronosLookAndFeel::Face::monoMedium:   return typefaces.monoMedium;
     }
 
-    // Set initial color scheme (dark mode by default)
-    setupDarkColorScheme();
+    return typefaces.sansRegular;
+}
 }
 
-KronosLookAndFeel::~KronosLookAndFeel()
+KronosLookAndFeel::KronosLookAndFeel()
 {
-}
-
-juce::Typeface::Ptr KronosLookAndFeel::getTypefaceForFont(const juce::Font& font)
-{
-    if (asteraTypeface != nullptr)
-        return asteraTypeface;
-    
-    return juce::LookAndFeel_V4::getTypefaceForFont(font);
-}
-
-void KronosLookAndFeel::setupDarkColorScheme()
-{
-    // Background colors
-    setColour(juce::ResizableWindow::backgroundColourId, juce::Colour(0xFF1E1E1E));
-    setColour(juce::TextButton::buttonColourId, juce::Colour(0xFF2D2D2D));
-    
-    // Text colors
-    setColour(juce::Label::textColourId, juce::Colour(0xFFE0E0E0));
-    setColour(juce::TextButton::textColourOffId, juce::Colour(0xFFE0E0E0));
-    
-    // Border and accent colors
-    setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xFF007AFF));
-    setColour(KronosLookAndFeel::outlineColourId, juce::Colour(0xFFE0E0E0));  // For borders
-    
-    // Date label colors (slightly dimmer than main text)
-    setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
-}
-
-void KronosLookAndFeel::setupLightColorScheme()
-{
-    // Background colors
-    setColour(juce::ResizableWindow::backgroundColourId, juce::Colour(0xFFF5F5F5));
-    setColour(juce::TextButton::buttonColourId, juce::Colour(0xFFE8E8E8));
-    
-    // Text colors
-    setColour(juce::Label::textColourId, juce::Colour(0xFF2D2D2D));
-    setColour(juce::TextButton::textColourOffId, juce::Colour(0xFF2D2D2D));
-    
-    // Border and accent colors
-    setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xFF0A84FF));
-    setColour(KronosLookAndFeel::outlineColourId, juce::Colour(0xFF2D2D2D));  // For borders
-    
-    // Date label colors (slightly dimmer than main text)
-    setColour(juce::Label::backgroundColourId, juce::Colours::transparentWhite);
+    setDarkMode(true);
 }
 
 void KronosLookAndFeel::setDarkMode(bool isDark)
 {
     darkModeEnabled = isDark;
-    glowingLabelLookAndFeel.setDarkMode(isDark);
-    if (isDark)
-        setupDarkColorScheme();
+    const auto& theme = isDark ? darkTheme : lightTheme;
+
+    setColour(groundColourId,     juce::Colour(theme.ground));
+    setColour(surfaceColourId,    juce::Colour(theme.surface));
+    setColour(raisedColourId,     juce::Colour(theme.raised));
+    setColour(lineColourId,       juce::Colour(theme.line));
+    setColour(textColourId,       juce::Colour(theme.text));
+    setColour(mutedColourId,      juce::Colour(theme.muted));
+    setColour(faintColourId,      juce::Colour(theme.faint));
+    setColour(accentColourId,     juce::Colour(theme.accent));
+    setColour(accentTextColourId, juce::Colour(theme.accentText));
+    setColour(ctaColourId,        juce::Colour(theme.cta));
+    setColour(trackColourId,      juce::Colour(theme.track));
+    setColour(weaveColourId,      juce::Colour(theme.weave));
+    setColour(scrimColourId,      juce::Colour(theme.scrim));
+
+    setColour(juce::ResizableWindow::backgroundColourId, juce::Colour(theme.ground));
+    setColour(juce::ListBox::backgroundColourId, juce::Colours::transparentBlack);
+    setColour(juce::ListBox::outlineColourId, juce::Colours::transparentBlack);
+    setColour(juce::TextEditor::backgroundColourId, juce::Colour(theme.surface));
+    setColour(juce::TextEditor::textColourId, juce::Colour(theme.text));
+    setColour(juce::TextEditor::highlightColourId, juce::Colour(theme.accent).withAlpha(0.3f));
+    setColour(juce::TextEditor::highlightedTextColourId, juce::Colour(theme.text));
+    setColour(juce::CaretComponent::caretColourId, juce::Colour(theme.accent));
+}
+
+juce::Font KronosLookAndFeel::font(Face face, float size, float tracking)
+{
+    const auto font = juce::Font(typefaceFor(face)).withPointHeight(size);
+
+    // JUCE measures extra kerning against the font height, the spec against the em
+    return font.withExtraKerningFactor(tracking * size / font.getHeight());
+}
+
+void KronosLookAndFeel::drawScrollbar(juce::Graphics& g, juce::ScrollBar&, int x, int y, int width, int height,
+                                      bool isScrollbarVertical, int thumbStartPosition, int thumbSize,
+                                      bool isMouseOver, bool isMouseDown)
+{
+    const auto thumb = isScrollbarVertical ? juce::Rectangle<int>(x, thumbStartPosition, width, thumbSize)
+                                           : juce::Rectangle<int>(thumbStartPosition, y, thumbSize, height);
+
+    g.setColour(findColour(mutedColourId).withAlpha(isMouseOver || isMouseDown ? 0.44f : 0.28f));
+    g.fillRect(thumb);
+}
+
+void KronosLookAndFeel::drawCornerResizer(juce::Graphics& g, int width, int height, bool isMouseOver, bool isMouseDragging)
+{
+    const auto size = static_cast<float>(juce::jmin(width, height));
+
+    g.setColour(findColour(isMouseOver || isMouseDragging ? mutedColourId : lineColourId));
+
+    for (float inset = 0.35f; inset < 0.9f; inset += 0.25f)
+        g.drawLine(static_cast<float>(width) - size * (1.0f - inset), static_cast<float>(height),
+                   static_cast<float>(width), static_cast<float>(height) - size * (1.0f - inset), 1.0f);
+}
+
+void KronosLookAndFeel::fillTextEditorBackground(juce::Graphics& g, int, int, juce::TextEditor&)
+{
+    g.fillAll(findColour(surfaceColourId));
+}
+
+void KronosLookAndFeel::drawTextEditorOutline(juce::Graphics& g, int width, int height, juce::TextEditor& editor)
+{
+    const auto bounds = juce::Rectangle<int>(width, height).toFloat();
+
+    g.setColour(findColour(lineColourId));
+    g.drawRect(bounds, 1.0f);
+
+    g.setColour(findColour(accentColourId));
+    if (editor.hasKeyboardFocus(true))
+        g.drawRect(bounds, 2.0f);
     else
-        setupLightColorScheme();
-    sendChangeMessage();
+        g.fillRect(bounds.withTop(bounds.getBottom() - 2.0f));
 }
-
-void KronosLookAndFeel::GlowingLabelLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
-{
-    auto bounds = label.getLocalBounds().toFloat();
-    auto text = label.getText();
-    
-    // Set Astera font with dynamic sizing
-    g.setFont(juce::Font("ASTERA", bounds.getHeight() * 0.5f, juce::Font::plain));
-    
-    // Enhanced glow color with higher alpha
-    auto glowColor = darkModeEnabled ? 
-        juce::Colour(64, 64, 255).withAlpha(0.3f) :     // Brighter blue glow for dark mode
-        juce::Colour(160, 140, 120).withAlpha(0.3f);    // Brighter warm grey for light mode
-
-    // Number of glow passes for more pronounced effect
-    for (float i = 8; i > 0; --i) 
-    {
-        float alpha = glowColor.getFloatAlpha() / (i * 0.7f);  // Adjusted alpha falloff
-        g.setColour(glowColor.withAlpha(alpha));
-        g.drawText(text, bounds, label.getJustificationType(), true);
-    }
-
-    // Enhanced stroke effect
-    auto strokeColor = darkModeEnabled ?
-        juce::Colour(30, 50, 150).brighter(0.2f) :      // Stroke for dark mode
-        juce::Colour(120, 100, 80).brighter(0.2f);      // Stroke for light mode
-
-    // Thick stroke
-    float strokeWidth = 2.3f;
-    g.setColour(strokeColor);
-    
-    for (float x = -strokeWidth; x <= strokeWidth; x += strokeWidth)
-        for (float y = -strokeWidth; y <= strokeWidth; y += strokeWidth)
-            if (x != 0 || y != 0)
-                g.drawText(text, bounds.translated(x, y), label.getJustificationType(), true);
-
-    // Main text in pure white for better contrast
-    g.setColour(juce::Colours::white);
-    g.drawText(text, bounds, label.getJustificationType(), true);
-}
-
-void KronosLookAndFeel::drawLabel(juce::Graphics& g, juce::Label& label)
-{
-    if (label.getName() == "TitleLabel") 
-    {
-        // Let the glowing label look handle all title drawing
-        glowingLabelLookAndFeel.drawLabel(g, label);
-        return; 
-    }
-    else if (label.getName().contains("PreviousSessions"))
-    {
-        // Use same very muted grey for both modes
-        g.setColour(juce::Colour(0x30, 0x30, 0x35));    // Very muted grey with slight blue tint
-        g.setFont(label.getFont());
-        g.drawText(label.getText(), label.getLocalBounds(), 
-                  label.getJustificationType(), true);
-        return;
-    }
-    
-    // Check if this is a time label or date label
-    if (label.getName().contains("TimeLabel") || label.getName().contains("DateLabel"))
-    {
-        auto bounds = label.getLocalBounds().toFloat();
-        auto text = label.getText();
-        auto font = label.getFont();
-        
-        auto textArea = bounds.withSizeKeepingCentre(bounds.getWidth(), bounds.getHeight());
-        
-        // Get theme-appropriate stroke color
-        g.setColour(getStrokeColor());
-        g.setFont(font);
-        
-        // Multiple offset positions for stroke effect
-        float strokeSize = label.getName().contains("TimeLabel") ? 1.25f : 0.75f;
-        float positions[][2] = {
-            {-strokeSize, -strokeSize},
-            {-strokeSize, strokeSize},
-            {strokeSize, -strokeSize},
-            {strokeSize, strokeSize},
-            {0, strokeSize},
-            {0, -strokeSize},
-            {strokeSize, 0},
-            {-strokeSize, 0}
-        };
-        
-        // Draw stroke positions
-        for (auto& pos : positions)
-        {
-            g.drawText(text, 
-                      textArea.translated(pos[0], pos[1]).toNearestInt(), 
-                      label.getJustificationType(), 
-                      true);
-        }
-        
-        // Draw main text in pure white
-        g.setColour(juce::Colours::white);
-        g.drawText(text, textArea.toNearestInt(), label.getJustificationType(), true);
-    }
-    else if (label.getName().contains("BarTimeLabel"))  // Time labels over bars
-    {
-        auto bounds = label.getLocalBounds().toFloat();
-        auto text = label.getText();
-        
-        // First draw black stroke
-        g.setColour(juce::Colours::black);
-        float blackStrokeSize = 1.5f; 
-        for (float x = -blackStrokeSize; x <= blackStrokeSize; x += blackStrokeSize)
-            for (float y = -blackStrokeSize; y <= blackStrokeSize; y += blackStrokeSize)
-                if (x != 0 || y != 0)
-                    g.drawText(text, bounds.translated(x, y), 
-                             label.getJustificationType(), true);
-        
-        // Draw main text in white
-        g.setColour(juce::Colours::white);
-        g.drawText(text, bounds, label.getJustificationType(), true);
-    }
-    else
-    {
-        LookAndFeel_V4::drawLabel(g, label);
-    }
-}
-
-juce::Font KronosLookAndFeel::getTextButtonFont(juce::TextButton& button, int buttonHeight)
-{
-    // Special case for close button
-    if (button.getButtonText() == "x")
-        return juce::Font("ASTERA", 16.0f, juce::Font::plain);  // Smaller font size
-        
-    return juce::Font(18.0f, juce::Font::bold);
-}
-
-void KronosLookAndFeel::drawPopupMenuBackground(juce::Graphics& g, int width, int height)
-{
-    auto background = darkModeEnabled ? 
-        juce::Colour(30, 30, 30) :       // Dark background for dark mode
-        juce::Colour(200, 195, 190);     // Darker warm grey for light mode
-    auto highlight = darkModeEnabled ? 
-        juce::Colour(40, 40, 40) :       // Slightly lighter for dark mode
-        juce::Colour(210, 205, 200);     // Slightly lighter warm grey for light mode
-    
-    g.setGradientFill(juce::ColourGradient(background, 0.0f, 0.0f,
-                                          highlight, 0.0f, (float)height,
-                                          false));
-    g.fillAll();
-    
-    // Add subtle border
-    g.setColour(darkModeEnabled ? 
-        juce::Colour(60, 60, 60) :       // Dark mode border
-        juce::Colour(120, 100, 80));     // Light mode border - warm metallic
-    g.drawRect(0, 0, width, height, 1);
-}
-
-void KronosLookAndFeel::drawPopupMenuItem(juce::Graphics& g, const juce::Rectangle<int>& area,
-                                        bool isSeparator, bool isActive, bool isHighlighted,
-                                        bool isTicked, bool hasSubMenu, const juce::String& text,
-                                        const juce::String& shortcutKeyText,
-                                        const juce::Drawable* icon, const juce::Colour* textColour)
-{
-    if (isHighlighted && isActive)
-    {
-        // Create a gradient for the highlight that matches our theme
-        auto bounds = area.toFloat().reduced(2);
-        g.setGradientFill(juce::ColourGradient(
-            darkModeEnabled ?
-                juce::Colour(64, 64, 255).withAlpha(0.2f) :     // Blue for dark mode
-                juce::Colour(160, 140, 120).withAlpha(0.2f),    // Warm metallic for light mode
-            bounds.getTopLeft(),
-            darkModeEnabled ?
-                juce::Colour(64, 64, 255).withAlpha(0.3f) :     // Darker blue for dark mode
-                juce::Colour(120, 100, 80).withAlpha(0.3f),     // Darker metallic for light mode
-            bounds.getBottomRight(),
-            false));
-        g.fillRoundedRectangle(bounds, 4.0f);
-        
-        // Add subtle glow border
-        g.setColour(darkModeEnabled ?
-            juce::Colour(64, 64, 255).withAlpha(0.4f) :         // Blue glow for dark mode
-            juce::Colour(160, 140, 120).withAlpha(0.4f));       // Warm metallic glow for light mode
-        g.drawRoundedRectangle(bounds, 4.0f, 1.0f);
-    }
-
-    auto font = juce::Font("ASTERA", 16.0f, juce::Font::plain);
-    auto textColor = darkModeEnabled ? 
-        juce::Colour(0xE6, 0xE6, 0xFF) :      // Light blue-white for dark mode
-        juce::Colour(50, 40, 35);             // Darker warm grey for light mode
-    
-    if (!isSeparator)
-    {
-        auto textArea = area.reduced(15, 0);
-        
-        // Draw glow
-        g.setColour(textColor.withAlpha(0.3f));
-        for (float i = 2; i > 0; --i)
-        {
-            g.setFont(font);
-            auto glowBounds = textArea.toFloat().translated(0, i * 0.5f);
-            g.drawText(text, glowBounds, juce::Justification::centredLeft, true);
-        }
-        
-        // Draw main text
-        g.setColour(isActive ? textColor : textColor.withAlpha(0.5f));
-        g.setFont(font);
-        g.drawText(text, textArea, juce::Justification::centredLeft, true);
-    }
-}
-
-void KronosLookAndFeel::drawAlertBox(juce::Graphics& g, juce::AlertWindow& alert, 
-                                   const juce::Rectangle<int>& textArea, 
-                                   juce::TextLayout& textLayout)
-{
-    auto bounds = alert.getLocalBounds().toFloat().reduced(1.0f);
-    
-    // Fill background with a muted, warm grey
-    g.setColour(darkModeEnabled ? 
-        juce::Colour(0x1E, 0x1E, 0x1E) :      // Dark grey for dark mode
-        juce::Colour(100, 95, 90));            // Muted warm grey for light mode
-    g.fillRoundedRectangle(bounds, 10.0f);
-    
-    // Draw border with gradient
-    juce::ColourGradient borderGradient(
-        darkModeEnabled ?
-            juce::Colour(130, 130, 130) :           // Dark mode highlight
-            juce::Colour(160, 140, 120),            // Light mode warm highlight
-        bounds.getBottomLeft(),
-        darkModeEnabled ?
-            juce::Colour(40, 40, 40) :             // Dark mode shadow
-            juce::Colour(100, 85, 70),             // Light mode warm shadow
-        bounds.getTopRight(),
-        false
-    );
-    
-    g.setGradientFill(borderGradient);
-    g.drawRoundedRectangle(bounds, 10.0f, 2.0f);
-    
-    // Draw the provided TextLayout
-    textLayout.draw(g, textArea.toFloat());
-}
-
-// Add ASTERA font to alert window buttons
-void KronosLookAndFeel::drawButtonText(juce::Graphics& g, juce::TextButton& button,
-                                     bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
-{
-    auto font = juce::Font("ASTERA", 16.0f, juce::Font::plain);
-    g.setFont(font);
-    
-    g.setColour(button.findColour(button.getToggleState() ? juce::TextButton::textColourOnId
-                                                         : juce::TextButton::textColourOffId)
-                       .withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.5f));
-
-    auto bounds = button.getLocalBounds();
-    g.drawText(button.getButtonText(), bounds, juce::Justification::centred, true);
-}
-
-void KronosLookAndFeel::drawHyperlinkButton(juce::Graphics& g, juce::HyperlinkButton& button,
-                                           const juce::Colour& textColour)
-{
-    auto buttonText = button.getButtonText();
-    auto font = juce::Font("ASTERA", 16.0f, juce::Font::plain);
-    
-    auto textBounds = button.getLocalBounds();
-    
-    // Set color based on mouse state and theme
-    juce::Colour linkColour = darkModeEnabled ?
-        (button.isMouseOver() ? juce::Colour(150, 150, 255) : juce::Colour(100, 100, 255)) :  // Blue shades for dark mode
-        (button.isMouseOver() ? juce::Colour(255, 140, 0) : juce::Colour(200, 110, 0));       // Orange shades for light mode
-    
-    g.setColour(linkColour);
-    g.setFont(font);
-    g.drawText(buttonText, textBounds, juce::Justification::centred, true);
-    
-    // Draw underline
-    auto textWidth = font.getStringWidth(buttonText);
-    auto centreX = textBounds.getCentreX();
-    auto baseY = textBounds.getCentreY() + 5;  // Adjust this value to position the underline
-    
-    g.drawLine(centreX - textWidth/2, baseY,
-               centreX + textWidth/2, baseY,
-               1.0f);  // Line thickness
-}
-

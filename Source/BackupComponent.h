@@ -1,64 +1,56 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "KronosWidgets.h"
 #include "PluginProcessor.h"
 
 /**
- * BackupComponent - Modal dialog for backing up plugin state data
- * 
- * Allows users to enter a project name and displays the location
- * where the backup will be saved.
+ * BackupComponent - Sheet for backing up plugin state data
+ *
+ * The success state is only shown after the file has actually been written.
  */
-class BackupComponent : public juce::Component,
-                       public juce::Timer
+class BackupComponent : public KronosSheet
 {
 public:
-    // Constructor takes a reference to the processor to access plugin state
-    BackupComponent(KronosAudioProcessor& p);
-    ~BackupComponent() override;
+    enum class Stage { entering, confirmingOverwrite, saved };
 
-    // JUCE Component overrides
-    void paint(juce::Graphics& g) override;
+    explicit BackupComponent(KronosAudioProcessor& p);
+
+    juce::String getKicker() const override;
+    juce::String getSheetTitle() const override;
+    int getPreferredHeight() const override;
+    void focusDefaultControl() override;
+    void cancelOrClose() override;
+
+    void paint(juce::Graphics&) override;
     void resized() override;
-    void timerCallback() override;
 
-    // Close button for the modal dialog
-    juce::TextButton closeButton;
+    Stage getStage() const { return stage; }
+    juce::String getErrorText() const { return errorText; }
+    void setProjectName(const juce::String& name) { projectNameEditor.setText(name, true); }
+
+    // Writes the current state and moves to the saved stage, or reports why not.
+    bool saveBackup(const juce::File& backupFile);
 
 private:
-    // Reference to the audio processor
-    KronosAudioProcessor& audioProcessor;
-    
-    // UI Elements
-    juce::Label titleLabel;
-    juce::Label instructionLabel;
-    juce::TextEditor projectNameEditor;
-    juce::TextButton backupButton;
-    
-    // Custom look and feel
-    std::unique_ptr<juce::LookAndFeel> customLookAndFeel;
-    
-    // New UI elements for confirmation
-    juce::TextButton confirmButton;
-    juce::TextButton cancelButton;
-    
-    // State management
-    bool isConfirmationMode;
-    juce::String confirmationMessage;
-    juce::File pendingBackupFile;
-    
-    // Setup and positioning methods
-    void setupComponents();
-    void positionComponents();
-    
-    // Helper methods
-    void performBackup();
-    juce::String getBackupDirectory();
+    void setStage(Stage newStage);
+    juce::File getBackupFile() const;
+    juce::String getFileName() const;
+    juce::String getBackupDirectory() const;
     void initiateBackup();
-    void confirmBackup();
-    void cancelConfirmation();
-    void resetConfirmationState();
-    void saveBackup(const juce::File& backupFile);
-    
+
+    KronosAudioProcessor& audioProcessor;
+
+    juce::TextEditor projectNameEditor;
+    KronosButton cancelButton { "Cancel", KronosButton::Style::secondary };
+    KronosButton saveButton { "Save backup", KronosButton::Style::primary };
+    KronosButton overwriteButton { "Overwrite", KronosButton::Style::primary };
+    KronosButton revealButton { "Show in folder", KronosButton::Style::secondary };
+    KronosButton doneButton { "Done", KronosButton::Style::primary };
+
+    Stage stage = Stage::entering;
+    juce::String errorText;
+    juce::File savedFile;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BackupComponent)
-}; 
+};

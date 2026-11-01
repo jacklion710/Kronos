@@ -1,220 +1,94 @@
 #include "AboutComponent.h"
+#include "JucePluginDefines.h"
 
-AboutComponent::AboutComponent(KronosAudioProcessor& processor)
-    : audioProcessor(processor)
-{    
-    // Close button setup
-    closeButton.setButtonText("x");
-    closeButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
-    closeButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
-    addAndMakeVisible(closeButton);
-    
-    // Initialize hyperlinks
-    gumroadLink.setButtonText("JACKLION.GUMROAD.COM");
-    gumroadLink.setURL(juce::URL("https://jacklion.gumroad.com"));
-    
-    soundcloudLink.setButtonText("SOUNDCLOUD.COM/JACK0LION");
-    soundcloudLink.setURL(juce::URL("https://soundcloud.com/jack0lion"));
-    
-    jlWebLink.setButtonText("JACKLION.XYZ");
-    jlWebLink.setURL(juce::URL("https://jacklion.xyz"));
-    
-    jlInstaLink.setButtonText("INSTAGRAM.COM/JACK.LION");
-    jlInstaLink.setURL(juce::URL("https://www.instagram.com/jack.lion"));
-    
-    discordLink.setButtonText("DISCORD.GG/EF0Q7BX");
-    discordLink.setURL(juce::URL("https://discord.gg/EFQq7BX"));
-    
-    aznadelLink.setButtonText("LINKTR.EE/AZNADEL");
-    aznadelLink.setURL(juce::URL("https://linktr.ee/aznadel"));
+using KLF = KronosLookAndFeel;
 
-    // Make all links visible
-    for (auto* link : {&gumroadLink, &soundcloudLink, &jlInstaLink, 
-                      &jlWebLink, &discordLink, &aznadelLink})
+AboutComponent::AboutComponent()
+{
+    const auto addLink = [this](KronosButton& link, const char* url)
     {
+        link.setButtonText(link.getName());
+        link.onActivated = [url] { juce::URL(url).launchInDefaultBrowser(); };
         addAndMakeVisible(link);
-    }
+    };
 
-    positionLinks();
+    addLink(websiteLink, "https://jacklion.xyz");
+    addLink(pluginsLink, "https://jacklion.gumroad.com");
+    addLink(discordLink, "https://discord.gg/EFQq7BX");
+    addLink(instagramLink, "https://www.instagram.com/jack.lion");
+}
+
+juce::String AboutComponent::getKicker() const
+{
+    return juce::String(juce::CharPointer_UTF8("ABOUT \xc2\xb7 \xce\xa0\xce\x95\xce\xa1\xce\x99"));
+}
+
+void AboutComponent::focusDefaultControl()
+{
+    websiteLink.grabKeyboardFocus();
 }
 
 void AboutComponent::resized()
 {
-    // Calculate scale factor based on default size of 600x450
-    float widthScale = getWidth() / 600.0f;
-    float heightScale = getHeight() / 450.0f;
-    float scale = juce::jmin(widthScale, heightScale);
+    constexpr int linksTop = 172, rowHeight = 36;
+    const auto columnWidth = (getWidth() - 3) / 2;
+    const auto rightX = columnWidth + 2;
+    const auto rightWidth = getWidth() - 1 - rightX;
 
-    // Position close button relative to parent bounds with scaling
-    closeButton.setBounds(getWidth() - (25 * scale), 5 * scale, 20 * scale, 20 * scale);
-    
-    // Update other component positions with scaling
-    positionLinks();
+    websiteLink.setBounds(1, linksTop + 1, columnWidth, rowHeight);
+    pluginsLink.setBounds(rightX, linksTop + 1, rightWidth, rowHeight);
+    discordLink.setBounds(1, linksTop + rowHeight + 2, columnWidth, rowHeight);
+    instagramLink.setBounds(rightX, linksTop + rowHeight + 2, rightWidth, rowHeight);
 }
 
 void AboutComponent::paint(juce::Graphics& g)
 {
-    // Calculate scale factor
-    float widthScale = getWidth() / 600.0f;
-    float heightScale = getHeight() / 450.0f;
-    float scale = juce::jmin(widthScale, heightScale);
+    const auto text = findColour(KLF::textColourId);
+    const auto muted = findColour(KLF::mutedColourId);
+    const auto faint = findColour(KLF::faintColourId);
+    const auto line = findColour(KLF::lineColourId);
+    const auto width = static_cast<float>(getWidth());
 
-    bool isDarkMode = audioProcessor.isDarkMode();
-    
-    // Background color based on theme
-    g.fillAll(isDarkMode ? 
-        juce::Colour(0xFF1A1A1A) :           // Dark charcoal for dark mode
-        juce::Colour(0xFF8A8A8A));           // Concrete gray for light mode
-    
-    // Text color - white for both modes for now
-    g.setColour(juce::Colours::white);
-    
-    auto asteraFont = juce::Font("ASTERA", 24.0f * scale, juce::Font::plain);
-    auto contentBounds = getLocalBounds().reduced(20 * scale);
-    
-    auto topSectionBounds = contentBounds.removeFromTop(170 * scale); 
-    
-    // Title
-    g.setFont(asteraFont);
-    g.drawText("KRONOS", topSectionBounds.removeFromTop(30 * scale), juce::Justification::centred, true);
-    
-    // Version
-    g.setFont(asteraFont.withHeight(20.0f * scale));
-    g.drawText("V1.1.0", topSectionBounds.removeFromTop(30 * scale), juce::Justification::centred, true);
-    
-    topSectionBounds.removeFromTop(20 * scale); // Space before description
-    
-    // Description
-    g.setFont(asteraFont.withHeight(16.0f * scale));
-    auto descriptionBounds = topSectionBounds.removeFromTop(30 * scale);
-    g.drawFittedText("A SIMPLE TIME TRACKING PLUGIN FOR YOUR DAW", 
-                     descriptionBounds,
-                     juce::Justification::centred, 
-                     2);
-    
-    // Creator credit
-    auto creditBounds = topSectionBounds.removeFromTop(30 * scale);
-    g.drawFittedText("CREATED BY JACOB LEONE AKA JACK.LION", 
-                     creditBounds,
-                     juce::Justification::centred, 
-                     2);
+    KronosArt::drawOuroboros(g, { 0.0f, 0.0f, 64.0f, 64.0f }, muted, findColour(KLF::accentColourId),
+                             findColour(KLF::raisedColourId), text);
 
-    // Draw separator line
-    int lineWidth = getWidth() * 0.8f;
-    int lineX = (getWidth() - lineWidth) / 2;
-    int lineY = 190 * scale;
-    g.setColour(juce::Colours::white);
-    g.drawLine(lineX, lineY, lineX + lineWidth, lineY, 1.0f * scale);
-    
-    contentBounds.removeFromTop(40 * scale); // Space after separator
+    g.setColour(text);
+    g.setFont(KLF::font(KLF::Face::sansBold, 26.0f, 0.3f));
+    g.drawText("KRONOS", juce::Rectangle<float>(78.0f, 8.0f, 300.0f, 30.0f), juce::Justification::centredLeft, false);
 
-    // Split remaining content into two columns
-    auto leftColumn = contentBounds.removeFromLeft(contentBounds.getWidth() / 2);
-    auto rightColumn = contentBounds;
+    g.setColour(faint);
+    g.setFont(KLF::font(KLF::Face::monoRegular, 11.0f, 0.12f));
+    g.drawText(juce::String(juce::CharPointer_UTF8("v")) + JucePlugin_VersionString
+                   + juce::String(juce::CharPointer_UTF8(" \xc2\xb7 VST3 \xc2\xb7 AU")),
+               juce::Rectangle<float>(78.0f, 40.0f, 300.0f, 14.0f), juce::Justification::centredLeft, false);
 
-    // Left Column
-    g.setColour(juce::Colours::white); // Reset color after line
-    g.drawText("PLUGINS and MORE AT:", 
-               leftColumn.removeFromTop(30 * scale),
-               juce::Justification::centred, true);
-               
-    leftColumn.removeFromTop(45 * scale); // Space between sections
-    g.drawText("MUSIC", 
-               leftColumn.removeFromTop(30 * scale), 
-               juce::Justification::centred, true);
-               
-    leftColumn.removeFromTop(45 * scale); // Space between sections
-    g.drawText("INSTAGRAM", 
-               leftColumn.removeFromTop(30 * scale), 
-               juce::Justification::centred, true);
+    // The motto strip
+    g.setColour(line);
+    g.fillRect(0.0f, 78.0f, width, 1.0f);
+    g.fillRect(0.0f, 112.0f, width, 1.0f);
 
-    // Right Column
-    g.drawText("WEBSITE", 
-               rightColumn.removeFromTop(30 * scale), 
-               juce::Justification::centred, true);
-               
-    rightColumn.removeFromTop(45 * scale); // Space between sections
-    g.drawText("BUG REPORTS", 
-               rightColumn.removeFromTop(30 * scale), 
-               juce::Justification::centred, true);
-               
-    rightColumn.removeFromTop(45 * scale); // Space between sections
-    g.drawText("GRAPHICS BY AZNADEL", 
-               rightColumn.removeFromTop(30 * scale), 
-               juce::Justification::centred, true);
+    const auto motto = juce::String(juce::CharPointer_UTF8("\xce\x95\xce\x9d \xce\xa4\xce\x9f \xce\xa0\xce\x91\xce\x9d"));
+    const auto mottoFont = KLF::font(KLF::Face::sansSemibold, 13.0f, 0.3f);
 
-    // Draw metallic border
-    float borderThickness = 2.0f * scale;
-    
-    // Create gradient for border
-    juce::ColourGradient borderGradient(
-        isDarkMode ?
-            juce::Colour(180, 180, 180) :     // Lighter silver for dark mode start
-            juce::Colour(200, 180, 140),      // Warmer gold for light mode start
-        getLocalBounds().getTopLeft().toFloat(),
-        isDarkMode ?
-            juce::Colour(100, 100, 100) :     // Darker silver for dark mode end
-            juce::Colour(120, 100, 80),       // Darker gold for light mode end
-        getLocalBounds().getBottomRight().toFloat(),
-        false);
-    
-    auto borderBounds = getLocalBounds().toFloat();
-    g.setGradientFill(borderGradient);
-    g.drawRect(borderBounds, borderThickness);
-}
+    g.setColour(findColour(KLF::accentTextColourId));
+    g.setFont(mottoFont);
+    g.drawText(motto, juce::Rectangle<float>(0.0f, 79.0f, 140.0f, 33.0f), juce::Justification::centredLeft, false);
 
-void AboutComponent::positionLinks()
-{
-    // Calculate scale factor
-    float widthScale = getWidth() / 600.0f;
-    float heightScale = getHeight() / 450.0f;
-    float scale = juce::jmin(widthScale, heightScale);
+    g.setColour(faint);
+    g.setFont(KLF::font(KLF::Face::sansRegular, 12.0f).italicised());
+    g.drawText(juce::String(juce::CharPointer_UTF8("the all is one \xe2\x80\x94 inscription of the ouroboros")),
+               juce::Rectangle<float>(mottoFont.getStringWidthFloat(motto) + 10.0f, 79.0f, 300.0f, 33.0f),
+               juce::Justification::centredLeft, false);
 
-    // Calculate center position and consistent width for all links with scaling
-    int linkWidth = 300 * scale;
-    int linkHeight = 30 * scale;
-    
-    // Get bounds for layout
-    auto bounds = getLocalBounds().reduced(20 * scale);
-    
-    // Skip past the fixed content at the top (including separator line)
-    bounds.removeFromTop(190 * scale); 
-    
-    // Split into two columns
-    auto leftColumn = bounds.removeFromLeft(bounds.getWidth() / 2);
-    auto rightColumn = bounds;
+    drawParagraph(g, "Time tracking for your DAW sessions. Created by Jacob Leone (Jack.Lion).",
+                  KLF::font(KLF::Face::sansRegular, 13.0f), muted, { 0.0f, 126.0f, width, 40.0f });
 
-    // Position links
-    int leftY = leftColumn.getY();
-    gumroadLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
-                         leftY + 45 * scale, linkWidth, linkHeight);
-    soundcloudLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
-                            leftY + 120 * scale, linkWidth, linkHeight);
-    jlInstaLink.setBounds(leftColumn.getX() + (leftColumn.getWidth() - linkWidth) / 2, 
-                         leftY + 195 * scale, linkWidth, linkHeight);
+    // One pixel gaps between the link cells draw as a grid
+    g.setColour(line);
+    g.fillRect(0.0f, 172.0f, width, 75.0f);
 
-    // Right column links
-    int rightY = rightColumn.getY();
-    jlWebLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
-                       rightY + 45 * scale, linkWidth, linkHeight);
-    discordLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
-                         rightY + 120 * scale, linkWidth, linkHeight);
-    aznadelLink.setBounds(rightColumn.getX() + (rightColumn.getWidth() - linkWidth) / 2, 
-                         rightY + 195 * scale, linkWidth, linkHeight);
-
-    // Update link appearance
-    bool isDarkMode = audioProcessor.isDarkMode();
-    juce::Colour linkColor = isDarkMode ? 
-        juce::Colour(64, 64, 255) :      // Blue for dark mode
-        juce::Colour(255, 150, 50);      // Orange for light mode
-    
-    auto asteraFont = juce::Font("ASTERA", 16.0f * scale, juce::Font::plain);
-    
-    for (auto* link : {&gumroadLink, &soundcloudLink, &jlInstaLink, 
-                      &jlWebLink, &discordLink, &aznadelLink})
-    {
-        link->setFont(asteraFont, false);
-        link->setColour(juce::HyperlinkButton::textColourId, linkColor);
-        link->setJustificationType(juce::Justification::centred);
-    }
+    g.setColour(faint);
+    g.setFont(KLF::font(KLF::Face::monoRegular, 10.0f, 0.12f));
+    g.drawText(juce::String(juce::CharPointer_UTF8("GPL v3 \xc2\xb7 JACK.LION")),
+               juce::Rectangle<float>(0.0f, 262.0f, width, 14.0f), juce::Justification::centredLeft, false);
 }

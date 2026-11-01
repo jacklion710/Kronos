@@ -1,24 +1,26 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "PluginProcessor.h"
+#include "KronosWidgets.h"
 
-class AboutComponent : public juce::Component
+class AboutComponent : public KronosSheet
 {
 public:
-    AboutComponent(KronosAudioProcessor& processor);
-    ~AboutComponent() override = default;
+    AboutComponent();
 
-    void paint(juce::Graphics& g) override;
+    juce::String getKicker() const override;
+    juce::String getSheetTitle() const override { return "About Kronos"; }
+    int getPreferredHeight() const override { return 286; }
+    void focusDefaultControl() override;
+
+    void paint(juce::Graphics&) override;
     void resized() override;
-    void positionLinks();
-
-    juce::TextButton closeButton;
 
 private:
-    KronosAudioProcessor& audioProcessor;
-    juce::HyperlinkButton gumroadLink, soundcloudLink, jlWebLink, 
-                         jlInstaLink, discordLink, aznadelLink;
+    KronosButton websiteLink { "Website", KronosButton::Style::link };
+    KronosButton pluginsLink { "More plugins", KronosButton::Style::link };
+    KronosButton discordLink { "Discord", KronosButton::Style::link };
+    KronosButton instagramLink { "Instagram", KronosButton::Style::link };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AboutComponent)
 };

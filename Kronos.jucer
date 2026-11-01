@@ -12,6 +12,12 @@
             file="Source/AboutComponent.cpp"/>
       <FILE id="fG5Gxt" name="AboutComponent.h" compile="0" resource="0"
             file="Source/AboutComponent.h"/>
+      <FILE id="k1Fnt1" name="SourceSans3-Regular.ttf" compile="0" resource="1" file="Resources/fonts/SourceSans3-Regular.ttf"/>
+      <FILE id="k1Fnt2" name="SourceSans3-Semibold.ttf" compile="0" resource="1" file="Resources/fonts/SourceSans3-Semibold.ttf"/>
+      <FILE id="k1Fnt3" name="SourceSans3-Bold.ttf" compile="0" resource="1" file="Resources/fonts/SourceSans3-Bold.ttf"/>
+      <FILE id="k1Fnt4" name="JetBrainsMono-Light.ttf" compile="0" resource="1" file="Resources/fonts/JetBrainsMono-Light.ttf"/>
+      <FILE id="k1Fnt5" name="JetBrainsMono-Regular.ttf" compile="0" resource="1" file="Resources/fonts/JetBrainsMono-Regular.ttf"/>
+      <FILE id="k1Fnt6" name="JetBrainsMono-Medium.ttf" compile="0" resource="1" file="Resources/fonts/JetBrainsMono-Medium.ttf"/>
       <FILE id="gnINyQ" name="ASTERA.ttf" compile="0" resource="1" file="Resources/ASTERA.ttf"/>
       <FILE id="jmMJih" name="Background Dark.svg" compile="0" resource="1"
             file="Resources/Background Dark.svg"/>
@@ -95,6 +101,10 @@
             file="Source/RestoreComponent.cpp"/>
       <FILE id="pdYedH" name="RestoreComponent.h" compile="0" resource="0"
             file="Source/RestoreComponent.h"/>
+      <FILE id="k2Src1" name="KronosWidgets.cpp" compile="1" resource="0" file="Source/KronosWidgets.cpp"/>
+      <FILE id="k2Src2" name="KronosWidgets.h" compile="0" resource="0" file="Source/KronosWidgets.h"/>
+      <FILE id="k2Src3" name="KronosViews.cpp" compile="1" resource="0" file="Source/KronosViews.cpp"/>
+      <FILE id="k2Src4" name="KronosViews.h" compile="0" resource="0" file="Source/KronosViews.h"/>
       <FILE id="D7CUVz" name="LookAndFeel.h" compile="0" resource="0" file="Source/LookAndFeel.h"/>
       <FILE id="rckogh" name="LookAndFeel.cpp" compile="1" resource="0" file="Source/LookAndFeel.cpp"/>
       <FILE id="MJF2rv" name="PluginProcessor.cpp" compile="1" resource="0"

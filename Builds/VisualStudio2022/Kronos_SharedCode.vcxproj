@@ -143,6 +143,8 @@
     <ClCompile Include="..\..\Source\BackupComponent.cpp"/>
     <ClCompile Include="..\..\Source\RestoreComponent.cpp"/>
     <ClCompile Include="..\..\Source\LookAndFeel.cpp"/>
+    <ClCompile Include="..\..\Source\KronosWidgets.cpp"/>
+    <ClCompile Include="..\..\Source\KronosViews.cpp"/>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
     <ClCompile Include="..\..\..\..\Documents\Applications\Programming\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.cpp">
@@ -2451,6 +2453,8 @@
     <ClInclude Include="..\..\Source\BackupComponent.h"/>
     <ClInclude Include="..\..\Source\RestoreComponent.h"/>
     <ClInclude Include="..\..\Source\LookAndFeel.h"/>
+    <ClInclude Include="..\..\Source\KronosWidgets.h"/>
+    <ClInclude Include="..\..\Source\KronosViews.h"/>
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\PluginEditor.h"/>
     <ClInclude Include="..\..\..\..\Documents\Applications\Programming\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h"/>
@@ -3416,6 +3420,12 @@
     <ClInclude Include="..\..\JuceLibraryCode\JucePluginDefines.h"/>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\Resources\fonts\SourceSans3-Regular.ttf"/>
+    <None Include="..\..\Resources\fonts\SourceSans3-Semibold.ttf"/>
+    <None Include="..\..\Resources\fonts\SourceSans3-Bold.ttf"/>
+    <None Include="..\..\Resources\fonts\JetBrainsMono-Light.ttf"/>
+    <None Include="..\..\Resources\fonts\JetBrainsMono-Regular.ttf"/>
+    <None Include="..\..\Resources\fonts\JetBrainsMono-Medium.ttf"/>
     <None Include="..\..\Resources\ASTERA.ttf"/>
     <None Include="..\..\Resources\Background Dark.svg"/>
     <None Include="..\..\Resources\Background Light.svg"/>
