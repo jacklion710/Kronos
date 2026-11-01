@@ -62,7 +62,6 @@ public:
     KronosButton(const juce::String& accessibleName, Style style);
 
     void setIcon(juce::Path path, float viewBoxSize, float iconSize, float strokeWidth);
-    void setDetail(const juce::String& decorativeDetail) { detail = decorativeDetail; repaint(); }
     void setActive(bool shouldBeActive);
     void setIgnoresMotion(bool shouldIgnore);
     void playLabelDecode();
@@ -83,7 +82,6 @@ private:
     bool ignoresMotion = false;
     juce::Path icon;
     float iconViewBox = 16.0f, iconSize = 16.0f, iconStroke = 0.0f;
-    juce::String detail;
     Tween hover, press, decode;
     juce::Random decodeNoise { 11 };
 };

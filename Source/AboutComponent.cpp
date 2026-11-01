@@ -20,7 +20,7 @@ AboutComponent::AboutComponent()
 
 juce::String AboutComponent::getKicker() const
 {
-    return juce::String(juce::CharPointer_UTF8("ABOUT \xc2\xb7 \xce\xa0\xce\x95\xce\xa1\xce\x99"));
+    return "ABOUT";
 }
 
 void AboutComponent::focusDefaultControl()
@@ -30,7 +30,7 @@ void AboutComponent::focusDefaultControl()
 
 void AboutComponent::resized()
 {
-    constexpr int linksTop = 172, rowHeight = 36;
+    constexpr int linksTop = 138, rowHeight = 36;
     const auto columnWidth = (getWidth() - 3) / 2;
     const auto rightX = columnWidth + 2;
     const auto rightWidth = getWidth() - 1 - rightX;
@@ -62,33 +62,18 @@ void AboutComponent::paint(juce::Graphics& g)
                    + juce::String(juce::CharPointer_UTF8(" \xc2\xb7 VST3 \xc2\xb7 AU")),
                juce::Rectangle<float>(78.0f, 40.0f, 300.0f, 14.0f), juce::Justification::centredLeft, false);
 
-    // The motto strip
     g.setColour(line);
     g.fillRect(0.0f, 78.0f, width, 1.0f);
-    g.fillRect(0.0f, 112.0f, width, 1.0f);
-
-    const auto motto = juce::String(juce::CharPointer_UTF8("\xce\x95\xce\x9d \xce\xa4\xce\x9f \xce\xa0\xce\x91\xce\x9d"));
-    const auto mottoFont = KLF::font(KLF::Face::sansSemibold, 13.0f, 0.3f);
-
-    g.setColour(findColour(KLF::accentTextColourId));
-    g.setFont(mottoFont);
-    g.drawText(motto, juce::Rectangle<float>(0.0f, 79.0f, 140.0f, 33.0f), juce::Justification::centredLeft, false);
-
-    g.setColour(faint);
-    g.setFont(KLF::font(KLF::Face::sansRegular, 12.0f).italicised());
-    g.drawText(juce::String(juce::CharPointer_UTF8("the all is one \xe2\x80\x94 inscription of the ouroboros")),
-               juce::Rectangle<float>(mottoFont.getStringWidthFloat(motto) + 10.0f, 79.0f, 300.0f, 33.0f),
-               juce::Justification::centredLeft, false);
 
     drawParagraph(g, "Time tracking for your DAW sessions. Created by Jacob Leone (Jack.Lion).",
-                  KLF::font(KLF::Face::sansRegular, 13.0f), muted, { 0.0f, 126.0f, width, 40.0f });
+                  KLF::font(KLF::Face::sansRegular, 13.0f), muted, { 0.0f, 92.0f, width, 40.0f });
 
     // One pixel gaps between the link cells draw as a grid
     g.setColour(line);
-    g.fillRect(0.0f, 172.0f, width, 75.0f);
+    g.fillRect(0.0f, 138.0f, width, 75.0f);
 
     g.setColour(faint);
     g.setFont(KLF::font(KLF::Face::monoRegular, 10.0f, 0.12f));
     g.drawText(juce::String(juce::CharPointer_UTF8("GPL v3 \xc2\xb7 JACK.LION")),
-               juce::Rectangle<float>(0.0f, 262.0f, width, 14.0f), juce::Justification::centredLeft, false);
+               juce::Rectangle<float>(0.0f, 228.0f, width, 14.0f), juce::Justification::centredLeft, false);
 }

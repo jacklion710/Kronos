@@ -45,7 +45,7 @@ void BackupComponent::parentHierarchyChanged()
 
 juce::String BackupComponent::getKicker() const
 {
-    return juce::String(juce::CharPointer_UTF8("BACKUP \xc2\xb7 \xce\x9c\xce\x9d\xce\x97\xce\x9c\xce\x97"));
+    return "BACKUP";
 }
 
 juce::String BackupComponent::getSheetTitle() const

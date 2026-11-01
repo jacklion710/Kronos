@@ -2,21 +2,29 @@
 
 Where the handoff, the spec and the prototype disagree, the hard rules win, then the spec, then the prototype. Everything else follows `Main.dc.html`.
 
+## Founder change: no Greek words
+
+Jacob reviewed the build on 2026-11-01 and removed all Greek words, because no one will understand them. This overrides every Greek label in the handoff, spec and prototype.
+
+- The header inscription is gone, along with its divider, and the hairline rule now runs from the wordmark to the status chip.
+- Menu items, sheet kickers and the readout labels are English only.
+- About no longer has the motto strip.
+- The dial's turning ring at radius 65 now carries the seven planetary symbols with beads between them, in faint at 50%. That replacement is my choice, not from the design.
+- The sort label decode uses punctuation in place of Greek letters.
+- The sigil, ouroboros, hexagram and planetary day symbols stay because they are not words.
+
 ## Resolved conflicts in the design
 
 | Item | Design says | Built | Why |
 | --- | --- | --- | --- |
 | Light theme CTA | Prototype hard-codes `#BC321E` | `#A82C19` | The colour rule limits light to `#D2452B` and `#A82C19` |
 | Minute arc | Prototype divides by a radius 64 circumference on a radius 57 ring, so it fills early | True fraction of the hour | "The arcs must show real values" |
-| Dial inscription | Prototype uses full-strength faint | 50% opacity | Engravings stay at 40-50% |
 | Hexagram nodes | Prototype uses an opaque accent dot and opaque muted dots | Muted at 45% | Only the hexagon edge uses the accent |
 | Hit targets | RECENT/LONGEST are 24px high, Close is 28px | Drawn at those sizes inside 32px targets | Targets must be at least 32px |
 | Link hover | Prototype CSS uses `#FF7A5F` | A mix of existing tokens | Colours stay within the token sets |
 | About version | Prototype shows v1.0.4 | The real build version | No invented readouts |
 | Backup file | Prototype shows `MY PROJECT_2026-10-31.kronos` in `~/Documents/Kronos/Backups` | `MY PROJECT.kronos` in the existing Application Support folder | "Keep the existing backup/restore file logic" |
 | Overwriting a backup | Not in the prototype | A confirm stage in the Backup sheet | Existing behaviour, kept with the file logic |
-
-The 40-50% rule is read as applying to the dial, which is where the spec states it. The header inscription and the Greek labels keep the prototype's colours.
 
 ## Simplified from the spec
 
@@ -25,11 +33,10 @@ The 40-50% rule is read as applying to the dial, which is where the spec states 
 - **Sort switch:** the label decodes in 180ms and rows fade in with a 40ms stagger. Rows do not travel to their new positions.
 - **Reduced motion:** the prototype honours `prefers-reduced-motion`. JUCE has no cross-platform equivalent, so this is not implemented.
 - **Status chip:** the prototype sizes the chip to its text, which pushes the inscription and rule sideways on every state change. Here it stays TRACKING-width in both states, and the label, LED and glint cross-fade over 340ms.
-- **Readout label row:** the Greek tracking is .2em, not .3em, because both labels need to fit in 342px on one line.
 
 ## Fonts
 
-- **Source Sans 3 Bold is Latin only.** No full Bold was on this machine, so this is the web build's Latin subset converted to TTF. The UI never sets Greek at weight 700, so nothing renders wrong, but it does not meet "400/600/700, including the Greek glyphs". Swap in Adobe's release TTF before shipping.
+- **Source Sans 3 Bold is Latin only.** No full Bold was on this machine, so this is the web build's Latin subset converted to TTF. With no Greek left in the UI nothing depends on the missing glyphs, but swap in Adobe's release TTF before shipping.
 - **JetBrains Mono** weights 300, 400 and 500 are static instances made from the variable font.
 - **OFL:** the licence texts are in `Resources/fonts`. The installers must include them when the fonts ship.
 

@@ -7,17 +7,7 @@ namespace
 constexpr auto twoPi = juce::MathConstants<double>::twoPi;
 
 // Each ambient layer keeps its own period so nothing pulses in step
-constexpr double inscriptionPeriod = 120.0, hexagramPeriod = 72.0, glintPeriod = 11.0, ledPeriod = 2.4;
-
-juce::String greek(const char* utf8)
-{
-    return juce::String(juce::CharPointer_UTF8(utf8));
-}
-
-const auto headerInscription = "\xce\xa7\xce\xa1\xce\x9f\xce\x9d\xce\x9f\xce\xa3 \xc2\xb7 \xce\x9a\xce\x91\xce\x99\xce\xa1\xce\x9f\xce\xa3 \xc2\xb7 \xce\x91\xce\x99\xce\xa9\xce\x9d";
-const auto dialInscription = "\xce\xa7\xce\xa1\xce\x9f\xce\x9d\xce\x9f\xce\xa3 \xc2\xb7 \xce\x9a\xce\x91\xce\x99\xce\xa1\xce\x9f\xce\xa3 \xc2\xb7 \xce\x91\xce\x99\xce\xa9\xce\x9d \xc2\xb7 \xce\x95\xce\x9d \xce\xa4\xce\x9f \xce\xa0\xce\x91\xce\x9d \xc2\xb7 ";
-const auto chronos = "\xce\xa7\xce\xa1\xce\x9f\xce\x9d\xce\x9f\xce\xa3";
-const auto kairos = "\xce\x9a\xce\x91\xce\x99\xce\xa1\xce\x9f\xce\xa3";
+constexpr double ringPeriod = 120.0, hexagramPeriod = 72.0, glintPeriod = 11.0, ledPeriod = 2.4;
 
 float widthOf(const juce::Font& font, const juce::String& text)
 {
@@ -141,12 +131,9 @@ void HeaderBar::resized()
     const auto wordmarkFont = KLF::font(KLF::Face::sansBold, 15.0f, 0.34f);
     wordmarkArea = { 36.0f, 8.0f, widthOf(wordmarkFont, "KRONOS"), 20.0f };
 
-    const auto inscriptionFont = KLF::font(KLF::Face::sansRegular, 9.0f, 0.42f);
-    const auto inscriptionWidth = widthOf(inscriptionFont, greek(headerInscription));
-    const auto inscriptionX = chipArea.getX() - 12.0f - 18.0f - 12.0f - inscriptionWidth;
     const auto ruleX = wordmarkArea.getRight() + 12.0f;
 
-    ruleArea = { ruleX, 17.0f, juce::jmax(0.0f, inscriptionX - 12.0f - ruleX), 2.0f };
+    ruleArea = { ruleX, 17.0f, juce::jmax(0.0f, chipArea.getX() - 12.0f - ruleX), 2.0f };
 }
 
 void HeaderBar::drawWordmark(juce::Graphics& g)
@@ -212,19 +199,7 @@ void HeaderBar::paint(juce::Graphics& g)
         g.fillRect(x, ruleArea.getY(), 40.0f, 1.0f);
     }
 
-    const auto inscriptionFont = KLF::font(KLF::Face::sansRegular, 9.0f, 0.42f);
-    const auto inscription = greek(headerInscription);
-    const auto inscriptionWidth = widthOf(inscriptionFont, inscription);
-    const auto inscriptionX = chipArea.getX() - 12.0f - 18.0f - 12.0f - inscriptionWidth;
-
-    g.setColour(faint);
-    g.setFont(inscriptionFont);
-    g.drawText(inscription, juce::Rectangle<float>(inscriptionX, 8.0f, inscriptionWidth + 4.0f, 20.0f),
-               juce::Justification::centredLeft, false);
-
     g.setColour(line);
-    g.fillRect(chipArea.getX() - 12.0f - 18.0f, 17.0f, 18.0f, 1.0f);
-
     g.drawRect(chipArea, 1.0f);
 
     const auto led = juce::Rectangle<float>(6.0f, 6.0f).withCentre({ chipArea.getX() + 13.0f, chipArea.getCentreY() });
@@ -268,43 +243,31 @@ DialComponent::DialComponent()
 void DialComponent::resized()
 {
     playButton.setBounds(44, 44, 72, 72);
-    inscription = buildInscription();
+    ornamentRing = buildOrnamentRing();
 }
 
-juce::Path DialComponent::buildInscription() const
+juce::Path DialComponent::buildOrnamentRing() const
 {
-    // The prototype sets this on a path; JUCE has no text-on-a-path, so each
-    // glyph is placed and turned individually, then cached.
-    const auto font = KLF::font(KLF::Face::sansSemibold, 6.4f);
-    const auto text = greek(dialInscription) + greek(dialInscription);
-    constexpr float radius = 65.5f;
-
-    juce::Array<int> glyphs;
-    juce::Array<float> offsets;
-    font.getGlyphPositions(text, glyphs, offsets);
-
-    if (offsets.size() < 2)
-        return {};
-
-    const auto naturalWidth = offsets.getLast();
-    const auto spacing = (static_cast<float>(twoPi) * radius - naturalWidth) / static_cast<float>(glyphs.size());
+    // The seven planets with a bead between each, turning as one ring
+    constexpr float radius = 65.5f, glyphSize = 8.0f;
+    const auto step = juce::MathConstants<float>::twoPi / 7.0f;
 
     juce::Path result;
-    auto* typeface = font.getTypefacePtr().get();
 
-    for (int i = 0; i < glyphs.size(); ++i)
+    for (int day = 0; day < 7; ++day)
     {
+        const auto angle = static_cast<float>(day) * step;
+        const auto placement = juce::AffineTransform::scale(glyphSize / 14.0f)
+                                   .translated(-glyphSize * 0.5f, -radius - glyphSize * 0.5f)
+                                   .rotated(angle)
+                                   .translated(80.0f, 80.0f);
+
         juce::Path glyph;
-        typeface->getOutlineForGlyph(glyphs[i], glyph);
+        juce::PathStrokeType(0.7f).createStrokedPath(glyph, KronosArt::planetGlyph(day), placement);
+        result.addPath(glyph);
 
-        const auto position = offsets[i] + spacing * static_cast<float>(i);
-        const auto angle = position / radius;
-        const auto scale = font.getHeight() * font.getHorizontalScale();
-
-        result.addPath(glyph, juce::AffineTransform::scale(scale, font.getHeight())
-                                  .translated(0.0f, -radius)
-                                  .rotated(angle)
-                                  .translated(80.0f, 80.0f));
+        const auto beadAngle = angle + step * 0.5f;
+        result.addEllipse(80.0f + radius * std::sin(beadAngle) - 0.7f, 80.0f - radius * std::cos(beadAngle) - 0.7f, 1.4f, 1.4f);
     }
 
     return result;
@@ -329,7 +292,7 @@ void DialComponent::setTracking(bool isTracking)
 
 void DialComponent::advance(double seconds)
 {
-    inscriptionTurn = std::fmod(inscriptionTurn + seconds / inscriptionPeriod, 1.0);
+    ringTurn = std::fmod(ringTurn + seconds / ringPeriod, 1.0);
     hexagramTurn = std::fmod(hexagramTurn - seconds / hexagramPeriod, 1.0);
     repaint();
 }
@@ -368,7 +331,7 @@ void DialComponent::paint(juce::Graphics& g)
         g.strokePath(arc(57.0f, minuteFraction), juce::PathStrokeType(1.4f));
 
     g.setColour(faint.withAlpha(0.5f));
-    g.fillPath(inscription, juce::AffineTransform::rotation(static_cast<float>(inscriptionTurn * twoPi), 80.0f, 80.0f));
+    g.fillPath(ornamentRing, juce::AffineTransform::rotation(static_cast<float>(ringTurn * twoPi), 80.0f, 80.0f));
 
     static const auto triangleUp = juce::Drawable::parseSVGPath("M80 30 L123.3 105 L36.7 105 Z");
     static const auto triangleDown = juce::Drawable::parseSVGPath("M80 130 L36.7 55 L123.3 55 Z");
@@ -429,34 +392,17 @@ void ReadoutPanel::paint(juce::Graphics& g)
 
     constexpr float left = 203.0f, right = 545.0f, top = 19.0f;
 
-    // Label row: Greek sits beside the English and never replaces it
-    const auto greekFont = KLF::font(KLF::Face::sansSemibold, 10.0f, 0.2f);
     const auto labelFont = KLF::font(KLF::Face::monoRegular, 10.0f, 0.18f);
     const juce::Rectangle<float> labels(left, top, right - left, 13.0f);
-
-    g.setFont(greekFont);
-    g.setColour(accentText);
-    g.drawText(greek(chronos), labels, juce::Justification::centredLeft, false);
+    const auto runText = KronosArt::formatDuration(values.run);
 
     g.setFont(labelFont);
     g.setColour(muted);
-    g.drawText("PROJECT TIME", labels.withTrimmedLeft(widthOf(greekFont, greek(chronos)) + 8.0f),
-               juce::Justification::centredLeft, false);
-
-    const auto runText = KronosArt::formatDuration(values.run);
-    const auto runWidth = widthOf(labelFont, runText);
-    const auto runLabelWidth = widthOf(labelFont, "THIS RUN ");
-    const auto kairosWidth = widthOf(greekFont, greek(kairos));
+    g.drawText("PROJECT TIME", labels, juce::Justification::centredLeft, false);
+    g.drawText("THIS RUN", labels.withTrimmedRight(widthOf(labelFont, runText) + 8.0f), juce::Justification::centredRight, false);
 
     g.setColour(text);
     g.drawText(runText, labels, juce::Justification::centredRight, false);
-    g.setColour(muted);
-    g.drawText("THIS RUN", labels.withRight(right - runWidth - 2.0f).withLeft(right - runWidth - runLabelWidth - 2.0f),
-               juce::Justification::centredLeft, false);
-    g.setFont(greekFont);
-    g.setColour(faint);
-    g.drawText(greek(kairos), labels.withWidth(kairosWidth + 4.0f).withX(right - runWidth - runLabelWidth - kairosWidth - 10.0f),
-               juce::Justification::centredLeft, false);
 
     // H:MM:SS. Very long totals shrink rather than clip.
     const auto hours = juce::String(values.total / 3600);
@@ -790,15 +736,12 @@ MenuPanel::MenuPanel()
 
     backupItem.setButtonText(juce::String(juce::CharPointer_UTF8("Back up\xe2\x80\xa6")));
     backupItem.setIcon(KronosArt::backupIcon(), 14.0f, 14.0f, 1.2f);
-    backupItem.setDetail(greek("\xce\x9c\xce\x9d\xce\x97\xce\x9c\xce\x97"));
 
     restoreItem.setButtonText(juce::String(juce::CharPointer_UTF8("Restore\xe2\x80\xa6")));
     restoreItem.setIcon(KronosArt::restoreIcon(), 14.0f, 14.0f, 1.2f);
-    restoreItem.setDetail(greek("\xce\x91\xce\x9d\xce\x91\xce\x9c\xce\x9d\xce\x97\xce\xa3\xce\x99\xce\xa3"));
 
     aboutItem.setButtonText("About Kronos");
     aboutItem.setIcon(KronosArt::aboutIcon(), 14.0f, 14.0f, 1.2f);
-    aboutItem.setDetail(greek("\xce\xa0\xce\x95\xce\xa1\xce\x99"));
 
     addAndMakeVisible(backupItem);
     addAndMakeVisible(restoreItem);

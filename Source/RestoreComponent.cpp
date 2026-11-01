@@ -40,7 +40,7 @@ RestoreComponent::RestoreComponent(KronosAudioProcessor& p) : audioProcessor(p)
 
 juce::String RestoreComponent::getKicker() const
 {
-    return juce::String(juce::CharPointer_UTF8("RESTORE \xc2\xb7 \xce\x91\xce\x9d\xce\x91\xce\x9c\xce\x9d\xce\x97\xce\xa3\xce\x99\xce\xa3"));
+    return "RESTORE";
 }
 
 juce::String RestoreComponent::getSheetTitle() const

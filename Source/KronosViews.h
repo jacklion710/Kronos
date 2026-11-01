@@ -57,11 +57,11 @@ public:
     KronosButton playButton { "Start tracking", KronosButton::Style::play };
 
 private:
-    juce::Path buildInscription() const;
+    juce::Path buildOrnamentRing() const;
 
     juce::int64 total = 0;
-    double inscriptionTurn = 0.0, hexagramTurn = 0.0;
-    juce::Path inscription;
+    double ringTurn = 0.0, hexagramTurn = 0.0;
+    juce::Path ornamentRing;
 };
 
 class ReadoutPanel : public ChamferPanel

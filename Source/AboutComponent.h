@@ -10,7 +10,7 @@ public:
 
     juce::String getKicker() const override;
     juce::String getSheetTitle() const override { return "About Kronos"; }
-    int getPreferredHeight() const override { return 286; }
+    int getPreferredHeight() const override { return 252; }
     void focusDefaultControl() override;
 
     void paint(juce::Graphics&) override;

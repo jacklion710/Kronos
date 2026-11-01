@@ -78,15 +78,13 @@ The window has a header, a readout panel and a sessions panel. It scales as one 
 
 ### Readout Panel
 
-- **Dial**: the outer arc shows the position in the current minute and the inner arc the position in the current hour, both from your real project time. The Greek ring and hexagram are decorative. They turn only while tracking and stop when paused.
+- **Dial**: the outer arc shows the position in the current minute and the inner arc the position in the current hour, both from your real project time. The ring of planetary symbols and the hexagram are decorative. They turn only while tracking and stop when paused.
 - **Start/Pause**: the button in the centre of the dial.
 - **Project time**: everything tracked in this project, as hours, minutes and seconds.
 - **This run**: time since tracking last started.
 - **Today**: time tracked on the current calendar day.
 - **Daily avg**: project time divided by the number of days that have tracked time.
 - **Longest day**: the most time tracked on a single day.
-
-The Greek words and planetary symbols are decoration. Every control and value has an English label.
 
 ### Sessions Panel
 

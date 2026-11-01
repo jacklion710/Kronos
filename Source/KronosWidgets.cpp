@@ -272,7 +272,7 @@ juce::String KronosButton::getDisplayText() const
     if (progress >= 1.0f)
         return text;
 
-    const juce::String glyphs(juce::CharPointer_UTF8("\xce\xa7\xce\xa1\xce\x9f\xce\x9d\xce\xa3\xce\x9a\xce\x91\xce\x99\xce\xa9#/:"));
+    const juce::String glyphs("#/:+=<>*");
 
     const auto resolved = juce::roundToInt(progress * static_cast<float>(text.length()));
     juce::String result;
@@ -291,7 +291,6 @@ void KronosButton::paintButton(juce::Graphics& g, bool, bool)
     const auto pressAmount = press.get();
     const auto text = findColour(KLF::textColourId);
     const auto muted = findColour(KLF::mutedColourId);
-    const auto faint = findColour(KLF::faintColourId);
     const auto line = findColour(KLF::lineColourId);
     const auto accent = findColour(KLF::accentColourId);
     const auto accentText = findColour(KLF::accentTextColourId);
@@ -378,9 +377,6 @@ void KronosButton::paintButton(juce::Graphics& g, bool, bool)
             g.setColour(text);
             g.setFont(KLF::font(KLF::Face::sansRegular, 13.0f));
             g.drawText(getButtonText(), bounds.withLeft(34.0f), juce::Justification::centredLeft, false);
-            g.setColour(faint);
-            g.setFont(KLF::font(KLF::Face::sansRegular, 9.0f, 0.24f));
-            g.drawText(detail, bounds.withTrimmedRight(10.0f), juce::Justification::centredRight, false);
             break;
         }
 
